@@ -1,0 +1,25 @@
+# Whitelist: only the catalogue itself is tracked. Anything else in the working
+# tree (evidence, builds, binaries, models, scratch) stays local by default.
+/*
+!/.gitignore
+!/LICENSE
+!/README.md
+!/tools/
+!/engines/
+
+# Inside an engine folder (engines/<gpu>/<model>@<encoding>/<name>/) only these are tracked.
+/engines/*/*/*/*
+!/engines/*/*/*/README.md
+!/engines/*/*/*/THIRD_PARTY.md
+!/engines/*/*/*/LICENSES.txt
+!/engines/*/*/*/engine/
+
+# Never tracked anywhere, even inside engine/.
+evidence/
+build/
+__pycache__/
+*.pyc
+*.safetensors
+*.gguf
+*.bin
+*.log

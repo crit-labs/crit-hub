@@ -1,0 +1,17 @@
+{
+  "source_manifest_sha256": "0a2aa951581be8f2ba924de24e8af2f822f632ffad7b03e3dc0f64016c1c3e0c",
+  "original_package_sha256": "026ebcdf7796026ec8975fdcc690f6cffeb7716610102e39f8134fa336be6bf7",
+  "configuration_sha256": "0ab1ebb35dd8903d365cd6d6bb912f06129f3b852975204b64e7b3040ce51c5d",
+  "model_manifest_sha256": "306701d28ce9480867281ad242dded1ff24bfcb2c557eb8aa14e2e7bef178248",
+  "toolchain": {
+    "cuda": "13.1.115",
+    "nvcc_arch": "sm_120",
+    "gcc": "13.3.0",
+    "cmake": "3.28.3",
+    "generator": "Ninja",
+    "build_type": "Release",
+    "crit_core": "crit checkout e74f8983b80aededcaaef2cf5dd024d255f7cbc4",
+    "cublas": "13.2.2 (CUDA 13.1 toolkit, dynamically linked, not redistributed)"
+  },
+  "runtime_prerequisites": []
+}

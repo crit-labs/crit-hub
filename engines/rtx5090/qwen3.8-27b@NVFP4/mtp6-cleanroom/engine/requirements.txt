@@ -1,0 +1,4 @@
+# Python chat frontend (vendored into the package by scripts/make_package.sh; no downloads at runtime)
+tokenizers==0.22.2
+Jinja2==3.1.6
+MarkupSafe==3.0.3

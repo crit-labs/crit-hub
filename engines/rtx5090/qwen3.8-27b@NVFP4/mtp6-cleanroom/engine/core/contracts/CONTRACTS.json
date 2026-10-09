@@ -1,0 +1,31 @@
+{
+  "kind": "crit.native-core.contract-documentation",
+  "version": "0.2.0",
+  "interface": "core/include/crit/core.h",
+  "cuda_interface": "core/include/crit/cuda.h",
+  "scope": "Common request/resource/lifetime contracts for token-generation and scoring consumers through Model/Session/Backend. Execution strategies and backend-specific techniques are opt-in.",
+  "factory": "Static Factory returns a Model through public crit interfaces.",
+  "text_frontend": "Optional independent host TextFrontend supports concurrent tokenize/detokenize calls during generation. Private TextDecoder instances retain their frontend, validate IDs, and outlive Engine. Legacy model callbacks remain idle-only.",
+  "resources": "Core owns reservations, budgets and physical lifetimes; consumers declare extents, representations and reuse plans.",
+  "requests": "Opt-in bounded keyed requests with request/lane-generation identity; serial fallback is preserved.",
+  "request_options": "Value-owned sampling and stop overrides plus immutable shared host extension parameters. Declared capability checks precede admission; adapters own sampling semantics and private RNG state. Option payload charges and owners survive through retirement or quarantine.",
+  "scoring": "Declared scoring on ConcurrentModel uses an exclusive FIFO barrier after all earlier generation retirement. Queued scores share allowance/deadlines; active cancellation drains before discarding. Returned score storage stays owned through settlement or quarantine. Public result capacity is reserved separately from adapter-owned scratch.",
+  "progress": "Readiness precedes copy/charge of borrowed token rows; model commit precedes publication.",
+  "group_failure": "Poison/quiesce after failed group commit; publish none of that group and preserve earlier committed output.",
+  "retirement": "Stop producers and drain backends. Retain/quarantine complete owners when settlement is unproved.",
+  "streams": "When a backend uses asynchronous queues, submit accesses to explicit services and order cross-queue dependencies. CUDA services are optional.",
+  "consumer_duties": [
+    "artifact_encoding",
+    "model_semantics",
+    "tensor_state_layout",
+    "kernels",
+    "sampling"
+  ],
+  "qualification": "Source contracts and host references are separate from native/GPU/model/performance acceptance.",
+  "transfer_readiness": "Order operation-specific worker/copy completion. An earlier completed event or enqueue success cannot publish new content. Retain source and destination owners through actual settlement.",
+  "optional_integrations": {
+    "scope": "Expert caching, graph capture and mapped-source resolution are consumer-selected Forge techniques, never core integration requirements. Each selected technique owns its representation-specific correctness contract and optional optimization candidates.",
+    "guide": "docs/EXPERT_EXECUTION.md"
+  },
+  "tracing": "Optional per-engine bounded host event ring, charged to host resources. Nonblocking writers count loss; snapshots do not acquire model locks or synchronize device work. Request/generation and operation identities correlate phases; host durations and step gaps are diagnostics, not GPU timings. Adapter device_timings() add device point events under the enclosing step operation; a throwing hook counts as dropped trace data."
+}
