@@ -23,3 +23,9 @@ __pycache__/
 *.gguf
 *.bin
 *.log
+
+# Vendored runtime binaries are never tracked: the repository keeps binaries
+# outside it, and some of these exceed the 100 MB per-file limit GitHub enforces.
+# Each engine documents the upstream assets and hashes in engine/VENDORED-RUNTIME.md.
+*.dll
+*.exe

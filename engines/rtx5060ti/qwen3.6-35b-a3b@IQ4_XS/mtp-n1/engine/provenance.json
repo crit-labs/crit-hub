@@ -1,0 +1,15 @@
+{
+  "source_manifest_sha256": "54cb9e4df456f49e00b5046077dea154e72647c998350d4a5c4f105cf877bee8",
+  "original_package_sha256": "e3500d0c388dffa53b5450d403878b9763e6b71a25449f53e55f9db38900358d",
+  "configuration_sha256": "82ecb8817ac038c966b2533ffb50777f1f0500a5b21d80c601d2838e9241deab",
+  "model_manifest_sha256": "d9af935d59594199838932f50f8495cde1c9c4502f47cc3c82541fef5d342f18",
+  "toolchain": {
+    "name": "prebuilt llama.cpp CUDA backend (no local compiler)",
+    "llama_cpp_build": "b11463",
+    "llama_cpp_commit": "d2a79e604",
+    "backend": "cuda-13.4-x64",
+    "cudart": "bundled 13.4",
+    "note": "No CMake, MSVC or nvcc on the target host; the prebuilt binary and bundled runtime are used unchanged."
+  },
+  "runtime_prerequisites": []
+}

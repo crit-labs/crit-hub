@@ -1,0 +1,34 @@
+{
+  "backend": "server",
+  "server_binary": "vendor/llamacpp/b11463/bin/llama-server.exe",
+  "runtime_paths": [
+    "vendor/llamacpp/b11463/bin",
+    "vendor/llamacpp/b11463/runtime"
+  ],
+  "model_path": "PLACEHOLDER_MODEL_PATH",
+  "threads": 12,
+  "server_args": [
+    "-fa", "auto",
+    "-ctk", "f16",
+    "-ctv", "f16",
+    "--spec-type", "draft-mtp",
+    "--spec-draft-n-max", "1"
+  ],
+  "max_output_tokens": 2048,
+  "kv_tokens": 8192,
+  "timeout_seconds": 900,
+  "base_port": 18080,
+  "placement": {
+    "n_gpu_layers": 99,
+    "n_cpu_moe": 8,
+    "tensor_overrides": [],
+    "label": "mtp-n1-moe8-t12"
+  },
+  "server": {
+    "cache_type_k": "f16",
+    "cache_type_v": "f16",
+    "prompt_cache": true,
+    "parallel": 1
+  }
+}
+

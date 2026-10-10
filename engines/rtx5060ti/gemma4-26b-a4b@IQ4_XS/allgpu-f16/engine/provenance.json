@@ -1,0 +1,12 @@
+{
+  "source_manifest_sha256": "cee78c75f582305210eb9caa3eca5418d9f85a711297cf88ebae9d59fa0f6f8b",
+  "original_package_sha256": "205fdef3c229f93c14a5e78618ed17a0fa63fc1aedbd1b8be7b801f16712e00f",
+  "configuration_sha256": "00ade56a04b80dbdbe3943a85ae9e17e9ac11d4e4dcebd83e229810125502cbd",
+  "model_manifest_sha256": "82b25d89b60630f0837697248c23c3c334a52ffddbbd017f8df94f6006510389",
+  "toolchain": {
+    "kind": "prebuilt-binary",
+    "compiler": "none",
+    "note": "No local compiler. llama.cpp b11463 prebuilt CUDA 13.4 x64 release is vendored unchanged; the engine is pure Python driving the released llama-server over HTTP."
+  },
+  "runtime_prerequisites": []
+}
