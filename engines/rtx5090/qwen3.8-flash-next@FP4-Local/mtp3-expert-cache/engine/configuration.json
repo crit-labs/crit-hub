@@ -1,0 +1,20 @@
+{
+  "cpu_expert_share": 0,
+  "decode_activations": "fp32",
+  "decode_gemv": "1-4 rows per warp, loads of the next row ahead, activations staged with a swizzle (wide rows with more than 2 tokens read through L1); same per-lane order for 1 and 4 tokens",
+  "decode_graphs": "per index-score bucket: head with layer 0, the rest, and the drafter steps of a speculative round",
+  "expert_cache": "device CLOCK directory over spare device memory plus KV positions beyond the request and the prompt workspace; union plan per pass built by all threads; misses read from mapped host memory with write-through; slots touched in a pass protected",
+  "expert_down": "per (entry, 64 rows) blocks with staged activations, plan-order sum",
+  "expert_prefetch": "off (not in this candidate)",
+  "index_keys": "fp32 pooled, split-fp16 prompt-path index GEMM",
+  "kv_cache": "fp8 e4m3 with an fp32 scale per 256-dim key or value vector (target and MTP layers)",
+  "ple_gather": "16-thread pool for decode passes, next round's rows gathered during the drafter stage; up to 48 threads for prompt chunks",
+  "prefill_chunk": 16384,
+  "prompt_activations": "fp16 tensor cores, fp32 accumulation",
+  "prompt_cpu_experts": "off",
+  "prompt_experts": "one batched copy per layer; chunks under 512 tokens copy experts routed by at most 4 tokens into a transient pool (prompt workspace tail) instead of the cache",
+  "sampling": "greedy on device; temperature/top-p/top-k with crit Core's Sampler on host logits, one token per pass",
+  "score_paths": "prefill, decode, verify",
+  "speculation": "greedy requests: MTP block as released, 3 drafts per round verified in one 4-token pass; drafting head re-encoded as MXFP8 (drafter only); MTP experts resident on the device; one-token passes for the last positions of the context",
+  "vram_margin_gib": 1.0
+}

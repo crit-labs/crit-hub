@@ -1,0 +1,18 @@
+{
+  "run_id": "run-20261017T045435Z-b4d9b011",
+  "candidate_id": "candidate-0005",
+  "source_manifest_sha256": "7bbd32e6d22df528ddbf7f5897691f1885fa780b3ef134497b38114ae229b813",
+  "original_package_sha256": "e7c883f1c7ffb5a2f3bca0d30d38815b02f82c48ba4f6c48d966179863a24430",
+  "configuration_sha256": "0461ab52bbc4608bddaf2384a16efa8929d1ad0ca384a11e09a6ca2da042b4c1",
+  "model_manifest_sha256": "306701d28ce9480867281ad242dded1ff24bfcb2c557eb8aa14e2e7bef178248",
+  "toolchain": {
+    "cuda": "13.1.115 (/usr/local/cuda-13.1)",
+    "gcc": "13.3.0",
+    "cmake": "3.28.3",
+    "ninja": "1.11.1",
+    "os": "Ubuntu 24.04 on WSL2",
+    "crit_core": "0.1.0 from crit bdaae9af7e452a58414f1b40f06b251ad9990ca9 (CORE.md)",
+    "runtime_libraries": "libcudart.so.13 and libcublasLt.so.13 from the CUDA 13.1 toolkit (not redistributed)"
+  },
+  "runtime_prerequisites": []
+}
