@@ -451,10 +451,16 @@ void Net::moe_batch(const LayerWeights& L, int layer, int T, bool prefetch_next)
     int njobs = 0;
     for(int e : fetch) hjobs_[njobs++] = {e, mslot_addr_[mslot_of_[layer * kExperts + e]]};
     for(const auto& [e, slot] : transient) hjobs_[njobs++] = {e, slot};
-    for(int e : prefetched_)
-        if(std::binary_search(want.begin(), want.end(), e) &&
-           std::find(fetch.begin(), fetch.end(), e) == fetch.end())
-            hjobs_[njobs++] = {e, mslot_addr_[mslot_of_[layer * kExperts + e]]};
+    // A prefetched slot is published as a cache hit even if this prompt never routes to it.
+    // Initialize every surviving prefetched expert's scales before publishing that directory.
+    // Protect those scale-job destinations from the next-layer prefetch below until the jobs finish.
+    for(int e : prefetched_) {
+        const int slot = mslot_of_[layer * kExperts + e];
+        if(slot >= 0 && std::find(fetch.begin(), fetch.end(), e) == fetch.end()) {
+            hjobs_[njobs++] = {e, mslot_addr_[slot]};
+            mstamp_[slot] = 2 * layer + 2;
+        }
+    }
     prefetched_.clear();
     copies_done_.record(ts);
     // Prefetch every expert of the next layer that is not resident (long prompts use nearly all of them).

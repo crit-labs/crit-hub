@@ -1,5 +1,11 @@
 # Qwen3.8-Flash-Next @ FP4-Local · RTX 5090 · mtp3-expert-cache
 
+**Corrected release source: candidate-0006.** Candidate-0003 is known incorrect after
+long prompts and is superseded. The repair initializes the scales of every prefetched
+expert before that cache entry can be used. This configuration also reserves 2 GiB at
+cache allocation for runtime graphs and desktop GPU usage. [Validation](engine/validation.json)
+records tested scope and identities; historical candidate-0003 results do not qualify this source.
+
 An engine written from scratch on crit Core 0.1.0, which it links as an installed SDK. It
 runs text generation on WSL2 Ubuntu 24.04 with CUDA 13.1 on sm_120a (RTX 5090, 32 GB)
 and a host with about 82 GiB of RAM available to WSL.
@@ -18,7 +24,7 @@ recorded; `python -B tools/verify_model.py` checks a download against it.
 | --- | --- |
 | Attention, delta-net and shared-expert projections (MXFP8); router, hyper-connections, head (BF16) | GPU, resident |
 | Routed experts (NVFP4, CSF scales kept compressed) | Pinned host RAM, about 61 GB |
-| Hot experts | GPU CLOCK slot cache (about 7,800 slots), which also borrows KV positions a request can't reach and the idle prompt workspace |
+| Hot experts | GPU CLOCK slot cache (sized from free VRAM with a 2 GiB reserve), which also borrows KV positions a request can't reach and the idle prompt workspace |
 | KV cache | GPU, FP8 E4M3 with an FP32 scale per 256-dim vector, sized for 262,144 tokens |
 | Token embeddings | Pinned host RAM, read through the device mapping |
 | PLE n-gram table | Memory-mapped checkpoint, rows gathered on the host per token |
@@ -32,71 +38,136 @@ FP16 tensor-core GEMMs with one batched expert copy per layer. Sampled requests 
 token per pass with crit Core's sampler. [engine/README.md](engine/README.md) has the
 full design notes.
 
-## Measured (sealed candidate-0003)
+## Measured (candidate-0006)
 
-crit Eval, 6 speed cases at a 262,144-token context:
+crit Eval, six speed cases, 262,144-token capacity, greedy MTP decoding:
 
 | Metric | Result |
 | --- | ---: |
-| Decode | 88.3 tok/s |
-| Prefill | 1,818 tok/s |
-| Time to first token (geomean) | 1.60 s |
-| Long-context decode (to 262K) | 69.6 tok/s |
-| Held-out decode (10 prompts, 8 languages and code) | 94.3 tok/s |
-| Quality, worst path | 2.7% of the budget (PPL ×1.05, KLD mean 0.05, p99 0.5) |
+| Decode score | 84.5 tok/s |
+| Prefill score | 1,801 tok/s |
+| Time to first token, geometric mean | 1.61 s |
+| Decode at 261,888 prompt + 256 output tokens | 63.1 tok/s |
+| First token at that full capacity | 99.8 s |
+| Held-out decode, ten prompts | 92.1 tok/s |
 
-| Run benchmark, 256 output tokens | Decode | Time to first token | Prefill |
+| Run benchmark: prompt tokens, 256 output | Decode tok/s | First token | Prefill tok/s |
 | --- | ---: | ---: | ---: |
-| 512-token prompt | 84.1 tok/s | 2.32 s | 221 tok/s |
-| 14,336-token prompt | 77.9 tok/s | 5.17 s | 2,777 tok/s |
+| 512 | 84.9 | 2.39 s | 214 |
+| 14,336 | 74.6 | 5.16 s | 2,777 |
 
-Medians of three measured repetitions after one warmup, greedy decoding, stop tokens
-disabled, concurrency one, resident. At least 1.01 GiB of VRAM (nvidia-smi, whole GPU)
-and 18.6 GiB of RAM stayed free. Loading takes about 2.5 minutes.
+Run measurements are medians of three repetitions after one warmup, concurrency one,
+resident, with stop tokens disabled. The adapter has no replay support: measurements
+use its own generated text. They are not a controlled same-output speedup comparison
+against the corrupt original. Full-Eval physical telemetry left at least
+0.85 GiB GPU memory and 17.3 GiB host RAM available.
+Loading the checkpoint takes several minutes. The tested API startup, including model
+preparation and verification, took 880 seconds. For a registered
+run, use `crit serve --timeout 1800` to leave startup margin; the test passed with 900.
 
-Decode is bound by expert misses over the host link (about 27 GB/s here): the 4-token
-verify pass reads the union of four tokens' experts, and each round misses 88 (chat) to
-280 (after a 14K prompt) experts.
+## Correctness and practical checks
 
-## Checks
+- The original sealed binary fails mixed prefill-to-decode reference checks. At a
+  4,094-token prompt, over 38 fixed continuation positions, its PPL ratio was
+  1.17705, mean KL 0.15651 and p99 KL 3.70461.
+  The repaired native binary reaches 1.00695, 0.000442 and 0.01048 on that check,
+  within the unchanged limits 1.05 / 0.05 / 0.5. Graph and eager execution agree.
+- The independent reference uses official Transformers 5.19.0 `qwen4_exp` layers and
+  cache with exact FP32 dequantization of this stored checkpoint. Weight residency and
+  query batching were adapted to fit the GPU. It correctly generated all three archive
+  identifiers on the reproduced 4K failure. This is not a stock full-model deployment
+  or a reference validation at 262K.
+- This configuration passes all Eval gates, six fresh-process repeatability cases and
+  nineteen additional generation checks using prompts outside Eval. Greedy and seeded sampled retrieval succeeds
+  at 1K, 4K, 8K, 32K, 131K and 259,874 input tokens. Repeated 4K/32K requests after the
+  largest request retain the same token sequences. German, French and code copying pass.
+- A fresh build against the published Core SDK and the standalone launcher pass a long
+  prompt-file test. Python dependencies install in a fresh virtual environment.
+- Released crit 0.2.0 serves consecutive requests, leading system messages, streaming,
+  a stop string, near-260K retrieval and candidate switches, and exits cleanly on Ctrl+C.
+  The retained registered run was used for this API test.
+- Eval gates were run under crit-eval-v3, plus the targeted prefill-then-decode,
+  retrieval and request-history checks above. A crit-eval-v4 run, which adds the
+  prefill_decode quality path, the retrieval gate and the request-history gate to
+  Eval itself, is pending.
 
-- **Arithmetic:** Eval quality within budget on the prefill, decode and verify paths,
-  against an FP32 reference written from the Hugging Face transformers `qwen4_exp`
-  definition.
-- **Functional:** all 6 Eval speed cases ran at 262,144 tokens; the capacity and
-  lower-context gates passed; a fresh process repeats every greedy output; the resident
-  adapter passed consecutive requests, streaming, mid-stream cancel and close/reopen.
-  `crit serve` answered consecutive requests, a leading system message, streaming, a
-  stop string and a switch between candidates, and stopped cleanly.
-- **Resources:** the free-memory figures above, in every case.
+## Known issues
+
+- Speculative output equals plain greedy in 3/6 Eval cases (tool-call, long-summary
+  and agent-long first differ at tokens 125, 19 and 146). The cause is not yet
+  established; until it is, treat it as an open bug, not rounding.
 
 ## Limits
 
-- Text only; the vision tower is not used.
-- Greedy output repeats in a fresh process but not between requests in one process: the
-  512-token case diverged at token 24 on its second request. Speculative output equals
-  plain greedy decoding in 3 of 6 Eval cases (FP8 KV cache); exactness is reported, not
-  required.
-- Prefill runs at about 5% of its compute ceiling, since every chunk streams experts over
-  the host link.
-- Needs about 82 GiB of RAM for WSL, an otherwise idle GPU and `vram_margin_gib` 1.0.
+- **262,144 means total templated prompt plus generated output.** It is a tested capacity,
+  not a promise of accurate answers to every 262K document. Near-capacity retrieval was
+  tested separately from the full-capacity synthetic benchmark.
+- Text only, one request at a time. WSL2 Ubuntu 24.04, RTX 5090 32GB, CUDA 13.1,
+  g++ 13.3, CMake 3.28 and Ninja were tested, with about 82 GiB available to WSL.
+  Other GPUs, native Windows and a clean OS installation are untested.
+- Default chat sampling is temperature 1, top-p .95, top-k 20, with thinking disabled.
+  The speed measurements use greedy MTP. Sampled requests use one-token decoding and
+  should not be advertised at the greedy benchmark rate.
+- Requests to the same candidate keep weights loaded. Candidate switching reloads
+  weights; tested switches took 211–248 seconds. Model allocations are not shared across switches.
+- Cancellation is checked as output is emitted; it does not interrupt a long native
+  prefill immediately. Allow more than 100 seconds for the first token near full context.
+- Prefill and decode still stream offloaded experts over the host link. This remains
+  the main performance limitation, and prompt processing is far below its compute ceiling.
+- Released crit 0.2.0 also limits conversation text to 1,000,000 characters and
+  internal request JSON to 1 MiB. Some token-valid near-262K documents exceed those
+  transport limits. The standalone prompt-file command avoids that API JSON boundary.
+- This source export is runnable terminal chat, not a portable crit run registry.
+  The API adapter requires a locally registered and sealed run; the build below alone
+  does not create one. The API is a tested chat-completions subset, not a claim that
+  tools, structured output or every OpenAI request option are supported.
 
 ## Build and chat
 
+Start in the crit-hub repository root. Set WORK to a writable directory on the Linux
+filesystem, such as a subdirectory of your configured wsl_run_root. Keep builds and
+checkpoints outside the repository.
+Install the tested CUDA/compiler/CMake/Ninja prerequisites first. The native SDK is
+pinned to Core 0.1.0; Python text handling and serving use crit 0.2.0.
+
 ```sh
-git clone https://github.com/crit-labs/crit && git -C crit checkout v0.1.0
-cmake -S crit/core -B build/core -G Ninja -DCMAKE_BUILD_TYPE=Release -DCRIT_CORE_CUDA=ON \
-      -DCMAKE_CUDA_ARCHITECTURES=120a -DCMAKE_POSITION_INDEPENDENT_CODE=ON
-cmake --build build/core && cmake --install build/core --prefix core-install
-cmake -S engine -B build/fnl -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$PWD/core-install
-cmake --build build/fnl --target fnl
-mkdir -p package && cp build/fnl/libfnl.so engine/python/*.py engine/configuration.json package/
+ENGINE="$PWD/engines/rtx5090/qwen3.8-flash-next@FP4-Local/mtp3-expert-cache/engine"
+WORK="/path/to/your/wsl-run-root/flash-build"
+mkdir -p "$WORK"
+git clone --branch v0.1.0 --depth 1 https://github.com/crit-labs/crit "$WORK/crit-sdk"
+git clone --branch v0.2.0 --depth 1 https://github.com/crit-labs/crit "$WORK/crit-python"
+python3 -m venv "$WORK/venv"
+. "$WORK/venv/bin/activate"
+python -m pip install -e "$WORK/crit-python"
+export CUDACXX=/usr/local/cuda-13.1/bin/nvcc
+cmake -S "$WORK/crit-sdk/core" -B "$WORK/build-core" -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release -DCRIT_CORE_CUDA=ON -DBUILD_TESTING=OFF \
+  -DCMAKE_CUDA_ARCHITECTURES=120a -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+cmake --build "$WORK/build-core" -j 4
+cmake --install "$WORK/build-core" --prefix "$WORK/core-install"
+cmake -S "$ENGINE" -B "$WORK/build-fnl" -G Ninja -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_PREFIX_PATH="$WORK/core-install"
+cmake --build "$WORK/build-fnl" --target fnl -j 4
+mkdir -p "$WORK/package"
+cp "$WORK/build-fnl/libfnl.so" "$ENGINE"/python/*.py "$ENGINE/configuration.json" "$WORK/package/"
 ```
 
-`engine/python/fnl_serve.py` exports `create_engine(context)` for crit's resident chat
-(`chat-json-v1`, `chat-resident-v1`, `chat-stream-v1`, `chat-config-v1`,
-`chat-model-file-v1`); `engine/python/fnl_eval_adapter.py` is its crit Eval adapter. Open
-the sealed run with
-`crit serve --workspace <runs folder> --run run-20261016T225118Z-8d49a6ce --candidate candidate-0003`.
-Serving needs crit 0.2.0 or newer: 0.1.0 bounds loading at a fixed 600 s, and this
-model takes about 8 minutes (crit first copies and hashes the 102 GB checkpoint).
+Download the exact checkpoint revision in [model.json](model.json), then verify it
+from the crit-hub root and start the exported command:
+
+```sh
+MODEL="/path/to/downloaded/checkpoint"
+python -B tools/verify_model.py "$ENGINE/../model.json" "$MODEL"
+python "$WORK/package/chat.py" --model "$MODEL" --package "$WORK/package"
+# One request from a UTF-8 document, including multiline/long prompts:
+python "$WORK/package/chat.py" --model "$MODEL" --package "$WORK/package" \
+  --prompt-file /path/to/prompt.txt --output-tokens 256
+```
+
+Interactive commands: `/new` clears the conversation; `/quit` exits. The default
+capacity is 262144, including the chat template and requested output allowance.
+
+For a registered run, `fnl_serve.py` exports `create_engine(context)` with
+`chat-json-v1`, `chat-resident-v1`, `chat-stream-v1`, `chat-config-v1` and
+`chat-model-file-v1`. Follow crit's [run registration and packaging documentation](https://github.com/crit-labs/crit/blob/v0.2.0/docs/BUILDING_ENGINES.md)
+before using `crit serve`; the historical author's run ID is not part of this export.

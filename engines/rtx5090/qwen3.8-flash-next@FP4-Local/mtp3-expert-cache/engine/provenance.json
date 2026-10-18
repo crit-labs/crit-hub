@@ -1,9 +1,9 @@
 {
   "run_id": "run-20261016T225118Z-8d49a6ce",
-  "candidate_id": "candidate-0003",
-  "source_manifest_sha256": "74f0dd50289d337ec90d46ad838b1be711060b83a1e894093d7b32941d1a1140",
-  "original_package_sha256": "f94f15aebd37059a8e144c416815c92106132b35af3f1dd0fd3e4917f242b9cc",
-  "configuration_sha256": "f83317bcb9de7178b1e53ed5afe874bc6f9e75d36fe83cf000f6b807d485576c",
+  "candidate_id": "candidate-0006",
+  "source_manifest_sha256": "b99d56c75af72be9f647592e5bcc7dfff099602908f41403e502a92b0a36e69d",
+  "original_package_sha256": "69964b8b84a1a60c016fa991779f1afa69ecb5394f82a86c2e99faff93d68640",
+  "configuration_sha256": "b280dddfd5b485ded2fc03ae8f2418834994ef21694f3a3e246b38137a67c4be",
   "model_manifest_sha256": "9720fb0506e281c8410ce174b71736820446de775441c72195ca024882415f3a",
   "toolchain": {
     "nvcc": "CUDA 13.1 (cuda_13.1.r13.1/compiler.37061995_0)",
@@ -13,5 +13,24 @@
     "cuda_architectures": "120a",
     "crit_core": "0.1.0 from crit checkout 7e8dca0, CRIT_CORE_CUDA=ON, position independent"
   },
-  "runtime_prerequisites": []
+  "runtime_prerequisites": [
+    "WSL2 Ubuntu 24.04; RTX 5090 32GB; CUDA 13.1",
+    "About 82 GiB host RAM available to WSL in the tested machine",
+    "Native SDK: crit Core v0.1.0; Python: crit v0.2.0 with its declared dependencies"
+  ],
+  "supersedes_candidate": {
+    "candidate_id": "candidate-0003",
+    "source_manifest_sha256": "74f0dd50289d337ec90d46ad838b1be711060b83a1e894093d7b32941d1a1140",
+    "original_package_sha256": "f94f15aebd37059a8e144c416815c92106132b35af3f1dd0fd3e4917f242b9cc"
+  },
+  "validation_status": "Sealed and eligible; full Eval, independent regression, fresh-source build, fresh Python environment and actual served API checks passed.",
+  "export_additions": [
+    {
+      "path": "python/chat.py",
+      "sha256": "6fbaa04a1a6b61300d16433a6437da3169b55259398a7a913c24bdfe72042ee0",
+      "purpose": "Standalone terminal/prompt-file launcher; separate from the sealed native candidate"
+    }
+  ],
+  "validation_file": "validation.json",
+  "export_documentation": "Public READMEs updated with current validation, build instructions and limitations; the source-manifest identity refers to the retained run snapshot. Runtime src files match it exactly."
 }

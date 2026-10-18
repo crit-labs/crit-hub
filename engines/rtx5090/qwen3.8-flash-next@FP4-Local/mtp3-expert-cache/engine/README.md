@@ -36,8 +36,8 @@ slab, 16 base bytes and 4-bit offsets; U32 exception words override single scale
   issues the next row's loads before the current row's arithmetic, against activations staged once
   per block in shared memory with a bank-conflict-free swizzle (wide rows with more than two tokens
   read them through L1). Expert down projection: blocks per (entry, 64 rows) with the entry's
-  activations staged, then a sum over the entries in plan order. Same per-lane order as the
-  one-row kernels, so 1-token and 4-token passes give the same values per token. The pass's
+  activations staged, then a sum over the entries in plan order. The kernels retain the per-lane accumulation order of the
+  one-row versions; whole-engine token equivalence is measured separately. The pass's
   expert union is built by all threads of the plan block; missed experts' CSF scales are decoded
   by 8 blocks per matrix.
 - **Speculative decoding (greedy requests):** the checkpoint's MTP block, used as released, drafts
@@ -47,15 +47,17 @@ slab, 16 base bytes and 4-bit offsets; U32 exception words override single scale
   as MXFP8 (the verified pass uses the BF16 head). A round verifies the input token and the 3
   drafts in one pass, keeps the drafts that match the model's argmax plus the model's next token,
   commits the recurrent states for the kept tokens, runs the drafter's extend pass over the kept
-  positions and chains the next drafts, all on the device in one graph. Output equals plain greedy
-  decoding up to FP32 summation order. The device reports the kept count and each draft as it is
+  positions and chains the next drafts, all on the device in one graph. Exactness is measured, not assumed: candidate-0006 matches plain greedy
+  in 3/6 Eval cases; FP8 KV and execution-path differences remain subject to the quality budget. The device reports the kept count and each draft as it is
   known (mapped memory), so the host gathers the next round's n-gram rows while the drafter runs.
   Near the end of the context the last tokens decode one per pass. Sampled requests decode one
   token per pass.
 - **Prompt (chunks of `prefill_chunk` tokens):** FP16 tensor-core GEMMs (mma.sync) with weight
   tiles converted in shared memory; routed experts grouped by expert after a host-planned
   residency pass (DMA copies of missing experts; for long chunks the next layer's experts are
-  prefetched while the current layer computes); index scores exact to FP32 precision through a
+  prefetched while the current layer computes). Every surviving prefetched slot has its scales
+  initialized, including experts not routed by the prompt, before the directory becomes usable
+  by decoding. Pending scale-job destinations are protected from eviction. Index scores computed near FP32 precision through a
   split-FP16 GEMM; gathered tensor-core attention per query. For speculative requests the MTP
   block's KV cache and index keys are filled for the chunk's positions. The n-gram rows of a chunk
   are gathered by up to 48 threads (page faults on a cold table). A layer's expert copies go out as
@@ -71,7 +73,7 @@ slab, 16 base bytes and 4-bit offsets; U32 exception words override single scale
   256-dim key or value vector (amax / 448), converted to FP32 in decode attention and to FP16 tiles
   in prompt attention; FP32 pooled index keys; sized for the required context at load. KV
   positions a request cannot reach and the prompt workspace between prompt passes are lent to the
-  expert cache, which takes all device memory but `vram_margin_gib` (1 GiB) at load.
+  expert cache, which takes all device memory but `vram_margin_gib` (2 GiB in candidate-0006) at load.
 - **Scoring paths:** prefill, decode (one-token passes) and verify (4-token passes of the request's
   own tokens, the passes that emit speculative tokens).
 - **Eval facts:** `draft_bytes_per_step` (MTP block, one token's routed MTP experts, MXFP8 drafting
@@ -87,15 +89,9 @@ slab, 16 base bytes and 4-bit offsets; U32 exception words override single scale
 | Path | Contents |
 | --- | --- |
 | `src/` | CUDA/C++ engine: `model.*` (weights, decode path), `prefill_net.cu` (prompt path), kernels, `engine.cu` (crit Core Model/Session/Backend and the C API) |
-| `python/` | `fnl_native.py` (ctypes), `fnl_eval_adapter.py` (crit Eval eval-v1), `fnl_serve.py` (crit serve resident adapter) |
-| `tools/` | FP32 reference (`reference.py`, official transformers qwen4_exp code), checkpoint reader (`ckpt.py`), dev drivers and comparisons |
+| `python/` | `fnl_native.py` (ctypes), `fnl_eval_adapter.py` (crit Eval eval-v1), `fnl_serve.py` (crit serve resident adapter), `chat.py` (standalone terminal/prompt-file launcher) |
+| `tools/` | Native checks and microbenchmarks; full reference/evaluation records are retained separately from this source export |
 
 ## Build
 
-```sh
-cmake -S core -B build/core -G Ninja -DCMAKE_BUILD_TYPE=Release -DCRIT_CORE_CUDA=ON \
-      -DCMAKE_CUDA_ARCHITECTURES=120a -DCMAKE_POSITION_INDEPENDENT_CODE=ON
-cmake --build build/core && cmake --install build/core --prefix core-install
-cmake -S fnl -B build/fnl -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$PWD/core-install
-cmake --build build/fnl   # libfnl.so
-```
+Use the complete SDK, Python-environment and standalone-chat commands in [the engine entry](../README.md#build-and-chat). The native runtime uses Core 0.1.0; Python serving/text handling uses crit 0.2.0.
