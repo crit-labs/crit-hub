@@ -12,7 +12,7 @@
 [![Built with crit](docs/assets/badge-crit.svg)](https://github.com/crit-labs/crit)
 
 [Summary](#summary) • [Quick start](#quick-start) • [What crit-hub solves](#what-crit-hub-solves) •
-[Engines](#engines) • [Contributing](#contributing) • [License](#license)
+[Engines](engines/README.md) • [Contributing](#contributing) • [License](#license)
 
 </div>
 
@@ -86,14 +86,14 @@ Every working engine you add saves the next person from building it again.
 
 <br />
 
-1. Place it under the [folder layout](#layout) with a name that describes its design, for
+1. Place it under the [folder layout](engines/README.md#layout) with a name that describes its design, for
    example `mtp7-fp8attn`. Several designs can share a GPU and model/encoding.
 2. Include runnable source and a short README covering the target hardware and OS, model and
    checkpoint revision, encoding, dependencies, build steps and chat command.
 3. Document the measured workload, results, check coverage and known limits.
 4. [Credit your repository](#credit) directly under the README's title.
 5. Retain dependency credits and applicable license texts and notices.
-6. Add a row to the [engine table](#engines) in the same change.
+6. Add a row to the [engine table](engines/README.md#engines) in the same change.
 
 Keep model weights, builds, binaries, development scripts and full experiment records
 outside the repository. The [.gitignore](.gitignore) uses a whitelist for published files.
@@ -123,7 +123,7 @@ upstream work, report issues and find related engines. The link appears in three
   ```
 
 - **`engine/provenance.json`**, as `"contributor": {"name": ..., "repository": ...}`.
-- **The [engine table](#engines)** in this README.
+- **The [engine table](engines/README.md#engines)** in [engines/README.md](engines/README.md).
 
 The exporter below writes the first two from `--contributor` and `--contributor-repo`.
 

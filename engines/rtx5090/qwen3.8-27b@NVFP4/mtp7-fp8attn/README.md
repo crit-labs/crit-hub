@@ -3,6 +3,8 @@
 > [!NOTE]
 > **Contributed by** crit-labs · [crit-labs/crit](https://github.com/crit-labs/crit)
 
+[crit-hub](../../../../README.md) › [engines](../../../README.md) › [rtx5090](../../README.md) › [qwen3.8-27b@NVFP4](../README.md) › mtp7-fp8attn
+
 An engine written from scratch on crit Core 0.1.0, which it links as an installed SDK. It
 runs text generation on WSL2 Ubuntu 24.04 with CUDA 13.1 on sm_120a (RTX 5090, 32 GB) at
 a 262,144-token context.

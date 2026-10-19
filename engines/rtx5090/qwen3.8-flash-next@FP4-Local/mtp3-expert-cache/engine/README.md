@@ -1,5 +1,7 @@
 # fnl: crit engine for nvidia/Qwen3.8-Flash-Next-FP4-Local
 
+[crit-hub](../../../../../README.md) › [engines](../../../../README.md) › [rtx5090](../../../README.md) › [qwen3.8-flash-next@FP4-Local](../../README.md) › [mtp3-expert-cache](../README.md) › engine
+
 A native CUDA engine on crit Core for the `qwen4_exp` text model of
 `nvidia/Qwen3.8-Flash-Next-FP4-Local` (48 layers: 36 gated-delta linear-attention and 12
 QSA-indexed attention layers, 4-stream gated-residual hyper-connections, a PLE n-gram

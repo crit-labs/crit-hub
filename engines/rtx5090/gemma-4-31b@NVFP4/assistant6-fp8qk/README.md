@@ -1,7 +1,9 @@
-# Gemma 4 31B-IT @ NVFP4 · RTX 5090 · assistant6-fp8qk
+# Gemma-4-31B @ NVFP4 · RTX 5090 · assistant6-fp8qk
 
 > [!NOTE]
 > **Contributed by** crit-labs · [crit-labs/crit](https://github.com/crit-labs/crit)
+
+[crit-hub](../../../../README.md) › [engines](../../../README.md) › [rtx5090](../../README.md) › [gemma-4-31b@NVFP4](../README.md) › assistant6-fp8qk
 
 A native CUDA engine on crit Core 0.2.1, which it links as an installed SDK. It runs text generation on WSL2
 Ubuntu 24.04 with CUDA 13.1 on sm_120a (RTX 5090, 32 GB) at a 262,144-token context, the model's native maximum.

@@ -1,7 +1,9 @@
-# Nemotron-3.5-Super-VL-120B-A12B @ NVFP4 · RTX 5090 · mtp3-cpu-experts
+# Nemotron-3.5-Super-120B-A12B @ NVFP4 · RTX 5090 · mtp3-cpu-experts
 
 > [!NOTE]
 > **Contributed by** crit-labs · [crit-labs/crit](https://github.com/crit-labs/crit)
+
+[crit-hub](../../../../README.md) › [engines](../../../README.md) › [rtx5090](../../README.md) › [nemotron-3.5-super-120b-a12b@NVFP4](../README.md) › mtp3-cpu-experts
 
 An engine written from scratch on crit Core 0.2.1 for one RTX 5090 (32 GB, sm_120a) on WSL2 Ubuntu 24.04 with
 CUDA 13.1, a Ryzen 5 9600 and about 82 GiB of host RAM visible to WSL. Text path only; context 262,144 tokens.

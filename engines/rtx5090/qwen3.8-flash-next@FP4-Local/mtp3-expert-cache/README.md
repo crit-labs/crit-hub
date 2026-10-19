@@ -3,6 +3,8 @@
 > [!NOTE]
 > **Contributed by** crit-labs · [crit-labs/crit](https://github.com/crit-labs/crit)
 
+[crit-hub](../../../../README.md) › [engines](../../../README.md) › [rtx5090](../../README.md) › [qwen3.8-flash-next@FP4-Local](../README.md) › mtp3-expert-cache
+
 **Release source: candidate-0010.** It is candidate-0006 with a serve adapter built on
 crit's shared `ResidentChat`: tool calls (tools and tool history go through the model's chat
 template, and the adapter parses the calls), per-request `temperature`, `top_p`, `top_k` and
