@@ -1,9 +1,13 @@
 {
   "run_id": "run-20261017T045435Z-b4d9b011",
-  "candidate_id": "candidate-0005",
-  "source_manifest_sha256": "7bbd32e6d22df528ddbf7f5897691f1885fa780b3ef134497b38114ae229b813",
-  "original_package_sha256": "e7c883f1c7ffb5a2f3bca0d30d38815b02f82c48ba4f6c48d966179863a24430",
-  "configuration_sha256": "0461ab52bbc4608bddaf2384a16efa8929d1ad0ca384a11e09a6ca2da042b4c1",
+  "candidate_id": "candidate-0007",
+  "contributor": {
+    "name": "crit-labs",
+    "repository": "https://github.com/crit-labs/crit"
+  },
+  "source_manifest_sha256": "d6bd78e0e53fd8b3bb50c8029b05866b0f15fbbe58da8e8bf312a35a00d5225a",
+  "original_package_sha256": "58ca8a7a1e26492ef7993d3f7a929e215c5f267db691d6df9606bcd950246ebc",
+  "configuration_sha256": "c728f51ddda9b6982f50db86ef8dfb0234ef10fea2e5eace7ad6eaf65dd061cd",
   "model_manifest_sha256": "306701d28ce9480867281ad242dded1ff24bfcb2c557eb8aa14e2e7bef178248",
   "toolchain": {
     "cuda": "13.1.115 (/usr/local/cuda-13.1)",

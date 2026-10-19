@@ -1,0 +1,22 @@
+{
+  "run_id": "run-20261018T173355Z-f764c819",
+  "candidate_id": "candidate-0003",
+  "contributor": {
+    "name": "crit-labs",
+    "repository": "https://github.com/crit-labs/crit"
+  },
+  "source_manifest_sha256": "38f80f4df7e1560973d122d077a105004b59bd0b03357b7601bb8a96bb3a059d",
+  "original_package_sha256": "bd0208962a37b16c0ec41ee301f64018c74737985f60dfd95a21303e1284b1a3",
+  "configuration_sha256": "0ffadf4e6161d06dd1317261636f9ceb755e2b2c2d10a1febf5f227ec44348b1",
+  "model_manifest_sha256": "63deb0e3818dce96dab187ccba21e75d9ed9e697c29c68c985d0748267d449fd",
+  "toolchain": {
+    "cuda": "13.1 (/usr/local/cuda-13.1)",
+    "gcc": "13.3.0",
+    "cmake": "3.28.3",
+    "ninja": "1.11",
+    "os": "Ubuntu 24.04 on WSL2",
+    "crit_core": "0.2.1 from the crit checkout (work/core-install)",
+    "runtime_libraries": "libcudart.so.13 from the CUDA 13.1 toolkit (not redistributed)"
+  },
+  "runtime_prerequisites": []
+}

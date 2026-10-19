@@ -1,5 +1,8 @@
 # Qwen3.8-27B @ NVFP4 · RTX 5090 · mtp7-fp8attn
 
+> [!NOTE]
+> **Contributed by** crit-labs · [crit-labs/crit](https://github.com/crit-labs/crit)
+
 An engine written from scratch on crit Core 0.1.0, which it links as an installed SDK. It
 runs text generation on WSL2 Ubuntu 24.04 with CUDA 13.1 on sm_120a (RTX 5090, 32 GB) at
 a 262,144-token context.
@@ -22,9 +25,9 @@ recorded; `python -B tools/verify_model.py` checks a download against it.
 | Prompt GEMMs | cuBLASLt FP8 and NVFP4 with an algorithm table recorded once on this GPU (`gemm_table.txt`); NVFP4 activations use the checkpoint's static input scale |
 | Prompt attention | Q·Kᵀ and P·V on E4M3 tensor cores over the cached codes, 64-key double-buffered tiles |
 | Prompt DeltaNet | Tiled causal conv and a staged sequential gated-delta scan |
-| Chat | The model card's thinking preset (temperature 1.0, top-p 0.95, top-k 20); drafts accepted with probability p(d) under that distribution, so sampling stays exact |
+| Chat | The model card's thinking preset (temperature 1.0, top-p 0.95, top-k 20) by default, per-request temperature, top-p, top-k (up to 64) and seed, and tool calls in the chat template's format; drafts accepted with probability p(d) under that distribution, so sampling stays exact |
 
-## Measured (sealed candidate-0005)
+## Measured
 
 crit Eval, 6 speed cases at a 262,144-token context, decode on pinned continuations:
 
@@ -61,7 +64,8 @@ tokens per round on chat and 7.8 on the agent case.
   capacity, lower-context and held-out generality gates passed; speculative output equals
   plain greedy decoding on 6 of 6 cases; a fresh process repeats every greedy output.
   `crit serve` passed consecutive requests, a system message, streaming, a stop string,
-  switching candidates and Ctrl+C.
+  switching candidates and Ctrl+C, a tool call and the answer after its result, a streamed
+  tool call, and seeded sampling that repeats with the same seed.
 - **Resources:** the free-memory figures above, in every case.
 
 ## Limits

@@ -5,6 +5,7 @@
 !/LICENSE
 !/README.md
 !/tools/
+!/docs/
 !/engines/
 
 # Inside an engine folder (engines/<gpu>/<model>@<encoding>/<name>/) only these are tracked.

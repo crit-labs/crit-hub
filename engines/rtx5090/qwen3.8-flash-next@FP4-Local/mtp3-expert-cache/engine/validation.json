@@ -1,7 +1,7 @@
 {
-  "candidate": "candidate-0006",
+  "candidate": "candidate-0010",
   "native_library_sha256": "6e74ced429f28e74a39493a4064a54c8698e6bd39997ce1e5e41ce7ad101a4d8",
-  "seal_sha256": "448e38df083df09209614dee8453e066ccbc0be4cb96f523ed78730590553025",
+  "seal_sha256": "b42f252d8bca79cb2d8c184b1ea96c056d9c17b8d3f73ad1cec83c9a6c9e020b",
   "eval_sha256": "c7277715867d309ded49f1ad6efabcd3e8d1fb04f3891181bfe3d3822bfcbf5e",
   "quality_passed": true,
   "gates": [
@@ -119,11 +119,50 @@
       "switch-to-baseline",
       "switch-back-to-fixed"
     ],
-    "shutdown_seconds": 25.057138814008795
+    "shutdown_seconds": 25.057138814008795,
+    "tool_calls_crit": "crit main (ResidentChat parses the calls; chat-tools-v1, sampling); unreleased at export"
   },
   "limitations": [
     "Single target machine; existing driver/toolchain/model download reused, not a clean OS install.",
     "Reference comparison reaches 4094 prompt tokens; large-context checks are retrieval/generation and capacity, not full-vocabulary reference comparisons.",
     "API tested with a retained registered run; the source export does not include that registry."
-  ]
+  ],
+  "candidate_0010": {
+    "change": "Serve adapter only, on crit_core.serving.ResidentChat: the model's chat template with tools and tool history, calls parsed in its <function=...> format and returned as chat-tools-v1, per-request temperature, top_p, top_k and seed, and decode telemetry counting tokens rather than MTP rounds.",
+    "byte_identical_to_candidate_0006": [
+      "libfnl.so",
+      "fnl_native.py",
+      "fnl_eval_adapter.py",
+      "configuration.json"
+    ],
+    "eval_evidence": "Gate evidence above (Eval, reference, generation checks) is candidate-0006's, carried over because the Eval path is byte-identical.",
+    "prompts_identical_to_candidate_0007": true,
+    "benchmarks": {
+      "case-0001 (512 prompt + 256 output)": {
+        "decode_tps": 91.7,
+        "prefill_tps": 233.9,
+        "ttft_ms": 2189.1
+      },
+      "case-0002 (14,336 prompt + 256 output)": {
+        "decode_tps": 83.3,
+        "prefill_tps": 2978.4,
+        "ttft_ms": 4813.3
+      }
+    },
+    "served": {
+      "passed": true,
+      "tests": [
+        "tool call (read_file)",
+        "answer after tool result",
+        "streamed tool call (get_weather)",
+        "plain reply with tools offered",
+        "greedy temperature 0",
+        "same seed gives the same sampled text",
+        "different seed differs",
+        "decode telemetry within 20% of wall-clock rate",
+        "SIGTERM unloads and releases"
+      ]
+    },
+    "history": "candidate-0007 added tool calls; candidate-0008 per-request sampling; candidate-0009 token-accurate telemetry; candidate-0010 declares chat-tools-v1"
+  }
 }

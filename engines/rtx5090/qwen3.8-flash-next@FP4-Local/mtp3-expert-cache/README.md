@@ -1,10 +1,16 @@
 # Qwen3.8-Flash-Next @ FP4-Local · RTX 5090 · mtp3-expert-cache
 
-**Corrected release source: candidate-0006.** Candidate-0003 is known incorrect after
-long prompts and is superseded. The repair initializes the scales of every prefetched
-expert before that cache entry can be used. This configuration also reserves 2 GiB at
-cache allocation for runtime graphs and desktop GPU usage. [Validation](engine/validation.json)
-records tested scope and identities; historical candidate-0003 results do not qualify this source.
+> [!NOTE]
+> **Contributed by** crit-labs · [crit-labs/crit](https://github.com/crit-labs/crit)
+
+**Release source: candidate-0010.** It is candidate-0006 with a serve adapter built on
+crit's shared `ResidentChat`: tool calls (tools and tool history go through the model's chat
+template, and the adapter parses the calls), per-request `temperature`, `top_p`, `top_k` and
+`seed`, and decode telemetry that counts tokens. The native library, Eval adapter and configuration are byte-identical to
+candidate-0006, which repaired candidate-0003 (incorrect after long prompts) by initializing
+the scales of every prefetched expert before that cache entry can be used, and reserves 2 GiB
+at cache allocation for runtime graphs and desktop GPU usage. [Validation](engine/validation.json)
+records tested scope and identities.
 
 An engine written from scratch on crit Core 0.1.0, which it links as an installed SDK. It
 runs text generation on WSL2 Ubuntu 24.04 with CUDA 13.1 on sm_120a (RTX 5090, 32 GB)
@@ -38,9 +44,10 @@ FP16 tensor-core GEMMs with one batched expert copy per layer. Sampled requests 
 token per pass with crit Core's sampler. [engine/README.md](engine/README.md) has the
 full design notes.
 
-## Measured (candidate-0006)
+## Measured
 
-crit Eval, six speed cases, 262,144-token capacity, greedy MTP decoding:
+crit Eval of the byte-identical candidate-0006 engine, six speed cases, 262,144-token
+capacity, greedy MTP decoding:
 
 | Metric | Result |
 | --- | ---: |
@@ -53,8 +60,11 @@ crit Eval, six speed cases, 262,144-token capacity, greedy MTP decoding:
 
 | Run benchmark: prompt tokens, 256 output | Decode tok/s | First token | Prefill tok/s |
 | --- | ---: | ---: | ---: |
-| 512 | 84.9 | 2.39 s | 214 |
-| 14,336 | 74.6 | 5.16 s | 2,777 |
+| 512 | 91.7 | 2.19 s | 234 |
+| 14,336 | 83.3 | 4.81 s | 2,978 |
+
+Run benchmarks are candidate-0010's own measurement; candidate-0006 measured 84.9 and 74.6
+tok/s decode on the same binary in an earlier session.
 
 Run measurements are medians of three repetitions after one warmup, concurrency one,
 resident, with stop tokens disabled. The adapter has no replay support: measurements
@@ -86,6 +96,11 @@ run, use `crit serve --timeout 1800` to leave startup margin; the test passed wi
 - Released crit 0.2.0 serves consecutive requests, leading system messages, streaming,
   a stop string, near-260K retrieval and candidate switches, and exits cleanly on Ctrl+C.
   The retained registered run was used for this API test.
+- Through `crit serve` (crit main) on candidate-0010: a tool call, the
+  answer after its tool result, a streamed call and a plain reply with tools offered;
+  greedy `temperature: 0`, the same `seed` repeating its sampled text and another seed
+  differing; decode telemetry within 20% of the wall-clock rate; SIGTERM unloading cleanly.
+  Requests render to the same tokens as in candidate-0006.
 - Eval gates were run under crit-eval-v3, plus the targeted prefill-then-decode,
   retrieval and request-history checks above. A crit-eval-v4 run, which adds the
   prefill_decode quality path, the retrieval gate and the request-history gate to
@@ -119,8 +134,9 @@ run, use `crit serve --timeout 1800` to leave startup margin; the test passed wi
   transport limits. The standalone prompt-file command avoids that API JSON boundary.
 - This source export is runnable terminal chat, not a portable crit run registry.
   The API adapter requires a locally registered and sealed run; the build below alone
-  does not create one. The API is a tested chat-completions subset, not a claim that
-  tools, structured output or every OpenAI request option are supported.
+  does not create one. The API is a tested chat-completions subset: tool calls with
+  `tool_choice` auto or none and the four sampling fields above; no strict tools,
+  structured output, `min_p`, penalties or `logit_bias`.
 
 ## Build and chat
 
@@ -168,6 +184,8 @@ Interactive commands: `/new` clears the conversation; `/quit` exits. The default
 capacity is 262144, including the chat template and requested output allowance.
 
 For a registered run, `fnl_serve.py` exports `create_engine(context)` with
-`chat-json-v1`, `chat-resident-v1`, `chat-stream-v1`, `chat-config-v1` and
-`chat-model-file-v1`. Follow crit's [run registration and packaging documentation](https://github.com/crit-labs/crit/blob/v0.2.0/docs/BUILDING_ENGINES.md)
+`chat-json-v1`, `chat-resident-v1`, `chat-stream-v1`, `chat-config-v1`,
+`chat-model-file-v1`, `chat-tools-v1`, `chat-tool-stream-v1` and per-request `temperature`, `top_p`, `top_k`
+and `seed` (crit main). `temperature: 0` decodes greedily in MTP rounds; omitted
+fields keep the engine's defaults. Follow crit's [run registration and packaging documentation](https://github.com/crit-labs/crit/blob/v0.2.0/docs/BUILDING_ENGINES.md)
 before using `crit serve`; the historical author's run ID is not part of this export.

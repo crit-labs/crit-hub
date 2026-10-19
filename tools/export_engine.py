@@ -63,6 +63,21 @@ def write_model(path, repository, revision, run_manifest):
     path.write_text(json.dumps(model, indent=2) + "\n", encoding="utf-8")
 
 
+REPOSITORY = re.compile(r"https://[A-Za-z0-9.-]+(/[A-Za-z0-9_.~-]+)+/?")
+
+
+def credit(text, name, repository):
+    """The contributor's repository sits directly under the engine README's title."""
+    lines = text.splitlines()
+    if not lines or not lines[0].startswith("# "):
+        raise ValueError("The engine README must open with a '# ' title")
+    if any(line.startswith("> **Contributed by**") and repository in line for line in lines[1:6]):
+        return text
+    shown = repository.split("://", 1)[1].split("/", 1)[1].rstrip("/")
+    rest = "\n".join(lines[1:]).lstrip("\n")
+    return f"{lines[0]}\n\n> [!NOTE]\n> **Contributed by** {name} · [{shown}]({repository})\n\n{rest}\n"
+
+
 def export(args):
     for name in (args.gpu, args.model, args.name, args.candidate):
         if not re.fullmatch(r"[A-Za-z0-9@_.+-]+", name) or name in (".", ".."):
@@ -98,6 +113,8 @@ def export(args):
         raise ValueError("Retain applicable licenses, including original contributions")
     if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", args.model_repo) or not re.fullmatch(r"[0-9a-f]{40}", args.model_revision):
         raise ValueError("Name the model as a Hugging Face repository and its full commit revision")
+    if not args.contributor.strip() or "\n" in args.contributor or not REPOSITORY.fullmatch(args.contributor_repo):
+        raise ValueError("Credit the contributor by name and the https URL of their repository")
     if not args.runtime_source:
         raise ValueError("Select the engine's runtime source explicitly")
     selected = []
@@ -118,12 +135,13 @@ def export(args):
         raise ValueError("Incomplete runtime source, data or notices")
     refuse_local_paths(selected + data + [(third_party, "THIRD_PARTY.md"), (readme, "README.md"),
                                           (package / "configuration.json", "configuration.json")], run)
+    credited = credit(readme.read_text(encoding="utf-8"), args.contributor.strip(), args.contributor_repo)
     engine = target / "engine"
     target.mkdir(parents=True)
     for path, name in selected:
         copy(path, child(engine, name))
     copy(third_party, target / "THIRD_PARTY.md")
-    copy(readme, target / "README.md")
+    (target / "README.md").write_text(credited, encoding="utf-8", newline="\n")
     copy(package / "configuration.json", engine / "configuration.json")
     # Runtime data is explicit, never inferred from work/ or historical scripts.
     for path, name in data:
@@ -133,6 +151,7 @@ def export(args):
     provenance = {
         "run_id": seal["run_id"],
         "candidate_id": args.candidate,
+        "contributor": {"name": args.contributor.strip(), "repository": args.contributor_repo},
         "source_manifest_sha256": manifest["source_manifest_sha256"],
         "original_package_sha256": hashlib.sha256(json.dumps(manifest, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()).hexdigest(),
         "configuration_sha256": manifest["configuration_sha256"],
@@ -157,6 +176,8 @@ if __name__ == "__main__":
     p.add_argument("--name", required=True, help="engine name describing its design, e.g. mtp6-cleanroom")
     p.add_argument("--model-repo", required=True, help="Hugging Face repository, e.g. unsloth/Qwen3.8-27B-NVFP4")
     p.add_argument("--model-revision", required=True, help="full commit of that repository the run used")
+    p.add_argument("--contributor", required=True, help="name credited in the README, e.g. your GitHub account")
+    p.add_argument("--contributor-repo", required=True, help="https URL of your repository, shown under the README's title")
     p.add_argument("--readme", required=True)
     p.add_argument("--third-party", help="THIRD_PARTY.md to use when the sealed source has none")
     p.add_argument("--runtime-source", action="append", default=[])

@@ -1,0 +1,40 @@
+{
+  "adaptive_draft": false,
+  "chat_adapter": "crit_core.serving.ResidentChat with tool_format gemma_tools.GEMMA_CALL; sampling fields temperature, top_p, top_k (<= 64), seed",
+  "context_tokens": 262144,
+  "decode_activations": "bf16 GEMV inputs, fp32 accumulation and residual stream",
+  "draft": 6,
+  "draft_model": "/llm/models/crit/google-gemma-4-31B-it-assistant/627c5ec1458b9086b841a91e0512fd31fd2fbbf1",
+  "drafter_weights": "google/gemma-4-31B-it-assistant BF16 re-encoded to NVFP4 at load (per-tensor global scale, E4M3 block scales of 16); draft-only",
+  "engine": "g4",
+  "global_blocks": 40,
+  "kv_cache": "fp8 e4m3, one fp32 scale per (position, kv head); sliding layers: K and V in a 3,200-slot ring; full layers: u = v_norm(k) plus the 128 rotated key dims RoPE(u * w) as their own E4M3 codes and scale",
+  "prefill_chunk": 2048,
+  "prefill_q8": true,
+  "prompt_activations": "attention projections FP8 E4M3 per row; MLP NVFP4 with a per-row global scale (448*6/row amax) and E4M3 block scales of 16; fp32 accumulation and residual stream",
+  "recon": {
+    "chat_template": {
+      "name": "default",
+      "sha256": "94899c0f917d93f6fe81c95744d1e8ddab2d21d39228d2e4aec1fb2a25bff413"
+    },
+    "sampling": {
+      "do_sample": true,
+      "temperature": 1.0,
+      "top_k": 64,
+      "top_p": 0.95
+    },
+    "stop_strings": [],
+    "stop_token_ids": [
+      1,
+      106,
+      50
+    ],
+    "template_variables": {}
+  },
+  "ring": 3200,
+  "row_fp4": true,
+  "slide_blocks": 8,
+  "speculative": true,
+  "splits": 8,
+  "weights": "transformed: attention q/k/v/o projections and the tied output head re-encoded from BF16 to FP8 E4M3 per row (scale = row amax / 448, round to nearest even, saturating) at load; NVFP4 MLPs (ModelOpt weight, weight_scale, weight_scale_2, input_scale) and BF16 norms, layer scalars and embedding rows as stored"
+}
