@@ -13,5 +13,4 @@ engines/<gpu>/<model>@<encoding>/<name>/
 contributor. Check a model download against an engine's checkpoint with
 `python -B tools/verify_model.py <engine>/model.json <model folder>`.
 
-To add an engine, follow [Contributing](../README.md#contributing) and add a row to the table above
-and to the README of its GPU and model folders.
+To add an engine, follow [Contributing](../README.md#contributing).

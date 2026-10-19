@@ -8,5 +8,5 @@ Checkpoint: [`nvidia/Gemma-4-31B-IT-NVFP4`](https://huggingface.co/nvidia/Gemma-
 instruction-tuned model. Each engine's `model.json` pins the revision and the SHA-256 of every file it
 was built on.
 
-Decode and prefill are crit Eval scores over six speed cases; each engine README has the workload,
-checks and limits behind them. The drafter is downloaded separately.
+Each engine folder's README has its design, measurements, checks and limits. The drafter is
+downloaded separately.

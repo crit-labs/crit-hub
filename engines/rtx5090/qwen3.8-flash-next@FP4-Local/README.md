@@ -8,5 +8,5 @@ The checkpoint is about 102 GB, so on a 32 GB GPU the routed experts live in hos
 Checkpoint: [`nvidia/Qwen3.8-Flash-Next-FP4-Local`](https://huggingface.co/nvidia/Qwen3.8-Flash-Next-FP4-Local).
 Each engine's `model.json` pins the revision and the SHA-256 of every file it was built on.
 
-Decode and prefill are crit Eval scores over six speed cases; the engine needs about 82 GiB of host
-RAM. Its README has the workload, checks, known issues and limits behind them.
+Each engine folder's README has its design, measurements, checks and limits. The engine needs about
+82 GiB of host RAM.

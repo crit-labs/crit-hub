@@ -6,5 +6,4 @@ a bundled MTP layer, in NVFP4: the NVFP4 MLPs in layers 0–55 and FP8 per-chann
 Checkpoint: [`unsloth/Qwen3.8-27B-NVFP4`](https://huggingface.co/unsloth/Qwen3.8-27B-NVFP4). Each
 engine's `model.json` pins the revision and the SHA-256 of every file it was built on.
 
-Decode and prefill are crit Eval scores over six speed cases; each engine README has the workload,
-checks and limits behind them.
+Each engine folder's README has its design, measurements, checks and limits.

@@ -93,7 +93,6 @@ Every working engine you add saves the next person from building it again.
 3. Document the measured workload, results, check coverage and known limits.
 4. [Credit your repository](#credit) directly under the README's title.
 5. Retain dependency credits and applicable license texts and notices.
-6. Add a row to the [engine table](engines/README.md#engines) in the same change.
 
 Keep model weights, builds, binaries, development scripts and full experiment records
 outside the repository. The [.gitignore](.gitignore) uses a whitelist for published files.
@@ -110,7 +109,7 @@ outside the repository. The [.gitignore](.gitignore) uses a whitelist for publis
 <br />
 
 Each engine links the repository of whoever contributed it, where people can follow its
-upstream work, report issues and find related engines. The link appears in three places:
+upstream work, report issues and find related engines. The link appears in two places:
 
 - **The engine README**, directly under the title, so it is the first thing anyone opening
   the folder sees:
@@ -123,9 +122,8 @@ upstream work, report issues and find related engines. The link appears in three
   ```
 
 - **`engine/provenance.json`**, as `"contributor": {"name": ..., "repository": ...}`.
-- **The [engine table](engines/README.md#engines)** in [engines/README.md](engines/README.md).
 
-The exporter below writes the first two from `--contributor` and `--contributor-repo`.
+The exporter below writes both from `--contributor` and `--contributor-repo`.
 
 </details>
 

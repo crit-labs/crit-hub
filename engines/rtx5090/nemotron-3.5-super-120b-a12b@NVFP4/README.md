@@ -9,6 +9,5 @@ Checkpoint: [`nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4`](https://hugg
 the engines here run its text path. Each engine's `model.json` pins the revision and the SHA-256 of
 every file it was built on.
 
-Decode and prefill are crit Eval scores over six speed cases (ranges are two Eval runs); decode
-depends on the CPU and needs about 82 GiB of host RAM. The engine README has the workload, checks and
-limits behind them.
+Each engine folder's README has its design, measurements, checks and limits. Decode depends on the
+CPU and needs about 82 GiB of host RAM.
