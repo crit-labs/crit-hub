@@ -191,3 +191,23 @@ For a registered run, `fnl_serve.py` exports `create_engine(context)` with
 and `seed` (crit main). `temperature: 0` decodes greedily in MTP rounds; omitted
 fields keep the engine's defaults. Follow crit's [run registration and packaging documentation](https://github.com/crit-labs/crit/blob/v0.2.0/docs/BUILDING_ENGINES.md)
 before using `crit serve`; the historical author's run ID is not part of this export.
+
+## Benchmark your machine
+
+`engine/tools/flashnext_bench.py` measures this engine on your PC, first with every expert miss
+copied over PCIe (CPU share 0, the default), then with 25%, 50% and 75% of misses computed on the
+CPU (`FNL_CPU_SHARE`). The CPU path lost on the 6-core PC this engine was built on; CPUs with
+more AVX-512 cores may gain. It loads the engine once per share (several minutes each), runs
+greedy MTP on a chat, a code and a ~14K-token prompt (median of 3 after a warm-up), and prints a
+Markdown table. After the build and checkpoint check above, from the same shell:
+
+```sh
+python "$ENGINE/tools/flashnext_bench.py" --model "$MODEL" --package "$WORK/package"
+# Fewer shares or a different CPU thread count (default: about one per physical core, minus one):
+python "$ENGINE/tools/flashnext_bench.py" --model "$MODEL" --package "$WORK/package" --shares 0,0.5 --threads 14
+```
+
+It needs about 82 GiB visible to Linux and stops before a load when less than 68 GiB is free. On
+a 96 GB Windows PC set `memory=88GB` under `[wsl2]` in `%UserProfile%\.wslconfig`, run
+`wsl --shutdown`, and close large apps. To share results, open an issue with the printed table
+and attach `flashnext-bench.json` if a share failed (it holds the error).
