@@ -1,7 +1,5 @@
 # Third-party kernels
 
-[mtp3-cpu-experts](../../README.md) › [engine](../README.md) › third_party
-
 `kernels/cutlass/` holds the NVIDIA CUTLASS v4.7.1 headers (git `cb4247394dd82148787aed73e5dc7cef33cbf862`,
 BSD-3-Clause) that `src/fp4_grouped.cu` compiles into `libnmh.so` for the SM120 block-scaled grouped
 NVFP4 prompt GEMMs. They were retained with `crit kernels retain`:

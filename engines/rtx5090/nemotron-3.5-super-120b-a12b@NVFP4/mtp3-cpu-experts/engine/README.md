@@ -1,7 +1,5 @@
 # nmh: engine source
 
-[crit-hub](../../../../../README.md) › [engines](../../../../README.md) › [rtx5090](../../../README.md) › [nemotron-3.5-super-120b-a12b@NVFP4](../../README.md) › [mtp3-cpu-experts](../README.md) › engine
-
 Runnable source of the `mtp3-cpu-experts` engine (internal name nmh) for Nemotron-3.5-Super-120B-A12B
 @ NVFP4 on the RTX 5090: a native CUDA library on crit Core 0.2.1 and the Python adapters that load
 it. The [engine README](../README.md) has the design, measurements, limits and the full build and

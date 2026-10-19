@@ -2,7 +2,7 @@
 
 ```text
 engines/<gpu>/<model>@<encoding>/<name>/
-  README.md          contributor repository, target, measured results, limits, build and chat
+  README.md          contributor repository, target, measured results, limits, build and serve
   engine/            source, configuration, provenance.json and required runtime data
   model.json         the exact checkpoint: repository, revision, file sizes and SHA-256
   THIRD_PARTY.md     dependency credits, when applicable

@@ -86,10 +86,10 @@ Every working engine you add saves the next person from building it again.
 
 <br />
 
-1. Place it under the [folder layout](engines/README.md#layout) with a name that describes its design, for
+1. Place it under the [folder layout](engines/README.md#engine-folder-layout) with a name that describes its design, for
    example `mtp7-fp8attn`. Several designs can share a GPU and model/encoding.
-2. Include runnable source and a short README covering the target hardware and OS, model and
-   checkpoint revision, encoding, dependencies, build steps and chat command.
+2. Include runnable source and a README that follows the [engine README template](docs/ENGINE_README.md):
+   model, design, measured results, checks, limits, build and serve.
 3. Document the measured workload, results, check coverage and known limits.
 4. [Credit your repository](#credit) directly under the README's title.
 5. Retain dependency credits and applicable license texts and notices.
