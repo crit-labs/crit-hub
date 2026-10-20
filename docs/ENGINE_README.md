@@ -9,6 +9,8 @@ to about 100 lines; put longer history, validation detail or design notes in a f
 
 > [!NOTE]
 > **Contributed by** <name> · [<owner>/<repo>](https://github.com/<owner>/<repo>)
+>
+> Built with [crit](https://github.com/crit-labs/crit): a sealed crit candidate, exported with `tools/export_engine.py`.
 
 One short paragraph: what the engine is (written from scratch or adapted, crit Core version), the
 tested platform (OS, CUDA, GPU and memory, host RAM when it matters) and the context length.
@@ -68,3 +70,23 @@ Only when the engine ships a benchmark tool: how to run it and how to share resu
 
 Credits and licenses are in [THIRD_PARTY.md](THIRD_PARTY.md) and [LICENSES.txt](LICENSES.txt).
 ````
+
+## External engines
+
+An external engine uses the same sections in the same order, with three differences.
+
+The notice under the title says the engine was not built with crit and links the pinned commit:
+
+````markdown
+> [!WARNING]
+> **External engine.** Not built with crit, and its source has not been reviewed by crit-hub. Read
+> it before you build or run it.
+>
+> **Contributed by** <name> · [<owner>/<repo>](https://github.com/<owner>/<repo>) · source at
+> [`<short SHA>`](https://github.com/<owner>/<repo>/tree/<40-character commit SHA>)
+````
+
+- The opening paragraph names the toolkit or runtime instead of a crit Core version.
+- **Build and chat** starts with a clone of the pinned commit:
+  `git clone <repository> && git -C <folder> checkout <40-character commit SHA>`.
+- **Credits** names the source's license and links its license file at the pinned commit.
