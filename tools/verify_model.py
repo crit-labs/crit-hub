@@ -1,6 +1,6 @@
-"""Check that a local model folder is the exact checkpoint an engine was built on.
+"""Check that a local model folder is the exact checkpoint an engine was measured on.
 
-Reads the engine's model.json and compares every listed file's size and SHA-256.
+Reads the checkpoint from the engine's engine.json and compares every listed file's size and SHA-256.
 """
 import argparse
 import hashlib
@@ -16,8 +16,11 @@ def digest(path):
     return h.hexdigest()
 
 
-def verify(model_json, folder):
-    model = json.loads(Path(model_json).read_text(encoding="utf-8"))
+def verify(engine, folder, model_id=None):
+    checkpoints = json.loads((Path(engine) / "engine.json").read_text(encoding="utf-8"))["checkpoints"]
+    if model_id is None and len(checkpoints) != 1:
+        raise SystemExit(f"{engine} pins several checkpoints; name one with --model: {', '.join(sorted(checkpoints))}")
+    model = checkpoints[model_id] if model_id else next(iter(checkpoints.values()))
     root = Path(folder)
     bad = []
     for entry in model["files"]:
@@ -34,7 +37,8 @@ def verify(model_json, folder):
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("model_json", help="the engine's model.json")
+    p.add_argument("engine", help="the engine's folder, e.g. engines/crit-labs/mtp7-fp8attn")
     p.add_argument("folder", help="local model folder, e.g. from huggingface-cli download REPO --revision REV")
+    p.add_argument("--model", help="the model id, when the engine pins several checkpoints")
     a = p.parse_args()
-    verify(a.model_json, a.folder)
+    verify(a.engine, a.folder, a.model)

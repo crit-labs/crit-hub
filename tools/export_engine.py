@@ -1,7 +1,11 @@
 """Export a sealed crit candidate as a compact source delivery; never copy research.
 
-The destination must be new. Supply a short README and the applicable original
-license files. Full candidate records and executable packages stay in the run.
+The destination, engines/<contributor>/<name>/, must be new. Supply a short README and the
+applicable original license files. Full candidate records and executable packages stay in the
+run. The exported engine.json carries the provenance and the exact checkpoint, and names the GPU
+and model the candidate was measured on; fill in the summary, features, measured_with and the
+README's measured figures, and the SPDX license of the engine source, before tools/check_engines.py
+passes.
 """
 import argparse
 import hashlib
@@ -54,13 +58,12 @@ def refuse_local_paths(files, run):
                 raise ValueError(f"Local path in {name}:{number}: {line.strip()[:120]}")
 
 
-def write_model(path, repository, revision, run_manifest):
+def checkpoint(repository, revision, run_manifest):
     """The exact checkpoint the candidate was built and measured on; download caches are not model files."""
     files = [{k: e[k] for k in ("path", "bytes", "sha256")} for e in run_manifest
              if not PurePosixPath(e["path"]).parts[0].startswith(".")]
-    model = {"repository": repository, "revision": revision, "files": files,
-             "run_model_manifest_sha256": hashlib.sha256(json.dumps(run_manifest, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()).hexdigest()}
-    path.write_text(json.dumps(model, indent=2) + "\n", encoding="utf-8")
+    return {"repository": repository, "revision": revision, "files": files,
+            "run_model_manifest_sha256": hashlib.sha256(json.dumps(run_manifest, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()).hexdigest()}
 
 
 REPOSITORY = re.compile(r"https://[A-Za-z0-9.-]+(/[A-Za-z0-9_.~-]+)+/?")
@@ -85,6 +88,10 @@ def export(args):
     for name in (args.gpu, args.model, args.name, args.candidate):
         if not re.fullmatch(r"[A-Za-z0-9@_.+-]+", name) or name in (".", ".."):
             raise ValueError("GPU/model/name/candidate must be a single folder name")
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+", args.contributor) or args.contributor in (".", ".."):
+        raise ValueError("The contributor names the engine's folder: use your GitHub account or organization")
+    if not re.fullmatch(r"[a-z0-9][a-z0-9.-]*", args.gpu) or not re.fullmatch(r"[a-z0-9][a-z0-9.-]*@[A-Za-z0-9.+-]+", args.model):
+        raise ValueError("Name the GPU like rtx5090 and the model like qwen3.8-27b@NVFP4")
     run = Path(args.run).resolve()
     candidate = child(run, f"candidates/{args.candidate}")
     seal = read(candidate / "seal.json")
@@ -98,7 +105,7 @@ def export(args):
     source = candidate / "source"
     package = candidate / "package"
     manifest = read(package / "manifest.json")
-    target = Path(args.hub).resolve() / "engines" / args.gpu / args.model / args.name
+    target = Path(args.hub).resolve() / "engines" / args.contributor / args.name
     if target.exists():
         raise ValueError("Destination exists; archive it before replacing it")
     # Validate all caller-supplied inputs before creating the destination.
@@ -152,10 +159,8 @@ def export(args):
     text = "\n\n".join(f"{'=' * 72}\n{label}\n{'=' * 72}\n{path.read_text(encoding='utf-8')}" for label, path in licenses)
     (target / "LICENSES.txt").write_text(text + "\n", encoding="utf-8")
     provenance = {
-        "origin": "crit",
         "run_id": seal["run_id"],
         "candidate_id": args.candidate,
-        "contributor": {"name": args.contributor.strip(), "repository": args.contributor_repo},
         "source_manifest_sha256": manifest["source_manifest_sha256"],
         "original_package_sha256": hashlib.sha256(json.dumps(manifest, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()).hexdigest(),
         "configuration_sha256": manifest["configuration_sha256"],
@@ -165,8 +170,18 @@ def export(args):
     }
     if LOCAL_PATH.search(json.dumps(provenance)) or run.parent.as_posix() in json.dumps(provenance):
         raise ValueError("Local path in the candidate's toolchain record; remove the export and describe the toolchain without it")
-    (engine / "provenance.json").write_text(json.dumps(provenance, indent=2) + "\n", encoding="utf-8")
-    write_model(target / "model.json", args.model_repo, args.model_revision, read(run / "inputs.json")["model_manifest"])
+    # The summary, features, protocol and measured figures come from the README; the contributor fills them in.
+    engine_json = {
+        "summary": None,
+        "origin": "crit",
+        "contributor": {"name": args.contributor.strip(), "repository": args.contributor_repo},
+        "license": None,
+        "features": [],
+        "results": [{"gpu": args.gpu, "model": args.model, "measured_with": None, "decode_tok_s": None}],
+        "provenance": provenance,
+        "checkpoints": {args.model: checkpoint(args.model_repo, args.model_revision, read(run / "inputs.json")["model_manifest"])},
+    }
+    (target / "engine.json").write_text(json.dumps(engine_json, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({"export": str(target), "files": sum(p.is_file() for p in target.rglob("*")), "verified_seal_files": len(seal["files"])}))
 
 
@@ -175,12 +190,12 @@ if __name__ == "__main__":
     p.add_argument("--run", required=True)
     p.add_argument("--candidate", required=True)
     p.add_argument("--hub", required=True, help="crit-hub repository root")
-    p.add_argument("--gpu", required=True)
-    p.add_argument("--model", required=True, help="<model>@<encoding>, e.g. qwen3.8-27b@NVFP4")
+    p.add_argument("--gpu", required=True, help="GPU id the candidate was measured on, e.g. rtx5090")
+    p.add_argument("--model", required=True, help="model id, <model>@<encoding>, e.g. qwen3.8-27b@NVFP4")
     p.add_argument("--name", required=True, help="engine name describing its design, e.g. mtp6-cleanroom")
     p.add_argument("--model-repo", required=True, help="Hugging Face repository, e.g. unsloth/Qwen3.8-27B-NVFP4")
     p.add_argument("--model-revision", required=True, help="full commit of that repository the run used")
-    p.add_argument("--contributor", required=True, help="name credited in the README, e.g. your GitHub account")
+    p.add_argument("--contributor", required=True, help="your GitHub account or organization: credited in the README and the engine's folder, engines/<contributor>/<name>/")
     p.add_argument("--contributor-repo", required=True, help="https URL of your repository, shown under the README's title")
     p.add_argument("--readme", required=True)
     p.add_argument("--third-party", help="THIRD_PARTY.md to use when the sealed source has none")

@@ -1,0 +1,239 @@
+{
+  "engines": [
+    {
+      "path": "engines/crit-labs/assistant6-fp8qk",
+      "name": "assistant6-fp8qk",
+      "summary": "Gemma 4 31B with its stock assistant drafter, 6 drafts per round, and an FP8 KV cache",
+      "origin": "crit",
+      "contributor": {
+        "name": "crit-labs",
+        "repository": "https://github.com/crit-labs/crit"
+      },
+      "license": "Apache-2.0",
+      "features": [
+        "openai-api",
+        "tool-calls",
+        "speculative"
+      ],
+      "source": null,
+      "pairs": [
+        {
+          "gpu": "rtx5090",
+          "model": "gemma-4-31b@NVFP4",
+          "status": "measured",
+          "result": {
+            "gpu": "rtx5090",
+            "model": "gemma-4-31b@NVFP4",
+            "measured_with": "crit-eval-v4",
+            "decode_tok_s": 260.9,
+            "prefill_tok_s": 8326,
+            "ttft_ms": 116,
+            "context_tokens": 262144
+          },
+          "checkpoint": {
+            "repository": "nvidia/Gemma-4-31B-IT-NVFP4",
+            "revision": "4135a98a9b728a548947683219633b25682223ac"
+          }
+        }
+      ]
+    },
+    {
+      "path": "engines/crit-labs/mtp3-cpu-experts",
+      "name": "mtp3-cpu-experts",
+      "summary": "Nemotron 3.5 Super with routed experts in host RAM, part of each miss computed on the CPU, and 3-token MTP",
+      "origin": "crit",
+      "contributor": {
+        "name": "crit-labs",
+        "repository": "https://github.com/crit-labs/crit"
+      },
+      "license": "Apache-2.0",
+      "features": [
+        "openai-api",
+        "tool-calls",
+        "speculative"
+      ],
+      "source": null,
+      "pairs": [
+        {
+          "gpu": "rtx5090",
+          "model": "nemotron-3.5-super-120b-a12b@NVFP4",
+          "status": "measured",
+          "result": {
+            "gpu": "rtx5090",
+            "model": "nemotron-3.5-super-120b-a12b@NVFP4",
+            "measured_with": "crit-eval-v4",
+            "decode_tok_s": [
+              42.5,
+              44.6
+            ],
+            "prefill_tok_s": [
+              3035,
+              3152
+            ],
+            "ttft_ms": [
+              1780,
+              1830
+            ],
+            "context_tokens": 262144,
+            "host_ram_gib": 82
+          },
+          "checkpoint": {
+            "repository": "nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4",
+            "revision": "59b8721646c38111a242da18218859fb2b454322"
+          }
+        }
+      ]
+    },
+    {
+      "path": "engines/crit-labs/mtp3-expert-cache",
+      "name": "mtp3-expert-cache",
+      "summary": "Qwen3.8-Flash-Next with routed experts in host RAM behind a GPU expert cache, and 3-token MTP",
+      "origin": "crit",
+      "contributor": {
+        "name": "crit-labs",
+        "repository": "https://github.com/crit-labs/crit"
+      },
+      "license": "Apache-2.0",
+      "features": [
+        "openai-api",
+        "tool-calls",
+        "speculative"
+      ],
+      "source": null,
+      "pairs": [
+        {
+          "gpu": "rtx5090",
+          "model": "qwen3.8-flash-next@FP4-Local",
+          "status": "measured",
+          "result": {
+            "gpu": "rtx5090",
+            "model": "qwen3.8-flash-next@FP4-Local",
+            "measured_with": "crit-eval-v3",
+            "decode_tok_s": 84.5,
+            "prefill_tok_s": 1801,
+            "ttft_ms": 1610,
+            "context_tokens": 262144,
+            "host_ram_gib": 82
+          },
+          "checkpoint": {
+            "repository": "nvidia/Qwen3.8-Flash-Next-FP4-Local",
+            "revision": "b9ce18a6887e18c089fdea8509a33e63429a3300"
+          }
+        }
+      ]
+    },
+    {
+      "path": "engines/crit-labs/mtp7-fp8attn",
+      "name": "mtp7-fp8attn",
+      "summary": "Qwen3.8-27B with up to 7 MTP drafts per round and FP8 attention",
+      "origin": "crit",
+      "contributor": {
+        "name": "crit-labs",
+        "repository": "https://github.com/crit-labs/crit"
+      },
+      "license": "Apache-2.0",
+      "features": [
+        "openai-api",
+        "tool-calls",
+        "speculative"
+      ],
+      "source": null,
+      "pairs": [
+        {
+          "gpu": "rtx5090",
+          "model": "qwen3.8-27b@NVFP4",
+          "status": "measured",
+          "result": {
+            "gpu": "rtx5090",
+            "model": "qwen3.8-27b@NVFP4",
+            "measured_with": "crit-eval-v3",
+            "decode_tok_s": 215.7,
+            "prefill_tok_s": 8917,
+            "ttft_ms": 120,
+            "context_tokens": 262144
+          },
+          "checkpoint": {
+            "repository": "unsloth/Qwen3.8-27B-NVFP4",
+            "revision": "f0b7c9e722f5565102fff8481c99e4d86ae099c7"
+          }
+        }
+      ]
+    },
+    {
+      "path": "engines/giveen/dflash2-int8kv",
+      "name": "dflash2-int8kv",
+      "summary": "NInfer: Qwen3.8-27B QUASAR with DFlash2 block drafting, 9 tokens per round, and an INT8 KV cache",
+      "origin": "external",
+      "contributor": {
+        "name": "giveen",
+        "repository": "https://github.com/giveen/ninfer-ext"
+      },
+      "license": "Apache-2.0",
+      "features": [
+        "openai-api",
+        "speculative"
+      ],
+      "source": {
+        "repository": "https://github.com/giveen/ninfer-ext",
+        "revision": "7b586bde50747eac26d198530aa04d83216947a9"
+      },
+      "pairs": [
+        {
+          "gpu": "rtx5090",
+          "model": "qwen3.8-27b@NVFP4",
+          "status": "measured",
+          "result": {
+            "gpu": "rtx5090",
+            "model": "qwen3.8-27b@NVFP4",
+            "measured_with": "LocalMaxxing",
+            "decode_tok_s": 510.7,
+            "context_tokens": 196032
+          },
+          "checkpoint": {
+            "repository": "QUASAR-QAT/Qwen3.8-27B-QUASAR-NVFP4",
+            "revision": "4a22293aa6d1026844bc93a8727f1837e48acd89"
+          }
+        }
+      ]
+    },
+    {
+      "path": "engines/giveen/mtp3-host-experts",
+      "name": "mtp3-host-experts",
+      "summary": "NInfer: Qwen3.8-Flash-Next with routed experts in host RAM behind an LRU device cache, and 3-token MTP",
+      "origin": "external",
+      "contributor": {
+        "name": "giveen",
+        "repository": "https://github.com/giveen/ninfer-ext"
+      },
+      "license": "Apache-2.0",
+      "features": [
+        "openai-api",
+        "tool-calls",
+        "speculative"
+      ],
+      "source": {
+        "repository": "https://github.com/giveen/ninfer-ext",
+        "revision": "7b586bde50747eac26d198530aa04d83216947a9"
+      },
+      "pairs": [
+        {
+          "gpu": "rtx5090",
+          "model": "qwen3.8-flash-next@NVFP4",
+          "status": "measured",
+          "result": {
+            "gpu": "rtx5090",
+            "model": "qwen3.8-flash-next@NVFP4",
+            "measured_with": "LocalMaxxing",
+            "decode_tok_s": 140.9,
+            "context_tokens": 262144,
+            "host_ram_gib": 65
+          },
+          "checkpoint": {
+            "repository": "nvidia/Qwen3.8-Flash-Next-NVFP4",
+            "revision": "fc694b54fb0174e0913e6adf86691ef85a4ead47"
+          }
+        }
+      ]
+    }
+  ]
+}

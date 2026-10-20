@@ -4,6 +4,10 @@ Every engine README in crit-hub uses these sections, with these names, in this o
 to about 100 lines; put longer history, validation detail or design notes in a file under
 `engine/` and link it from the section it belongs to.
 
+An engine for one GPU and one model is titled `<Model> @ <encoding> · <GPU> · <engine name>`. An
+engine that runs several is titled `<engine name>`, its opening paragraph names the GPUs and model
+families it supports, and **Measured** has one table per GPU and model it was measured on.
+
 ````markdown
 # <Model> @ <encoding> · <GPU> · <engine name>
 
@@ -19,7 +23,7 @@ tested platform (OS, CUDA, GPU and memory, host RAM when it matters) and the con
 
 The checkpoint repository and revision, the architecture in one or two sentences, how the weights
 are used (as stored, or what is re-encoded and why), any drafter or extra download, and a pointer to
-model.json and `tools/verify_model.py`.
+engine.json and `tools/verify_model.py`.
 
 ## Design
 
