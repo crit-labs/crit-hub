@@ -1,0 +1,45 @@
+{
+  "origin": "external",
+  "contributor": {
+    "name": "giveen",
+    "repository": "https://github.com/giveen/ninfer-ext"
+  },
+  "source": {
+    "repository": "https://github.com/giveen/ninfer-ext",
+    "revision": "7b586bde50747eac26d198530aa04d83216947a9"
+  },
+  "artifact": {
+    "format": "ninfer-v3",
+    "converter": "ninfer-v3",
+    "recipe": "qwen3_8_flash_next_nvfp4",
+    "components": [
+      "text",
+      "vision",
+      "mtp"
+    ],
+    "repository": "https://huggingface.co/jabbatheduck/ninfer-ext-models/tree/main/qwen3.8-flash-next",
+    "sha256": "bed67cf5343dfc697b8ddd3f29052e5f8bda1a22eac9985f5c4c0ac58e064d0f",
+    "not_redistributed": "the artifact is published as parts with SHA256SUMS; it is not part of this submission"
+  },
+  "leaderboard": {
+    "site": "LocalMaxxing",
+    "output_tokens_per_second": 140.9,
+    "run": "https://www.localmaxxing.com/en/runs/cmvfjyuh70199rf011u8mvio2/qwen3-8-flash-next-nvfp4-rtx-5090-140-9-tps"
+  },
+  "toolchain": {
+    "os": "Ubuntu 26.10",
+    "cxx": "gcc 15.3.0",
+    "cmake": "4.3.4",
+    "ninja": "1.13.0",
+    "cuda": "13.3 (cuda_13.3.r13.3/compiler.38244171_0)",
+    "cuda_architectures": "120a",
+    "runtime_libraries": "libcudart and libcublasLt from the CUDA 13.3 toolkit; FFmpeg and libcurl from the system (not redistributed)"
+  },
+  "runtime_prerequisites": [
+    "Linux x86-64 with one 32 GB-class NVIDIA GPU (RTX 5090, sm_120a) and a CUDA 13.x driver/toolkit",
+    "About 65 GiB host RAM for pinned experts with --ngram-residency stream, and about 127 GB disk for the artifact",
+    "CMake 3.28+, Ninja, a C++23 host compiler",
+    "FFmpeg development libraries (libavformat, libavcodec, libavutil, libswscale) and libcurl 7.85+",
+    "Python 3.11 with numpy and torch for conversion; the runtime needs none"
+  ]
+}
