@@ -55,7 +55,7 @@ free memory) and what sets the speed.
 
 - Known issues first, then platform, memory and feature limits.
 
-## Build and serve
+## Build and chat
 
 Build commands, the checkpoint check, `crit serve` and, when the engine ships one, its standalone
 chat command.

@@ -82,7 +82,7 @@ processing is far below its compute ceiling.
 - Released crit 0.2.0 caps conversation text at 1,000,000 characters; the standalone prompt-file
   command avoids that limit. [engine/VALIDATION.md](engine/VALIDATION.md) lists the remaining limits.
 
-## Build and serve
+## Build and chat
 
 Start in the crit-hub root. Set WORK to a writable directory on the Linux filesystem and keep builds
 and checkpoints outside the repository. The native SDK is pinned to Core 0.1.0; Python text handling

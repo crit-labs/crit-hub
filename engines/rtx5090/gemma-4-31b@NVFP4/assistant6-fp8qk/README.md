@@ -83,7 +83,7 @@ round on chat up to 6.4 on the agent case.
 - Long prompts are bound by the quadratic full attention; P·V is still BF16.
 - top_k above 64 is refused.
 
-## Build and serve
+## Build and chat
 
 ```sh
 git clone https://github.com/crit-labs/crit && git -C crit checkout v0.2.1

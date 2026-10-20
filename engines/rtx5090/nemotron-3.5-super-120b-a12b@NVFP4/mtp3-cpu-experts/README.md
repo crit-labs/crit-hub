@@ -72,7 +72,7 @@ the speed, so decode depends on the CPU: other heavy programs on the PC slow it.
 - Speculative output is not bitwise equal to plain greedy (reported, not required).
 - Needs about 70 GB free in WSL while running; loading takes 1-2 minutes.
 
-## Build and serve
+## Build and chat
 
 ```sh
 git clone https://github.com/crit-labs/crit && git -C crit checkout v0.2.1

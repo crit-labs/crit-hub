@@ -96,4 +96,4 @@ slab, 16 base bytes and 4-bit offsets; U32 exception words override single scale
 
 ## Build
 
-Use the complete SDK, Python-environment and standalone-chat commands in [the engine entry](../README.md#build-and-serve). The native runtime uses Core 0.1.0; Python serving/text handling uses crit 0.2.0.
+Use the complete SDK, Python-environment and standalone-chat commands in [the engine entry](../README.md#build-and-chat). The native runtime uses Core 0.1.0; Python serving/text handling uses crit 0.2.0.

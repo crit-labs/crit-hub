@@ -2,7 +2,7 @@
 
 Runnable source of the `assistant6-fp8qk` engine (internal name g4) for Gemma-4-31B @ NVFP4 on the
 RTX 5090: a native CUDA library on crit Core 0.2.1 and the Python adapters that load it. The
-[engine README](../README.md) has the design, measurements, limits and the full build and serve
+[engine README](../README.md) has the design, measurements, limits and the full build and chat
 commands. Contributed by crit-labs · [crit-labs/crit](https://github.com/crit-labs/crit).
 
 | Path | What it is |

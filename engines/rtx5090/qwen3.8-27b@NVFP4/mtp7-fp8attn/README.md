@@ -76,7 +76,7 @@ many drafts get accepted: about 2.6 tokens per round on chat and 7.8 on the agen
 - The recorded GEMM table is for the RTX 5090; on other GPUs delete `gemm_table.txt` from the
   package (cuBLASLt's first heuristic is used) or re-measure it.
 
-## Build and serve
+## Build and chat
 
 ```sh
 git clone https://github.com/crit-labs/crit && git -C crit checkout v0.1.0
