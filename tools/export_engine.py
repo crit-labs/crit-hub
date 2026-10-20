@@ -66,6 +66,9 @@ def write_model(path, repository, revision, run_manifest):
 REPOSITORY = re.compile(r"https://[A-Za-z0-9.-]+(/[A-Za-z0-9_.~-]+)+/?")
 
 
+BUILT_WITH_CRIT = "> Built with [crit](https://github.com/crit-labs/crit): a sealed crit candidate, exported with `tools/export_engine.py`."
+
+
 def credit(text, name, repository):
     """The contributor's repository sits directly under the engine README's title."""
     lines = text.splitlines()
@@ -75,7 +78,7 @@ def credit(text, name, repository):
         return text
     shown = repository.split("://", 1)[1].split("/", 1)[1].rstrip("/")
     rest = "\n".join(lines[1:]).lstrip("\n")
-    return f"{lines[0]}\n\n> [!NOTE]\n> **Contributed by** {name} · [{shown}]({repository})\n\n{rest}\n"
+    return f"{lines[0]}\n\n> [!NOTE]\n> **Contributed by** {name} · [{shown}]({repository})\n>\n{BUILT_WITH_CRIT}\n\n{rest}\n"
 
 
 def export(args):
@@ -149,6 +152,7 @@ def export(args):
     text = "\n\n".join(f"{'=' * 72}\n{label}\n{'=' * 72}\n{path.read_text(encoding='utf-8')}" for label, path in licenses)
     (target / "LICENSES.txt").write_text(text + "\n", encoding="utf-8")
     provenance = {
+        "origin": "crit",
         "run_id": seal["run_id"],
         "candidate_id": args.candidate,
         "contributor": {"name": args.contributor.strip(), "repository": args.contributor_repo},
