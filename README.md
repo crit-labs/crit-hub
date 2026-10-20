@@ -137,7 +137,10 @@ crit-hub records where it is, what it targets and what it measured.
    under `provenance.source`, the exact checkpoint of every measured model, and the measured
    figures with `measured_with`. Figures measured with crit Eval (`"crit-eval-v4"`) are compared
    with every other engine's on the same protocol; anything else, such as your own benchmark or a
-   leaderboard run, is shown as your own report.
+   leaderboard run, is shown as your own report. An engine behind any OpenAI-compatible chat API
+   gets crit Eval figures without changes: Eval's
+   [server adapter](https://github.com/crit-labs/crit/blob/main/docs/eval/ADAPTER.md#engines-behind-a-server)
+   runs the speed cases against `/chat/completions`, as it does for crit's own engines behind `crit serve`.
 6. Name your source's license in the README's **Credits** section and in `engine.json`.
 7. `python -B tools/check_engines.py` passes for your folder, and `python -B tools/build_index.py`
    updates [browse/](browse/README.md); commit both.

@@ -65,8 +65,9 @@ people read.
   `prefill_tok_s`, `ttft_ms`, `context_tokens` and, when the engine keeps weights in host memory,
   `host_ram_gib`. A figure is a number, or `[low, high]` across runs, and must appear in the
   README as written there, for example `8,917` or `1.61 s`. **`measured_with`** names the
-  method: figures with the same crit Eval protocol, such as `crit-eval-v4`, are comparable across
-  engines; anything else is the contributor's own report.
+  method: figures under the same major version of the crit Eval protocol, such as `crit-eval-v4`
+  and `crit-eval-v4.1`, are comparable across engines; anything else is the contributor's own
+  report.
 - **`supports`** (optional) names further pairs the engine runs but nobody has measured yet. Each
   group pairs every GPU in `gpus` with every model in `models`.
 - **`provenance`**: for a crit engine the sealed run, candidate, hashes and toolchain the exporter
