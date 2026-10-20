@@ -98,6 +98,7 @@ Every working engine you add saves the next person from building it again.
 3. Document the measured workload, results, check coverage and known limits.
 4. [Credit your repository](#credit) directly under the README's title.
 5. Retain dependency credits and applicable license texts and notices.
+6. `python -B tools/check_engines.py` passes for your folder.
 
 Keep model weights, builds, binaries, development scripts and full experiment records
 outside the repository. The [.gitignore](.gitignore) uses a whitelist for published files.
@@ -140,6 +141,7 @@ crit-hub records where it is, what it targets and what it measured.
    ```
 
 7. Name your source's license in the README's **Credits** section.
+8. `python -B tools/check_engines.py` passes for your folder.
 
 To update an external engine, change the pinned commit, the measurements and anything else the new
 commit changes in one change.
