@@ -2,7 +2,7 @@
 
 # Browse engines
 
-Pick your GPU, then your model, then its quant. Each quant's page lists every engine that runs that model and quant, built for exactly it or for a whole model family, and links its folder.
+Pick your GPU, then the model, then its checkpoint: the Hugging Face repository an engine runs, such as a quantization or finetune of the model. Each checkpoint's page lists every engine that runs it and links its folder.
 
 | GPU | Models |
 | --- | ---: |

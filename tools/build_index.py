@@ -1,9 +1,11 @@
-"""Generate browse/, the GPU -> model -> quant -> engines index, from every engine's engine.json.
+"""Generate browse/, the GPU -> model -> checkpoint -> engines index, from every engine's engine.json.
 
-browse/README.md lists the GPUs, browse/<gpu>/README.md the models with engines on that GPU,
-browse/<gpu>/<model>/README.md that model's quants on it, and browse/<gpu>/<model>/<quant>/README.md
-every engine that runs that model id (<model>@<quant>): measured on it, or listed in a supports
-group and not measured yet. browse/index.json carries each engine's card,
+Models and checkpoints are Hugging Face's: a model is the root of a pinned checkpoint's lineage, such
+as Qwen/Qwen3.8-27B, and its checkpoints are the pinned repositories that derive from it, such as
+unsloth/Qwen3.8-27B-NVFP4. browse/README.md lists the GPUs, browse/<gpu>/README.md the models with
+engines on that GPU, browse/<gpu>/<model>/README.md that model's checkpoints with how each derives
+from it, and browse/<gpu>/<model>/<checkpoint>/README.md every engine that runs that checkpoint:
+measured on it, or listed in a supports group and not measured yet. browse/index.json carries each engine's card,
 pinned source and pairs for the website and coding agents. Each pair keeps the model id
 (qwen3.8-27b@NVFP4) and adds it split into model_name and quant, and the lab and bits Hugging Face
 gives its checkpoint (below). When git history is available the
@@ -20,6 +22,7 @@ again, delete its entry and refresh. Checks and builds read the cache alone.
 """
 import argparse
 import json
+import posixpath
 import subprocess
 import sys
 from datetime import date
@@ -101,36 +104,77 @@ def load_engines(hub):
     return engines
 
 
-def rows(engines, gpu, model):
-    """The engines that run one pair: measured first, then supported, each by name."""
-    found = [(e, p) for e in engines for p in e["pairs"] if (p["gpu"], p["model"]) == (gpu, model)]
-    return sorted(found, key=lambda ep: (ep[1]["status"] != "measured", ep[0]["name"], ep[0]["path"]))
+def link(page, target):
+    """A relative link from one browse/ page to a repository path."""
+    return posixpath.relpath(target, posixpath.dirname(page))
 
 
-def pair_page(gpu, model, found):
-    name, quant = model.split("@")
-    checkpoints = sorted({p["checkpoint"]["repository"] for _, p in found if p["status"] == "measured"})
-    several = len(checkpoints) > 1
-    lines = [f"# {model} · {gpu}", "",
-             f"[crit-hub](../../../../README.md) › [browse](../../../README.md) › [{gpu}](../../README.md) › "
-             f"[{name}](../README.md) › {quant}", ""]
-    if checkpoints:
-        links = " and ".join(f"[`{c}`](https://huggingface.co/{c})" for c in checkpoints)
-        lines += [f"Measured on {links}. Each engine's engine.json pins the revision and the SHA-256 of every "
-                  "checkpoint file.", ""]
-    lines += ["| Engine | Summary | Origin | Contributor |" + (" Checkpoint |" if several else "")
-              + " Decode | Prefill | First token | Context | Host RAM | Measured with | Status |",
-              "| --- | --- | --- | --- |" + (" --- |" if several else "") + " ---: | ---: | ---: | ---: | ---: | --- | --- |"]
+def model_of(pair):
+    """The Hugging Face model a pair belongs to: its checkpoint's root, or its own id unplaced."""
+    return pair["hf"]["root"]["repository"] if pair.get("hf") else pair["model_name"]
+
+
+def checkpoint_of(pair):
+    return pair["checkpoint"]["repository"] if "checkpoint" in pair else pair["model"]
+
+
+def tree(engines):
+    """{gpu: {model: {checkpoint: [(engine, pair)]}}}, each level sorted; within a checkpoint
+    measured engines first, then supported, each by name."""
+    grown = {}
+    for engine in engines:
+        for pair in engine["pairs"]:
+            grown.setdefault(pair["gpu"], {}).setdefault(model_of(pair), {}).setdefault(checkpoint_of(pair), []).append((engine, pair))
+    order = lambda ep: (ep[1]["status"] != "measured", ep[0]["name"], ep[0]["path"])
+    return {gpu: {model: {checkpoint: sorted(grown[gpu][model][checkpoint], key=order)
+                          for checkpoint in sorted(grown[gpu][model], key=str.lower)}
+                  for model in sorted(grown[gpu], key=str.lower)}
+            for gpu in sorted(grown)}
+
+
+def counts(found):
+    return ", ".join(f"{n} {status}" for status in ("measured", "supported")
+                     if (n := sum(p["status"] == status for _, p in found)))
+
+
+def hugging_face(repository):
+    return f"[`{repository}`](https://huggingface.co/{repository})"
+
+
+def derivation(pair):
+    """How a checkpoint derives from its model: "quantized", or "quantized from google/gemma-4-31B-it"
+    when it derives from the model through another one."""
+    hf = pair.get("hf")
+    if not hf or not hf["lineage"]:
+        return "the model itself" if hf else "–"
+    relation = hf["relation"] or "derived"
+    return relation if len(hf["lineage"]) == 1 else f"{relation} from `{hf['lineage'][0]['repository']}`"
+
+
+def checkpoint_page(page, gpu, model, checkpoint, found):
+    first = found[0][1]
+    lines = [f"# {checkpoint} · {gpu}", "",
+             f"[crit-hub]({link(page, 'README.md')}) › [browse]({link(page, 'browse/README.md')}) › "
+             f"[{gpu}]({link(page, f'browse/{gpu}/README.md')}) › [{model}]({link(page, f'browse/{gpu}/{model}/README.md')}) › "
+             f"{checkpoint}", ""]
+    if first.get("hf"):
+        lineage = first["hf"]["lineage"]
+        steps = [f"{lineage[0]['relation'] or 'derived'} from {hugging_face(lineage[0]['repository'])}"] if lineage else ["the model itself"]
+        steps += [f"a {step['relation'] or 'derivative'} of {hugging_face(step['repository'])}" for step in lineage[1:]]
+        lines += [f"{hugging_face(checkpoint)} on Hugging Face: {', '.join(steps)}. Each engine's engine.json pins the "
+                  "revision and, where it measured, the SHA-256 of every checkpoint file.", ""]
+    lines += ["| Engine | Model id | Summary | Origin | Contributor | Decode | Prefill | First token | Context | Host RAM "
+              "| Measured with | Status |",
+              "| --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- |"]
     for engine, pair in found:
         result = pair.get("result", {})
         contributor = engine["contributor"]
-        checkpoint = [f"`{pair['checkpoint']['repository']}`" if "checkpoint" in pair else "–"] if several else []
         lines.append("| " + " | ".join([
-            f"[{engine['name']}](../../../../{engine['path']}/)",
+            f"[{engine['name']}]({link(page, engine['path'])}/)",
+            f"`{pair['model']}`",
             engine["summary"],
             "crit" if engine["origin"] == "crit" else "external, not reviewed",
             f"[{contributor['name']}]({contributor['repository']})",
-            *checkpoint,
             figure(result.get("decode_tok_s"), "tok/s"),
             figure(result.get("prefill_tok_s"), "tok/s"),
             ttft(result.get("ttft_ms")),
@@ -142,48 +186,47 @@ def pair_page(gpu, model, found):
     return HEADER + "\n".join(lines + ["", NOTE, ""])
 
 
-def counts(found):
-    return ", ".join(f"{n} {status}" for status in ("measured", "supported")
-                     if (n := sum(p["status"] == status for _, p in found)))
-
-
-def quants(models):
-    """Model ids grouped by model name: {name: [ids]}, both sorted."""
-    grouped = {}
-    for model in models:
-        grouped.setdefault(model.split("@")[0], []).append(model)
-    return grouped
-
-
-def gpu_page(gpu, models, engines):
-    lines = [f"# {gpu}", "", f"[crit-hub](../../README.md) › [browse](../README.md) › {gpu}", "",
-             "| Model | Lab | Quants | Engines |", "| --- | --- | ---: | --- |"]
-    for name, ids in quants(models).items():
-        found = [ep for model in ids for ep in rows(engines, gpu, model)]
-        lab = found[0][1].get("lab") or "–"
-        lines.append(f"| [{name}]({name}/README.md) | {lab} | {len(ids)} | {counts(found)} |")
+def model_page(page, gpu, model, checkpoints):
+    lines = [f"# {model} · {gpu}", "",
+             f"[crit-hub]({link(page, 'README.md')}) › [browse]({link(page, 'browse/README.md')}) › "
+             f"[{gpu}]({link(page, f'browse/{gpu}/README.md')}) › {model}", ""]
+    first = next(iter(checkpoints.values()))[0][1]
+    if first.get("hf"):
+        lines += [f"{hugging_face(model)} on Hugging Face, by {first['hf']['root']['lab']['name']}.", ""]
+    lines += ["| Checkpoint | Publisher | Relation | Bits | Size | Engines |", "| --- | --- | --- | ---: | ---: | --- |"]
+    for checkpoint, found in checkpoints.items():
+        hf = found[0][1].get("hf") or {}
+        bits = (hf.get("quantization") or {}).get("bits")
+        size = hf.get("size_bytes")
+        lines.append("| " + " | ".join([
+            f"[{checkpoint}]({link(page, f'browse/{gpu}/{model}/{checkpoint}/README.md')})",
+            hf["publisher"]["name"] if hf else "–",
+            derivation(found[0][1]),
+            f"{bits}-bit" if bits else "–",
+            f"{size / 1e9:.1f} GB" if size else "–",
+            counts(found),
+        ]) + " |")
     return HEADER + "\n".join(lines + [""])
 
 
-def model_page(gpu, name, ids, engines):
-    lines = [f"# {name} · {gpu}", "",
-             f"[crit-hub](../../../README.md) › [browse](../../README.md) › [{gpu}](../README.md) › {name}", "",
-             "| Quant | Bits | Format | Engines |", "| --- | ---: | --- | --- |"]
-    for model in ids:
-        quant = model.split("@")[1]
-        found = rows(engines, gpu, model)
-        pair = found[0][1]
-        bits = f"{pair['bits']}-bit" if pair.get("bits") else "–"
-        lines.append(f"| [{quant}]({quant}/README.md) | {bits} | {pair.get('format') or '–'} | {counts(found)} |")
+def gpu_page(page, gpu, models):
+    lines = [f"# {gpu}", "", f"[crit-hub]({link(page, 'README.md')}) › [browse]({link(page, 'browse/README.md')}) › {gpu}", "",
+             "| Model | Lab | Checkpoints | Engines |", "| --- | --- | ---: | --- |"]
+    for model, checkpoints in models.items():
+        found = [ep for eps in checkpoints.values() for ep in eps]
+        hf = found[0][1].get("hf")
+        lab = hf["root"]["lab"]["name"] if hf else "–"
+        lines.append(f"| [{model}]({link(page, f'browse/{gpu}/{model}/README.md')}) | {lab} | {len(checkpoints)} | {counts(found)} |")
     return HEADER + "\n".join(lines + [""])
 
 
 def top_page(listed):
     lines = ["# Browse engines", "",
-             "Pick your GPU, then your model, then its quant. Each quant's page lists every engine that runs "
-             "that model and quant, built for exactly it or for a whole model family, and links its folder.", "",
+             "Pick your GPU, then the model, then its checkpoint: the Hugging Face repository an engine runs, "
+             "such as a quantization or finetune of the model. Each checkpoint's page lists every engine that "
+             "runs it and links its folder.", "",
              "| GPU | Models |", "| --- | ---: |"]
-    lines += [f"| [{gpu}]({gpu}/README.md) | {len(quants(models))} |" for gpu, models in listed.items()]
+    lines += [f"| [{gpu}]({gpu}/README.md) | {len(models)} |" for gpu, models in listed.items()]
     lines += ["", "No engine for your GPU or model yet? Build one with [crit](https://github.com/crit-labs/crit) "
               "and [contribute](../README.md#contributing) it."]
     return HEADER + "\n".join(lines + [""])
@@ -215,16 +258,17 @@ def build(hub, refresh=False):
     """Every file browse/ should hold, as {path: text}."""
     engines = load_engines(hub)
     cache = place(hub, engines, refresh)
-    listed = {}
-    for gpu, model in sorted({(p["gpu"], p["model"]) for e in engines for p in e["pairs"]}):
-        listed.setdefault(gpu, []).append(model)
+    listed = tree(engines)
     files = {"browse/README.md": top_page(listed)}
     for gpu, models in listed.items():
-        files[f"browse/{gpu}/README.md"] = gpu_page(gpu, models, engines)
-        for name, ids in quants(models).items():
-            files[f"browse/{gpu}/{name}/README.md"] = model_page(gpu, name, ids, engines)
-            for model in ids:
-                files[f"browse/{gpu}/{name}/{model.split('@')[1]}/README.md"] = pair_page(gpu, model, rows(engines, gpu, model))
+        page = f"browse/{gpu}/README.md"
+        files[page] = gpu_page(page, gpu, models)
+        for model, checkpoints in models.items():
+            page = f"browse/{gpu}/{model}/README.md"
+            files[page] = model_page(page, gpu, model, checkpoints)
+            for checkpoint, found in checkpoints.items():
+                page = f"browse/{gpu}/{model}/{checkpoint}/README.md"
+                files[page] = checkpoint_page(page, gpu, model, checkpoint, found)
     files["browse/index.json"] = json.dumps({"engines": engines}, indent=2, ensure_ascii=False) + "\n"
     files[CACHE] = json.dumps({"checkpoints": cache}, indent=2, ensure_ascii=False) + "\n"
     return files

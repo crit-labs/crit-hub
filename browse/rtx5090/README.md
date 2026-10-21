@@ -4,9 +4,9 @@
 
 [crit-hub](../../README.md) › [browse](../README.md) › rtx5090
 
-| Model | Lab | Quants | Engines |
+| Model | Lab | Checkpoints | Engines |
 | --- | --- | ---: | --- |
-| [gemma-4-31b](gemma-4-31b/README.md) | Google | 1 | 1 measured |
-| [nemotron-3.5-super-120b-a12b](nemotron-3.5-super-120b-a12b/README.md) | NVIDIA | 1 | 1 measured |
-| [qwen3.8-27b](qwen3.8-27b/README.md) | Qwen | 1 | 2 measured |
-| [qwen3.8-flash-next](qwen3.8-flash-next/README.md) | Qwen | 2 | 2 measured |
+| [google/gemma-4-31B](google/gemma-4-31B/README.md) | Google | 1 | 1 measured |
+| [nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16](nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16/README.md) | NVIDIA | 1 | 1 measured |
+| [Qwen/Qwen3.8-27B](Qwen/Qwen3.8-27B/README.md) | Qwen | 2 | 2 measured |
+| [Qwen/Qwen3.8-Flash-Next](Qwen/Qwen3.8-Flash-Next/README.md) | Qwen | 2 | 2 measured |
