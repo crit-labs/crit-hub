@@ -1,4 +1,0 @@
-{
-  "FP4-Local": {"bits": 4, "format": "NVIDIA NVFP4 with quantization-aware distillation (QAD), attention in MXFP8"},
-  "NVFP4": {"bits": 4, "format": "NVIDIA FP4 (NVFP4)"}
-}

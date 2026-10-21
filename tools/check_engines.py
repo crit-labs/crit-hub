@@ -2,12 +2,11 @@
 
 Each engine lives in engines/<owner>/<name>/, where <owner> is its contributor, and describes
 itself in engine.json: summary, origin, contributor, license, features, the GPU/model pairs it
-measured (results) or supports, its provenance and the exact checkpoint of every measured model.
+measured (results) or supports, its provenance and the exact Hugging Face checkpoint of every model
+it measures or supports, which browse/hf.json must already place in Hugging Face's model tree.
 A crit engine needs its sealed-run provenance and the built-with-crit line under its credit.
 An external engine holds only README.md and engine.json, pins its source to a full commit SHA and
-opens its README with the external-engine notice. Every model an engine lists needs an entry in
-models.json at the repository root, keyed by the model id without its encoding, naming the lab that
-released it and its family, and its encoding one in quants.json, naming its bits and format.
+opens its README with the external-engine notice.
 """
 import argparse
 import json
@@ -93,16 +92,41 @@ def check_results(engine, text):
         for key in ("context_tokens", "host_ram_gib"):
             if key in result and not (isinstance(result[key], int) and not isinstance(result[key], bool) and result[key] > 0):
                 problems.append(f"engine.json result {pair}: {key} is a positive whole number")
+    return problems
+
+
+def check_checkpoints(engine, cache):
+    """Every measured or supported model pins its Hugging Face checkpoint, measured ones with the
+    hashes of its files, and browse/hf.json already places each one in Hugging Face's tree."""
     checkpoints = engine.get("checkpoints")
     if not isinstance(checkpoints, dict):
-        return problems + ["engine.json checkpoints pins the exact checkpoint of every measured model, keyed by model"]
-    measured = {model for _, model in seen}
+        return ["engine.json checkpoints pins the exact checkpoint of every measured or supported model, keyed by model"]
+    measured = {str(r.get("model")) for r in engine.get("results") or [] if isinstance(r, dict)}
+    supported = {str(m) for group in engine.get("supports") or [] if isinstance(group, dict)
+                 and isinstance(group.get("models"), list) for m in group["models"]} - measured
+    problems = []
     for model in sorted(measured - set(checkpoints)):
         problems.append(f"engine.json checkpoints needs the checkpoint {model} was measured on")
-    for model in sorted(set(checkpoints) - measured):
-        problems.append(f"engine.json checkpoints lists {model}, which no result measured")
-    for model in sorted(set(checkpoints) & measured):
-        problems += check_checkpoint(model, checkpoints[model])
+    for model in sorted(supported - set(checkpoints)):
+        problems.append(f'engine.json checkpoints needs the Hugging Face checkpoint {model} runs: '
+                        f'"{model}": {{"repository": "<owner>/<name>", "revision": "<40-character commit>"}}')
+    for model in sorted(set(checkpoints) - measured - supported):
+        problems.append(f"engine.json checkpoints lists {model}, which it neither measures nor supports")
+    for model in sorted(set(checkpoints) & (measured | supported)):
+        checkpoint = checkpoints[model]
+        if model in measured:
+            problems += check_checkpoint(model, checkpoint)
+        elif not (isinstance(checkpoint, dict) and isinstance(checkpoint.get("repository"), str) and checkpoint["repository"]):
+            problems.append(f"engine.json checkpoints[{model}] needs the Hugging Face repository and revision")
+            continue
+        if not isinstance(checkpoint, dict) or not isinstance(checkpoint.get("repository"), str):
+            continue
+        revision = str(checkpoint.get("revision"))
+        if not COMMIT.fullmatch(revision):
+            problems.append(f"engine.json checkpoints[{model}] revision must be the full 40-character commit")
+        elif f"{checkpoint['repository']}@{revision}" not in cache:
+            problems.append(f"browse/hf.json has no entry for {checkpoint['repository']} at {revision[:12]}; run "
+                            "python -B tools/build_index.py --refresh to read it from Hugging Face, and commit browse/")
     return problems
 
 
@@ -173,56 +197,7 @@ def check_external(folder, provenance, head, text):
     return problems
 
 
-def check_tables(engine, models, quants):
-    """Every listed model has a models.json entry and every encoding a quants.json entry."""
-    listed = {str(r.get("model")) for r in engine.get("results", []) if isinstance(r, dict)}
-    listed |= {str(m) for group in engine.get("supports", []) if isinstance(group, dict)
-               for m in group.get("models", []) if isinstance(group.get("models"), list)}
-    listed = [m.split("@") for m in listed if MODEL.fullmatch(m)]
-    problems = []
-    for name in sorted({base for base, _ in listed} - set(models)):
-        problems.append(f'models.json has no entry for {name}; add "{name}": {{"lab": "<who released it>", '
-                        f'"family": "<model family>"}} to models.json at the repository root')
-    for name in sorted({encoding for _, encoding in listed} - set(quants)):
-        problems.append(f'quants.json has no entry for {name}; add "{name}": {{"bits": <bits per weight, e.g. 4>, '
-                        f'"format": "<what the encoding is>"}} to quants.json at the repository root')
-    return problems
-
-
-def load_table(hub, name, key, fields, valid):
-    """A lookup table at the repository root: {key: {field: value}}, every entry valid."""
-    path = Path(hub) / name
-    if not path.is_file():
-        raise SystemExit(f"{name} is missing at the repository root")
-    try:
-        table = json.loads(path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as e:
-        raise SystemExit(f"invalid JSON in {name}: {e}")
-    if not isinstance(table, dict):
-        raise SystemExit(f"{name} maps each {key} to its {' and '.join(fields)}")
-    bad = [k for k, entry in table.items() if not isinstance(entry, dict) or set(entry) != set(fields) or not valid(k, entry)]
-    if bad:
-        raise SystemExit(f"{name} entries are \"<{key}>\": {{" + ", ".join(f'\"{f}\": ...' for f in fields) + "}: "
-                         + ", ".join(bad))
-    return table
-
-
-def load_models(hub):
-    """models.json: {model id without encoding: {"lab": ..., "family": ...}}."""
-    return load_table(hub, "models.json", "model id without encoding", ("lab", "family"),
-                      lambda k, e: re.fullmatch(r"[a-z0-9][a-z0-9.-]*", k)
-                      and all(isinstance(v, str) and v.strip() for v in e.values()))
-
-
-def load_quants(hub):
-    """quants.json: {encoding: {"bits": whole bits per weight, "format": ...}}."""
-    return load_table(hub, "quants.json", "encoding", ("bits", "format"),
-                      lambda k, e: re.fullmatch(r"[A-Za-z0-9.+-]+", k)
-                      and isinstance(e["bits"], int) and not isinstance(e["bits"], bool) and 1 <= e["bits"] <= 32
-                      and isinstance(e["format"], str) and e["format"].strip())
-
-
-def check(folder, models, quants):
+def check(folder, cache):
     if not NAME.fullmatch(folder.name) or not NAME.fullmatch(folder.parent.name):
         return ["engine folder names use only letters, digits, '.', '_' and '-'"]
     for name in ("README.md", "engine.json"):
@@ -239,7 +214,7 @@ def check(folder, models, quants):
     if not lines or not lines[0].startswith("# "):
         return ["README.md must open with a '# ' title"]
     head = lines[1:12]
-    problems = check_card(folder, engine) + check_results(engine, text) + check_supports(engine) + check_tables(engine, models, quants)
+    problems = check_card(folder, engine) + check_results(engine, text) + check_supports(engine) + check_checkpoints(engine, cache)
     provenance = engine.get("provenance") if isinstance(engine.get("provenance"), dict) else {}
     origin = engine.get("origin")
     if origin == "crit":
@@ -252,11 +227,12 @@ def check(folder, models, quants):
 
 
 def main(hub):
-    models, quants = load_models(hub), load_quants(hub)
+    path = Path(hub) / "browse" / "hf.json"
+    cache = json.loads(path.read_text(encoding="utf-8")).get("checkpoints", {}) if path.is_file() else {}
     folders = sorted(p for p in (Path(hub) / "engines").glob("*/*") if p.is_dir())
     failed = 0
     for folder in folders:
-        problems = check(folder, models, quants)
+        problems = check(folder, cache)
         name = folder.relative_to(Path(hub) / "engines").as_posix()
         if problems:
             failed += 1

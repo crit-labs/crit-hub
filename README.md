@@ -102,12 +102,13 @@ Every working engine you add saves the next person from building it again.
 3. Document the measured workload, results, check coverage and known limits.
 4. Fill in [engine.json](engines/README.md#engine-json): the summary, features, the source's license
    and, for every GPU and model, the measured figures with `measured_with` naming the crit Eval
-   protocol, for example `crit-eval-v5`. A model new to crit-hub also needs its lab and family in
-   [models.json](models.json), and a new quant its bits and format in [quants.json](quants.json).
+   protocol, for example `crit-eval-v5`, and the Hugging Face checkpoint of every model it runs
+   under `checkpoints`. Hugging Face tells crit-hub the rest: base model, lab, quantization.
 5. [Credit your repository](#credit) directly under the README's title.
 6. Retain dependency credits and applicable license texts and notices.
-7. `python -B tools/check_engines.py` passes for your folder, and `python -B tools/build_index.py`
-   updates [browse/](browse/README.md); commit both.
+7. `python -B tools/build_index.py --refresh` reads your checkpoints from Hugging Face and updates
+   [browse/](browse/README.md), and `python -B tools/check_engines.py` passes for your folder; commit
+   both.
 
 Keep model weights, builds, binaries, development scripts and full experiment records
 outside the repository. The [.gitignore](.gitignore) uses a whitelist for published files.
@@ -142,12 +143,12 @@ crit-hub records where it is, what it targets and what it measured.
    gets crit Eval figures without changes:
    [`crit eval run --url`](https://github.com/crit-labs/crit/blob/main/docs/eval/README.md#engines-behind-a-server)
    sends every prompt to `/chat/completions` and scores quality on the engine's own replies, as it
-   does for crit's own engines behind `crit serve`. A model new to crit-hub also needs its lab and
-   family in [models.json](models.json), and a new quant its bits and format in
-   [quants.json](quants.json).
+   does for crit's own engines behind `crit serve`. Pin the Hugging Face checkpoint of every model it
+   runs under `checkpoints`; Hugging Face tells crit-hub the rest: base model, lab, quantization.
 6. Name your source's license in the README's **Credits** section and in `engine.json`.
-7. `python -B tools/check_engines.py` passes for your folder, and `python -B tools/build_index.py`
-   updates [browse/](browse/README.md); commit both.
+7. `python -B tools/build_index.py --refresh` reads your checkpoints from Hugging Face and updates
+   [browse/](browse/README.md), and `python -B tools/check_engines.py` passes for your folder; commit
+   both.
 
 To update an external engine, change the pinned commit, the measurements and anything else the new
 commit changes in one change.

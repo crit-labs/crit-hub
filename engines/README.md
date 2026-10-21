@@ -73,16 +73,14 @@ people read.
 - **`provenance`**: for a crit engine the sealed run, candidate, hashes and toolchain the exporter
   records; for an external engine `source` (`repository` and the 40-character `revision`), the
   toolchain and runtime prerequisites.
-- **`checkpoints`** pins the exact checkpoint of every measured model: Hugging Face `repository`,
-  `revision`, and `path`, `bytes` and `sha256` of each file.
+- **`checkpoints`** pins the exact Hugging Face checkpoint of every model the engine measures or
+  supports: `repository` and the 40-character commit `revision`, and for a measured model the
+  `path`, `bytes` and `sha256` of each file. crit-hub reads the checkpoint's base model, lab and
+  quantization from Hugging Face (`tools/build_index.py --refresh`, kept in browse/hf.json), so a
+  checkpoint whose model card names its `base_model` lands under the right model by itself.
 
 A GPU id is the card in lowercase, such as `rtx5090`; a model id is the model in lowercase and its
 encoding, such as `qwen3.8-27b@NVFP4`. Reuse the ids already in [browse/](../browse/README.md) so an
-engine lands on the same page as the others for that GPU and model. Every model needs an entry in
-[models.json](../models.json), keyed by its id without the encoding, naming the lab that released it
-and its family, such as `"qwen3.8-27b": {"lab": "Alibaba", "family": "Qwen"}`, and every encoding
-(the quant after `@`) an entry in [quants.json](../quants.json) with its bits per weight and format,
-such as `"NVFP4": {"bits": 4, "format": "NVIDIA FP4 (NVFP4)"}`; `tools/check_engines.py` fails
-without them.
+engine lands on the same page as the others for that GPU and model.
 
 To add an engine, follow [Contributing](../README.md#contributing).

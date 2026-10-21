@@ -8,5 +8,5 @@
 | --- | --- | ---: | --- |
 | [gemma-4-31b](gemma-4-31b/README.md) | Google | 1 | 1 measured |
 | [nemotron-3.5-super-120b-a12b](nemotron-3.5-super-120b-a12b/README.md) | NVIDIA | 1 | 1 measured |
-| [qwen3.8-27b](qwen3.8-27b/README.md) | Alibaba | 1 | 2 measured |
-| [qwen3.8-flash-next](qwen3.8-flash-next/README.md) | Alibaba | 2 | 2 measured |
+| [qwen3.8-27b](qwen3.8-27b/README.md) | Qwen | 1 | 2 measured |
+| [qwen3.8-flash-next](qwen3.8-flash-next/README.md) | Qwen | 2 | 2 measured |

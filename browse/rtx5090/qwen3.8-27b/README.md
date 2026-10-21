@@ -6,4 +6,4 @@
 
 | Quant | Bits | Format | Engines |
 | --- | ---: | --- | --- |
-| [NVFP4](NVFP4/README.md) | 4-bit | NVIDIA FP4 (NVFP4) | 2 measured |
+| [NVFP4](NVFP4/README.md) | 4-bit | – | 2 measured |

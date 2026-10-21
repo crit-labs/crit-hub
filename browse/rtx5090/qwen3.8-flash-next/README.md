@@ -6,5 +6,5 @@
 
 | Quant | Bits | Format | Engines |
 | --- | ---: | --- | --- |
-| [FP4-Local](FP4-Local/README.md) | 4-bit | NVIDIA NVFP4 with quantization-aware distillation (QAD), attention in MXFP8 | 1 measured |
-| [NVFP4](NVFP4/README.md) | 4-bit | NVIDIA FP4 (NVFP4) | 1 measured |
+| [FP4-Local](FP4-Local/README.md) | 4-bit | – | 1 measured |
+| [NVFP4](NVFP4/README.md) | 4-bit | – | 1 measured |

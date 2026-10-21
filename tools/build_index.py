@@ -5,8 +5,8 @@ browse/<gpu>/<model>/README.md that model's quants on it, and browse/<gpu>/<mode
 every engine that runs that model id (<model>@<quant>): measured on it, or listed in a supports
 group and not measured yet. browse/index.json carries each engine's card,
 pinned source and pairs for the website and coding agents. Each pair keeps the model id
-(qwen3.8-27b@NVFP4) and adds it split into model_name and quant, the model's lab and family from
-models.json and the quant's bits and format from quants.json. When git history is available the
+(qwen3.8-27b@NVFP4) and adds it split into model_name and quant, and the lab and bits Hugging Face
+gives its checkpoint (below). When git history is available the
 engine's dates as YYYY-MM-DD: "added", the commit that added its engine.json, and "updated", the
 last commit that changed its folder (today while it has uncommitted changes); null without history,
 as in a shallow clone. --check fails when browse/ is out of date instead of writing it; it ignores
@@ -74,17 +74,9 @@ def dates(hub, folder):
 
 
 def load_engines(hub):
-    def table(name):
-        path = hub / name
-        return json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
-
-    models, quants = table("models.json"), table("quants.json")
-
     def model(name):
         base, encoding = name.split("@")
-        entry, quant = models.get(base, {}), quants.get(encoding, {})
-        return {"model": name, "model_name": base, "quant": encoding, "lab": entry.get("lab"),
-                "family": entry.get("family"), "bits": quant.get("bits"), "format": quant.get("format")}
+        return {"model": name, "model_name": base, "quant": encoding}
 
     engines = []
     for folder in sorted(p for p in (hub / "engines").glob("*/*") if p.is_dir()):
@@ -103,7 +95,8 @@ def load_engines(hub):
             "updated": updated,
             "pairs": [{"gpu": g, **model(m), "status": "measured", "result": r, "checkpoint": checkpoints[m]}
                       for (g, m), r in sorted(measured.items())]
-                     + [{"gpu": g, **model(m), "status": "supported"} for g, m in supported],
+                     + [{"gpu": g, **model(m), "status": "supported",
+                         **({"checkpoint": checkpoints[m]} if m in checkpoints else {})} for g, m in supported],
         })
     return engines
 
@@ -116,7 +109,7 @@ def rows(engines, gpu, model):
 
 def pair_page(gpu, model, found):
     name, quant = model.split("@")
-    checkpoints = sorted({p["checkpoint"]["repository"] for _, p in found if "checkpoint" in p})
+    checkpoints = sorted({p["checkpoint"]["repository"] for _, p in found if p["status"] == "measured"})
     several = len(checkpoints) > 1
     lines = [f"# {model} · {gpu}", "",
              f"[crit-hub](../../../../README.md) › [browse](../../../README.md) › [{gpu}](../../README.md) › "
@@ -213,6 +206,8 @@ def place(hub, engines, refresh):
         for pair in engine["pairs"]:
             checkpoint = pair.get("checkpoint")
             pair["hf"] = cache.get(f"{checkpoint['repository']}@{checkpoint['revision']}") if checkpoint else None
+            pair["lab"] = pair["hf"]["root"]["lab"]["name"] if pair["hf"] else None
+            pair["bits"] = (pair["hf"]["quantization"] or {}).get("bits") if pair["hf"] else None
     return {key: cache[key] for key in pinned if key in cache}
 
 
