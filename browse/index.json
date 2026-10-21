@@ -16,6 +16,8 @@
         "speculative"
       ],
       "source": null,
+      "added": "2026-10-20",
+      "updated": "2026-10-20",
       "pairs": [
         {
           "gpu": "rtx5090",
@@ -53,6 +55,8 @@
         "speculative"
       ],
       "source": null,
+      "added": "2026-10-20",
+      "updated": "2026-10-20",
       "pairs": [
         {
           "gpu": "rtx5090",
@@ -100,6 +104,8 @@
         "speculative"
       ],
       "source": null,
+      "added": "2026-10-20",
+      "updated": "2026-10-20",
       "pairs": [
         {
           "gpu": "rtx5090",
@@ -138,6 +144,8 @@
         "speculative"
       ],
       "source": null,
+      "added": "2026-10-20",
+      "updated": "2026-10-20",
       "pairs": [
         {
           "gpu": "rtx5090",
@@ -177,6 +185,8 @@
         "repository": "https://github.com/giveen/ninfer-ext",
         "revision": "7b586bde50747eac26d198530aa04d83216947a9"
       },
+      "added": "2026-10-20",
+      "updated": "2026-10-20",
       "pairs": [
         {
           "gpu": "rtx5090",
@@ -215,6 +225,8 @@
         "repository": "https://github.com/giveen/ninfer-ext",
         "revision": "7b586bde50747eac26d198530aa04d83216947a9"
       },
+      "added": "2026-10-20",
+      "updated": "2026-10-20",
       "pairs": [
         {
           "gpu": "rtx5090",
