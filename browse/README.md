@@ -2,10 +2,10 @@
 
 # Browse engines
 
-Pick your GPU, then your model and encoding. Each page lists every engine that runs that pair, built for exactly that pair or for a whole model family, and links its folder.
+Pick your GPU, then your model, then its quant. Each quant's page lists every engine that runs that model and quant, built for exactly it or for a whole model family, and links its folder.
 
 | GPU | Models |
 | --- | ---: |
-| [rtx5090](rtx5090/README.md) | 5 |
+| [rtx5090](rtx5090/README.md) | 4 |
 
 No engine for your GPU or model yet? Build one with [crit](https://github.com/crit-labs/crit) and [contribute](../README.md#contributing) it.

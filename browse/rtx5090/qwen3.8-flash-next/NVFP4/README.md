@@ -2,12 +2,12 @@
 
 # qwen3.8-flash-next@NVFP4 · rtx5090
 
-[crit-hub](../../../README.md) › [browse](../../README.md) › [rtx5090](../README.md) › qwen3.8-flash-next@NVFP4
+[crit-hub](../../../../README.md) › [browse](../../../README.md) › [rtx5090](../../README.md) › [qwen3.8-flash-next](../README.md) › NVFP4
 
 Measured on [`nvidia/Qwen3.8-Flash-Next-NVFP4`](https://huggingface.co/nvidia/Qwen3.8-Flash-Next-NVFP4). Each engine's engine.json pins the revision and the SHA-256 of every checkpoint file.
 
 | Engine | Summary | Origin | Contributor | Decode | Prefill | First token | Context | Host RAM | Measured with | Status |
 | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- |
-| [mtp3-host-experts](../../../engines/giveen/mtp3-host-experts/) | NInfer: Qwen3.8-Flash-Next with routed experts in host RAM behind an LRU device cache, and 3-token MTP | external, not reviewed | [giveen](https://github.com/giveen/ninfer-ext) | 140.9 tok/s | – | – | 262,144 | 65 GiB | LocalMaxxing | measured |
+| [mtp3-host-experts](../../../../engines/giveen/mtp3-host-experts/) | NInfer: Qwen3.8-Flash-Next with routed experts in host RAM behind an LRU device cache, and 3-token MTP | external, not reviewed | [giveen](https://github.com/giveen/ninfer-ext) | 140.9 tok/s | – | – | 262,144 | 65 GiB | LocalMaxxing | measured |
 
 **Measured** figures are the headline numbers of the engine README's Measured section, on this GPU and checkpoint; **Measured with** says how. Figures from the same crit Eval protocol are comparable; any other method is the contributor's own report. **Supported** means the engine says it runs this pair and nobody has measured it here yet. Engines are listed, not ranked.

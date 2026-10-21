@@ -2,12 +2,12 @@
 
 # qwen3.8-flash-next@FP4-Local · rtx5090
 
-[crit-hub](../../../README.md) › [browse](../../README.md) › [rtx5090](../README.md) › qwen3.8-flash-next@FP4-Local
+[crit-hub](../../../../README.md) › [browse](../../../README.md) › [rtx5090](../../README.md) › [qwen3.8-flash-next](../README.md) › FP4-Local
 
 Measured on [`nvidia/Qwen3.8-Flash-Next-FP4-Local`](https://huggingface.co/nvidia/Qwen3.8-Flash-Next-FP4-Local). Each engine's engine.json pins the revision and the SHA-256 of every checkpoint file.
 
 | Engine | Summary | Origin | Contributor | Decode | Prefill | First token | Context | Host RAM | Measured with | Status |
 | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- |
-| [mtp3-expert-cache](../../../engines/crit-labs/mtp3-expert-cache/) | Qwen3.8-Flash-Next with routed experts in host RAM behind a GPU expert cache, and 3-token MTP | crit | [crit-labs](https://github.com/crit-labs/crit) | 84.5 tok/s | 1,801 tok/s | 1.61 s | 262,144 | 82 GiB | crit-eval-v3 | measured |
+| [mtp3-expert-cache](../../../../engines/crit-labs/mtp3-expert-cache/) | Qwen3.8-Flash-Next with routed experts in host RAM behind a GPU expert cache, and 3-token MTP | crit | [crit-labs](https://github.com/crit-labs/crit) | 84.5 tok/s | 1,801 tok/s | 1.61 s | 262,144 | 82 GiB | crit-eval-v3 | measured |
 
 **Measured** figures are the headline numbers of the engine README's Measured section, on this GPU and checkpoint; **Measured with** says how. Figures from the same crit Eval protocol are comparable; any other method is the contributor's own report. **Supported** means the engine says it runs this pair and nobody has measured it here yet. Engines are listed, not ranked.

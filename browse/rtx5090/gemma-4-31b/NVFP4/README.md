@@ -2,12 +2,12 @@
 
 # gemma-4-31b@NVFP4 · rtx5090
 
-[crit-hub](../../../README.md) › [browse](../../README.md) › [rtx5090](../README.md) › gemma-4-31b@NVFP4
+[crit-hub](../../../../README.md) › [browse](../../../README.md) › [rtx5090](../../README.md) › [gemma-4-31b](../README.md) › NVFP4
 
 Measured on [`nvidia/Gemma-4-31B-IT-NVFP4`](https://huggingface.co/nvidia/Gemma-4-31B-IT-NVFP4). Each engine's engine.json pins the revision and the SHA-256 of every checkpoint file.
 
 | Engine | Summary | Origin | Contributor | Decode | Prefill | First token | Context | Host RAM | Measured with | Status |
 | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- |
-| [assistant6-fp8qk](../../../engines/crit-labs/assistant6-fp8qk/) | Gemma 4 31B with its stock assistant drafter, 6 drafts per round, and an FP8 KV cache | crit | [crit-labs](https://github.com/crit-labs/crit) | 260.9 tok/s | 8,326 tok/s | 116 ms | 262,144 | – | crit-eval-v4 | measured |
+| [assistant6-fp8qk](../../../../engines/crit-labs/assistant6-fp8qk/) | Gemma 4 31B with its stock assistant drafter, 6 drafts per round, and an FP8 KV cache | crit | [crit-labs](https://github.com/crit-labs/crit) | 260.9 tok/s | 8,326 tok/s | 116 ms | 262,144 | – | crit-eval-v4 | measured |
 
 **Measured** figures are the headline numbers of the engine README's Measured section, on this GPU and checkpoint; **Measured with** says how. Figures from the same crit Eval protocol are comparable; any other method is the contributor's own report. **Supported** means the engine says it runs this pair and nobody has measured it here yet. Engines are listed, not ranked.

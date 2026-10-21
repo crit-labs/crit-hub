@@ -3,7 +3,7 @@
 Each engine lives once, in `engines/<owner>/<name>/`: `<owner>` is the contributor's GitHub
 account or organization and `<name>` describes the engine's design. Its `engine.json` says what
 it is and which GPUs and models it runs, and [browse/](../browse/README.md) indexes every engine by
-GPU, then model and encoding. An engine tailored to one GPU and one model and an engine that runs
+GPU, then model, then quant. An engine tailored to one GPU and one model and an engine that runs
 many sit side by side there.
 
 Each engine records its origin in `engine.json`, whatever toolkit built it:

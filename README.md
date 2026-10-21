@@ -28,7 +28,7 @@ so you can find one built for your hardware and target LLM.**
 > Tailored engines are scattered across personal repositories, forks and forum posts, and
 > there is no Hugging Face for inference engines. crit-hub collects them in one place: each
 > engine lives once in `engines/<owner>/<engine>/` and lists the GPUs and models it runs, and
-> [browse/](browse/README.md) indexes them by GPU, then model and encoding. Each engine pins its
+> [browse/](browse/README.md) indexes them by GPU, then model, then quant. Each engine pins its
 > source and the exact checkpoint it was built on, and states what was measured, its known limits
 > and a link to the repository of whoever contributed it.
 > Engines come from any toolkit. Those built with [crit](https://github.com/crit-labs/crit)
@@ -43,8 +43,8 @@ so you can find one built for your hardware and target LLM.**
 
 ## Quick start
 
-Open [browse/](browse/README.md), pick your GPU, then your model and encoding. The table there
-lists every engine that runs that pair, whether it was built for exactly that pair or for a whole
+Open [browse/](browse/README.md), pick your GPU, then your model, then its quant. The table there
+lists every engine that runs that model and quant, whether it was built for exactly that pair or for a whole
 model family, and whether it was measured on it or only supports it. Each engine folder's
 README explains how to build it and open chat, and says whether it was built with crit or is
 an external engine, whose source you should read before you build it. Or give this prompt to your coding agent and
@@ -65,8 +65,8 @@ Find what already exists. Stop rebuilding it.
 
 **Discovery in one place 🔎**
 > Today you can rarely tell whether an engine for your exact hardware and model exists.
-> crit-hub makes that a folder lookup: GPU, then model and encoding, then every engine
-> that runs that pair.
+> crit-hub makes that a folder lookup: GPU, then model, then quant, then every engine
+> that runs it.
 
 **A registry, not a scoreboard 📇**
 > Engines are listed by what they target, not ranked against each other. Each one states

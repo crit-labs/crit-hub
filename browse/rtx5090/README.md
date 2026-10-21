@@ -4,10 +4,9 @@
 
 [crit-hub](../../README.md) › [browse](../README.md) › rtx5090
 
-| Model | Engines |
-| --- | --- |
-| [gemma-4-31b@NVFP4](gemma-4-31b@NVFP4/README.md) | 1 measured |
-| [nemotron-3.5-super-120b-a12b@NVFP4](nemotron-3.5-super-120b-a12b@NVFP4/README.md) | 1 measured |
-| [qwen3.8-27b@NVFP4](qwen3.8-27b@NVFP4/README.md) | 2 measured |
-| [qwen3.8-flash-next@FP4-Local](qwen3.8-flash-next@FP4-Local/README.md) | 1 measured |
-| [qwen3.8-flash-next@NVFP4](qwen3.8-flash-next@NVFP4/README.md) | 1 measured |
+| Model | Lab | Quants | Engines |
+| --- | --- | ---: | --- |
+| [gemma-4-31b](gemma-4-31b/README.md) | Google | 1 | 1 measured |
+| [nemotron-3.5-super-120b-a12b](nemotron-3.5-super-120b-a12b/README.md) | NVIDIA | 1 | 1 measured |
+| [qwen3.8-27b](qwen3.8-27b/README.md) | Alibaba | 1 | 2 measured |
+| [qwen3.8-flash-next](qwen3.8-flash-next/README.md) | Alibaba | 2 | 2 measured |

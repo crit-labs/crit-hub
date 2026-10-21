@@ -1,8 +1,9 @@
-"""Generate browse/, the GPU -> model -> engines index, from every engine's engine.json.
+"""Generate browse/, the GPU -> model -> quant -> engines index, from every engine's engine.json.
 
-browse/README.md lists the GPUs, browse/<gpu>/README.md the models with engines on that GPU, and
-browse/<gpu>/<model>@<encoding>/README.md every engine that runs that pair: measured on it, or
-listed in a supports group and not measured yet. browse/index.json carries each engine's card,
+browse/README.md lists the GPUs, browse/<gpu>/README.md the models with engines on that GPU,
+browse/<gpu>/<model>/README.md that model's quants on it, and browse/<gpu>/<model>/<quant>/README.md
+every engine that runs that model id (<model>@<quant>): measured on it, or listed in a supports
+group and not measured yet. browse/index.json carries each engine's card,
 pinned source and pairs for the website and coding agents. Each pair keeps the model id
 (qwen3.8-27b@NVFP4) and adds it split into model_name and quant, the model's lab and family from
 models.json and the quant's bits and format from quants.json. When git history is available the
@@ -103,10 +104,12 @@ def rows(engines, gpu, model):
 
 
 def pair_page(gpu, model, found):
+    name, quant = model.split("@")
     checkpoints = sorted({p["checkpoint"]["repository"] for _, p in found if "checkpoint" in p})
     several = len(checkpoints) > 1
     lines = [f"# {model} · {gpu}", "",
-             f"[crit-hub](../../../README.md) › [browse](../../README.md) › [{gpu}](../README.md) › {model}", ""]
+             f"[crit-hub](../../../../README.md) › [browse](../../../README.md) › [{gpu}](../../README.md) › "
+             f"[{name}](../README.md) › {quant}", ""]
     if checkpoints:
         links = " and ".join(f"[`{c}`](https://huggingface.co/{c})" for c in checkpoints)
         lines += [f"Measured on {links}. Each engine's engine.json pins the revision and the SHA-256 of every "
@@ -119,7 +122,7 @@ def pair_page(gpu, model, found):
         contributor = engine["contributor"]
         checkpoint = [f"`{pair['checkpoint']['repository']}`" if "checkpoint" in pair else "–"] if several else []
         lines.append("| " + " | ".join([
-            f"[{engine['name']}](../../../{engine['path']}/)",
+            f"[{engine['name']}](../../../../{engine['path']}/)",
             engine["summary"],
             "crit" if engine["origin"] == "crit" else "external, not reviewed",
             f"[{contributor['name']}]({contributor['repository']})",
@@ -135,23 +138,48 @@ def pair_page(gpu, model, found):
     return HEADER + "\n".join(lines + ["", NOTE, ""])
 
 
+def counts(found):
+    return ", ".join(f"{n} {status}" for status in ("measured", "supported")
+                     if (n := sum(p["status"] == status for _, p in found)))
+
+
+def quants(models):
+    """Model ids grouped by model name: {name: [ids]}, both sorted."""
+    grouped = {}
+    for model in models:
+        grouped.setdefault(model.split("@")[0], []).append(model)
+    return grouped
+
+
 def gpu_page(gpu, models, engines):
     lines = [f"# {gpu}", "", f"[crit-hub](../../README.md) › [browse](../README.md) › {gpu}", "",
-             "| Model | Engines |", "| --- | --- |"]
-    for model in models:
+             "| Model | Lab | Quants | Engines |", "| --- | --- | ---: | --- |"]
+    for name, ids in quants(models).items():
+        found = [ep for model in ids for ep in rows(engines, gpu, model)]
+        lab = found[0][1].get("lab") or "–"
+        lines.append(f"| [{name}]({name}/README.md) | {lab} | {len(ids)} | {counts(found)} |")
+    return HEADER + "\n".join(lines + [""])
+
+
+def model_page(gpu, name, ids, engines):
+    lines = [f"# {name} · {gpu}", "",
+             f"[crit-hub](../../../README.md) › [browse](../../README.md) › [{gpu}](../README.md) › {name}", "",
+             "| Quant | Bits | Format | Engines |", "| --- | ---: | --- | --- |"]
+    for model in ids:
+        quant = model.split("@")[1]
         found = rows(engines, gpu, model)
-        counts = [f"{n} {status}" for status in ("measured", "supported")
-                  if (n := sum(p["status"] == status for _, p in found))]
-        lines.append(f"| [{model}]({model}/README.md) | {', '.join(counts)} |")
+        pair = found[0][1]
+        bits = f"{pair['bits']}-bit" if pair.get("bits") else "–"
+        lines.append(f"| [{quant}]({quant}/README.md) | {bits} | {pair.get('format') or '–'} | {counts(found)} |")
     return HEADER + "\n".join(lines + [""])
 
 
 def top_page(listed):
     lines = ["# Browse engines", "",
-             "Pick your GPU, then your model and encoding. Each page lists every engine that runs that pair, "
-             "built for exactly that pair or for a whole model family, and links its folder.", "",
+             "Pick your GPU, then your model, then its quant. Each quant's page lists every engine that runs "
+             "that model and quant, built for exactly it or for a whole model family, and links its folder.", "",
              "| GPU | Models |", "| --- | ---: |"]
-    lines += [f"| [{gpu}]({gpu}/README.md) | {len(models)} |" for gpu, models in listed.items()]
+    lines += [f"| [{gpu}]({gpu}/README.md) | {len(quants(models))} |" for gpu, models in listed.items()]
     lines += ["", "No engine for your GPU or model yet? Build one with [crit](https://github.com/crit-labs/crit) "
               "and [contribute](../README.md#contributing) it."]
     return HEADER + "\n".join(lines + [""])
@@ -166,8 +194,10 @@ def build(hub):
     files = {"browse/README.md": top_page(listed)}
     for gpu, models in listed.items():
         files[f"browse/{gpu}/README.md"] = gpu_page(gpu, models, engines)
-        for model in models:
-            files[f"browse/{gpu}/{model}/README.md"] = pair_page(gpu, model, rows(engines, gpu, model))
+        for name, ids in quants(models).items():
+            files[f"browse/{gpu}/{name}/README.md"] = model_page(gpu, name, ids, engines)
+            for model in ids:
+                files[f"browse/{gpu}/{name}/{model.split('@')[1]}/README.md"] = pair_page(gpu, model, rows(engines, gpu, model))
     files["browse/index.json"] = json.dumps({"engines": engines}, indent=2, ensure_ascii=False) + "\n"
     return files
 
