@@ -1,0 +1,6 @@
+{
+  "gemma-4-31b": {"lab": "Google", "family": "Gemma"},
+  "nemotron-3.5-super-120b-a12b": {"lab": "NVIDIA", "family": "Nemotron"},
+  "qwen3.8-27b": {"lab": "Alibaba", "family": "Qwen"},
+  "qwen3.8-flash-next": {"lab": "Alibaba", "family": "Qwen"}
+}

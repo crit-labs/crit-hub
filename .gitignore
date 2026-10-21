@@ -4,6 +4,7 @@
 !/.gitignore
 !/LICENSE
 !/README.md
+!/models.json
 !/tools/
 !/docs/
 !/engines/

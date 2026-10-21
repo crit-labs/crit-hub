@@ -22,6 +22,8 @@
         {
           "gpu": "rtx5090",
           "model": "gemma-4-31b@NVFP4",
+          "lab": "Google",
+          "family": "Gemma",
           "status": "measured",
           "result": {
             "gpu": "rtx5090",
@@ -61,6 +63,8 @@
         {
           "gpu": "rtx5090",
           "model": "nemotron-3.5-super-120b-a12b@NVFP4",
+          "lab": "NVIDIA",
+          "family": "Nemotron",
           "status": "measured",
           "result": {
             "gpu": "rtx5090",
@@ -110,6 +114,8 @@
         {
           "gpu": "rtx5090",
           "model": "qwen3.8-flash-next@FP4-Local",
+          "lab": "Alibaba",
+          "family": "Qwen",
           "status": "measured",
           "result": {
             "gpu": "rtx5090",
@@ -150,6 +156,8 @@
         {
           "gpu": "rtx5090",
           "model": "qwen3.8-27b@NVFP4",
+          "lab": "Alibaba",
+          "family": "Qwen",
           "status": "measured",
           "result": {
             "gpu": "rtx5090",
@@ -191,6 +199,8 @@
         {
           "gpu": "rtx5090",
           "model": "qwen3.8-27b@NVFP4",
+          "lab": "Alibaba",
+          "family": "Qwen",
           "status": "measured",
           "result": {
             "gpu": "rtx5090",
@@ -231,6 +241,8 @@
         {
           "gpu": "rtx5090",
           "model": "qwen3.8-flash-next@NVFP4",
+          "lab": "Alibaba",
+          "family": "Qwen",
           "status": "measured",
           "result": {
             "gpu": "rtx5090",

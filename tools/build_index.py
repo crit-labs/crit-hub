@@ -3,7 +3,8 @@
 browse/README.md lists the GPUs, browse/<gpu>/README.md the models with engines on that GPU, and
 browse/<gpu>/<model>@<encoding>/README.md every engine that runs that pair: measured on it, or
 listed in a supports group and not measured yet. browse/index.json carries each engine's card,
-pinned source and pairs for the website and coding agents, and when git history is available the
+pinned source and pairs, each pair with its model's lab and family from models.json, for the
+website and coding agents, and when git history is available the
 engine's dates as YYYY-MM-DD: "added", the commit that added its engine.json, and "updated", the
 last commit that changed its folder (today while it has uncommitted changes); null without history,
 as in a shallow clone. --check fails when browse/ is out of date instead of writing it; it ignores
@@ -60,6 +61,13 @@ def dates(hub, folder):
 
 
 def load_engines(hub):
+    path = hub / "models.json"
+    models = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
+
+    def model(name):
+        entry = models.get(name.split("@")[0], {})
+        return {"model": name, "lab": entry.get("lab"), "family": entry.get("family")}
+
     engines = []
     for folder in sorted(p for p in (hub / "engines").glob("*/*") if p.is_dir()):
         engine = json.loads((folder / "engine.json").read_text(encoding="utf-8"))
@@ -75,9 +83,9 @@ def load_engines(hub):
             "source": engine["provenance"].get("source"),
             "added": added,
             "updated": updated,
-            "pairs": [{"gpu": g, "model": m, "status": "measured", "result": r, "checkpoint": checkpoints[m]}
+            "pairs": [{"gpu": g, **model(m), "status": "measured", "result": r, "checkpoint": checkpoints[m]}
                       for (g, m), r in sorted(measured.items())]
-                     + [{"gpu": g, "model": m, "status": "supported"} for g, m in supported],
+                     + [{"gpu": g, **model(m), "status": "supported"} for g, m in supported],
         })
     return engines
 

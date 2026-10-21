@@ -5,7 +5,9 @@ itself in engine.json: summary, origin, contributor, license, features, the GPU/
 measured (results) or supports, its provenance and the exact checkpoint of every measured model.
 A crit engine needs its sealed-run provenance and the built-with-crit line under its credit.
 An external engine holds only README.md and engine.json, pins its source to a full commit SHA and
-opens its README with the external-engine notice.
+opens its README with the external-engine notice. Every model an engine lists needs an entry in
+models.json at the repository root, keyed by the model id without its encoding, naming the lab that
+released it and its family.
 """
 import argparse
 import json
@@ -171,7 +173,39 @@ def check_external(folder, provenance, head, text):
     return problems
 
 
-def check(folder):
+def check_models(engine, models):
+    """Every listed model has a models.json entry with its lab and family."""
+    listed = {str(r.get("model")) for r in engine.get("results", []) if isinstance(r, dict)}
+    listed |= {str(m) for group in engine.get("supports", []) if isinstance(group, dict)
+               for m in group.get("models", []) if isinstance(group.get("models"), list)}
+    problems = []
+    for name in sorted({m.split("@")[0] for m in listed if MODEL.fullmatch(m)} - set(models)):
+        problems.append(f'models.json has no entry for {name}; add "{name}": {{"lab": "<who released it>", '
+                        f'"family": "<model family>"}} to models.json at the repository root')
+    return problems
+
+
+def load_models(hub):
+    """models.json: {model id without encoding: {"lab": ..., "family": ...}}."""
+    path = Path(hub) / "models.json"
+    if not path.is_file():
+        raise SystemExit("models.json is missing at the repository root")
+    try:
+        models = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        raise SystemExit(f"invalid JSON in models.json: {e}")
+    if not isinstance(models, dict):
+        raise SystemExit("models.json maps each model id without its encoding to its lab and family")
+    bad = [name for name, entry in models.items()
+           if not re.fullmatch(r"[a-z0-9][a-z0-9.-]*", name) or not isinstance(entry, dict) or set(entry) != {"lab", "family"}
+           or not all(isinstance(v, str) and v.strip() for v in entry.values())]
+    if bad:
+        raise SystemExit("models.json entries are \"<model id without encoding>\": {\"lab\": ..., \"family\": ...}: "
+                         + ", ".join(bad))
+    return models
+
+
+def check(folder, models):
     if not NAME.fullmatch(folder.name) or not NAME.fullmatch(folder.parent.name):
         return ["engine folder names use only letters, digits, '.', '_' and '-'"]
     for name in ("README.md", "engine.json"):
@@ -188,7 +222,7 @@ def check(folder):
     if not lines or not lines[0].startswith("# "):
         return ["README.md must open with a '# ' title"]
     head = lines[1:12]
-    problems = check_card(folder, engine) + check_results(engine, text) + check_supports(engine)
+    problems = check_card(folder, engine) + check_results(engine, text) + check_supports(engine) + check_models(engine, models)
     provenance = engine.get("provenance") if isinstance(engine.get("provenance"), dict) else {}
     origin = engine.get("origin")
     if origin == "crit":
@@ -201,10 +235,11 @@ def check(folder):
 
 
 def main(hub):
+    models = load_models(hub)
     folders = sorted(p for p in (Path(hub) / "engines").glob("*/*") if p.is_dir())
     failed = 0
     for folder in folders:
-        problems = check(folder)
+        problems = check(folder, models)
         name = folder.relative_to(Path(hub) / "engines").as_posix()
         if problems:
             failed += 1
