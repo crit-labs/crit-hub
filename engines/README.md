@@ -45,7 +45,7 @@ people read.
   "license": "Apache-2.0",
   "features": ["openai-api", "tool-calls", "speculative"],
   "results": [
-    {"gpu": "rtx5090", "model": "qwen3.8-27b@NVFP4", "measured_with": "crit-eval-v4",
+    {"gpu": "rtx5090", "model": "qwen3.8-27b@NVFP4", "measured_with": "crit-eval-v5",
      "decode_tok_s": 215.7, "prefill_tok_s": 8917, "ttft_ms": 120, "context_tokens": 262144}
   ],
   "supports": [{"gpus": ["rtx4090"], "models": ["qwen3.8-27b@NVFP4"]}],
@@ -65,8 +65,8 @@ people read.
   `prefill_tok_s`, `ttft_ms`, `context_tokens` and, when the engine keeps weights in host memory,
   `host_ram_gib`. A figure is a number, or `[low, high]` across runs, and must appear in the
   README as written there, for example `8,917` or `1.61 s`. **`measured_with`** names the
-  method: figures under the same major version of the crit Eval protocol, such as `crit-eval-v4`
-  and `crit-eval-v4.1`, are comparable across engines; anything else is the contributor's own
+  method: figures under the same major version of the crit Eval protocol, such as `crit-eval-v5`
+  and `crit-eval-v5.1`, are comparable across engines; anything else is the contributor's own
   report.
 - **`supports`** (optional) names further pairs the engine runs but nobody has measured yet. Each
   group pairs every GPU in `gpus` with every model in `models`.

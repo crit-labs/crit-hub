@@ -102,7 +102,7 @@ Every working engine you add saves the next person from building it again.
 3. Document the measured workload, results, check coverage and known limits.
 4. Fill in [engine.json](engines/README.md#engine-json): the summary, features, the source's license
    and, for every GPU and model, the measured figures with `measured_with` naming the crit Eval
-   protocol, for example `crit-eval-v4`.
+   protocol, for example `crit-eval-v5`.
 5. [Credit your repository](#credit) directly under the README's title.
 6. Retain dependency credits and applicable license texts and notices.
 7. `python -B tools/check_engines.py` passes for your folder, and `python -B tools/build_index.py`
@@ -135,12 +135,13 @@ crit-hub records where it is, what it targets and what it measured.
 4. In **Measured**, state the hardware, OS, toolchain, workload and protocol behind each number.
 5. Fill in [engine.json](engines/README.md#engine-json): `"origin": "external"`, the pinned source
    under `provenance.source`, the exact checkpoint of every measured model, and the measured
-   figures with `measured_with`. Figures measured with crit Eval (`"crit-eval-v4"`) are compared
+   figures with `measured_with`. Figures measured with crit Eval (`"crit-eval-v5"`) are compared
    with every other engine's on the same protocol; anything else, such as your own benchmark or a
    leaderboard run, is shown as your own report. An engine behind any OpenAI-compatible chat API
-   gets crit Eval figures without changes: Eval's
-   [server adapter](https://github.com/crit-labs/crit/blob/main/docs/eval/ADAPTER.md#engines-behind-a-server)
-   runs the speed cases against `/chat/completions`, as it does for crit's own engines behind `crit serve`.
+   gets crit Eval figures without changes:
+   [`crit eval run --url`](https://github.com/crit-labs/crit/blob/main/docs/eval/README.md#engines-behind-a-server)
+   sends every prompt to `/chat/completions` and scores quality on the engine's own replies, as it
+   does for crit's own engines behind `crit serve`.
 6. Name your source's license in the README's **Credits** section and in `engine.json`.
 7. `python -B tools/check_engines.py` passes for your folder, and `python -B tools/build_index.py`
    updates [browse/](browse/README.md); commit both.
