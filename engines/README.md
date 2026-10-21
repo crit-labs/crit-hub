@@ -80,7 +80,9 @@ A GPU id is the card in lowercase, such as `rtx5090`; a model id is the model in
 encoding, such as `qwen3.8-27b@NVFP4`. Reuse the ids already in [browse/](../browse/README.md) so an
 engine lands on the same page as the others for that GPU and model. Every model needs an entry in
 [models.json](../models.json), keyed by its id without the encoding, naming the lab that released it
-and its family, such as `"qwen3.8-27b": {"lab": "Alibaba", "family": "Qwen"}`;
-`tools/check_engines.py` fails without one.
+and its family, such as `"qwen3.8-27b": {"lab": "Alibaba", "family": "Qwen"}`, and every encoding
+(the quant after `@`) an entry in [quants.json](../quants.json) with its bits per weight and format,
+such as `"NVFP4": {"bits": 4, "format": "NVIDIA FP4 (NVFP4)"}`; `tools/check_engines.py` fails
+without them.
 
 To add an engine, follow [Contributing](../README.md#contributing).

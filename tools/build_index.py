@@ -3,8 +3,9 @@
 browse/README.md lists the GPUs, browse/<gpu>/README.md the models with engines on that GPU, and
 browse/<gpu>/<model>@<encoding>/README.md every engine that runs that pair: measured on it, or
 listed in a supports group and not measured yet. browse/index.json carries each engine's card,
-pinned source and pairs, each pair with its model's lab and family from models.json, for the
-website and coding agents, and when git history is available the
+pinned source and pairs for the website and coding agents. Each pair keeps the model id
+(qwen3.8-27b@NVFP4) and adds it split into model_name and quant, the model's lab and family from
+models.json and the quant's bits and format from quants.json. When git history is available the
 engine's dates as YYYY-MM-DD: "added", the commit that added its engine.json, and "updated", the
 last commit that changed its folder (today while it has uncommitted changes); null without history,
 as in a shallow clone. --check fails when browse/ is out of date instead of writing it; it ignores
@@ -61,12 +62,17 @@ def dates(hub, folder):
 
 
 def load_engines(hub):
-    path = hub / "models.json"
-    models = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
+    def table(name):
+        path = hub / name
+        return json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
+
+    models, quants = table("models.json"), table("quants.json")
 
     def model(name):
-        entry = models.get(name.split("@")[0], {})
-        return {"model": name, "lab": entry.get("lab"), "family": entry.get("family")}
+        base, encoding = name.split("@")
+        entry, quant = models.get(base, {}), quants.get(encoding, {})
+        return {"model": name, "model_name": base, "quant": encoding, "lab": entry.get("lab"),
+                "family": entry.get("family"), "bits": quant.get("bits"), "format": quant.get("format")}
 
     engines = []
     for folder in sorted(p for p in (hub / "engines").glob("*/*") if p.is_dir()):

@@ -22,8 +22,12 @@
         {
           "gpu": "rtx5090",
           "model": "gemma-4-31b@NVFP4",
+          "model_name": "gemma-4-31b",
+          "quant": "NVFP4",
           "lab": "Google",
           "family": "Gemma",
+          "bits": 4,
+          "format": "NVIDIA FP4 (NVFP4)",
           "status": "measured",
           "result": {
             "gpu": "rtx5090",
@@ -63,8 +67,12 @@
         {
           "gpu": "rtx5090",
           "model": "nemotron-3.5-super-120b-a12b@NVFP4",
+          "model_name": "nemotron-3.5-super-120b-a12b",
+          "quant": "NVFP4",
           "lab": "NVIDIA",
           "family": "Nemotron",
+          "bits": 4,
+          "format": "NVIDIA FP4 (NVFP4)",
           "status": "measured",
           "result": {
             "gpu": "rtx5090",
@@ -114,8 +122,12 @@
         {
           "gpu": "rtx5090",
           "model": "qwen3.8-flash-next@FP4-Local",
+          "model_name": "qwen3.8-flash-next",
+          "quant": "FP4-Local",
           "lab": "Alibaba",
           "family": "Qwen",
+          "bits": 4,
+          "format": "NVIDIA NVFP4 with quantization-aware distillation (QAD), attention in MXFP8",
           "status": "measured",
           "result": {
             "gpu": "rtx5090",
@@ -156,8 +168,12 @@
         {
           "gpu": "rtx5090",
           "model": "qwen3.8-27b@NVFP4",
+          "model_name": "qwen3.8-27b",
+          "quant": "NVFP4",
           "lab": "Alibaba",
           "family": "Qwen",
+          "bits": 4,
+          "format": "NVIDIA FP4 (NVFP4)",
           "status": "measured",
           "result": {
             "gpu": "rtx5090",
@@ -199,8 +215,12 @@
         {
           "gpu": "rtx5090",
           "model": "qwen3.8-27b@NVFP4",
+          "model_name": "qwen3.8-27b",
+          "quant": "NVFP4",
           "lab": "Alibaba",
           "family": "Qwen",
+          "bits": 4,
+          "format": "NVIDIA FP4 (NVFP4)",
           "status": "measured",
           "result": {
             "gpu": "rtx5090",
@@ -241,8 +261,12 @@
         {
           "gpu": "rtx5090",
           "model": "qwen3.8-flash-next@NVFP4",
+          "model_name": "qwen3.8-flash-next",
+          "quant": "NVFP4",
           "lab": "Alibaba",
           "family": "Qwen",
+          "bits": 4,
+          "format": "NVIDIA FP4 (NVFP4)",
           "status": "measured",
           "result": {
             "gpu": "rtx5090",

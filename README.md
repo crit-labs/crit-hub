@@ -103,7 +103,7 @@ Every working engine you add saves the next person from building it again.
 4. Fill in [engine.json](engines/README.md#engine-json): the summary, features, the source's license
    and, for every GPU and model, the measured figures with `measured_with` naming the crit Eval
    protocol, for example `crit-eval-v5`. A model new to crit-hub also needs its lab and family in
-   [models.json](models.json).
+   [models.json](models.json), and a new quant its bits and format in [quants.json](quants.json).
 5. [Credit your repository](#credit) directly under the README's title.
 6. Retain dependency credits and applicable license texts and notices.
 7. `python -B tools/check_engines.py` passes for your folder, and `python -B tools/build_index.py`
@@ -143,7 +143,8 @@ crit-hub records where it is, what it targets and what it measured.
    [`crit eval run --url`](https://github.com/crit-labs/crit/blob/main/docs/eval/README.md#engines-behind-a-server)
    sends every prompt to `/chat/completions` and scores quality on the engine's own replies, as it
    does for crit's own engines behind `crit serve`. A model new to crit-hub also needs its lab and
-   family in [models.json](models.json).
+   family in [models.json](models.json), and a new quant its bits and format in
+   [quants.json](quants.json).
 6. Name your source's license in the README's **Credits** section and in `engine.json`.
 7. `python -B tools/check_engines.py` passes for your folder, and `python -B tools/build_index.py`
    updates [browse/](browse/README.md); commit both.
