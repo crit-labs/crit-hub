@@ -31,9 +31,10 @@ so you can find one built for your hardware and target LLM.**
 > [browse/](browse/README.md) indexes them by GPU, then model, then checkpoint. Each engine pins its
 > source and the exact checkpoint it was built on, and states what was measured, its known limits
 > and a link to the repository of whoever contributed it.
-> Engines come from any toolkit. Those built with [crit](https://github.com/crit-labs/crit)
-> carry their sealed source here; external engines link to their source at a pinned commit
-> and are marked as third-party code crit-hub has not reviewed.
+> Engines come from any toolkit, and every one links its source at a pinned commit. Those built
+> with [crit](https://github.com/crit-labs/crit) keep their sealed source in
+> [crit-engines](https://github.com/crit-labs/crit-engines); external engines link the contributor's repository and are
+> marked as third-party code crit-hub has not reviewed.
 > It is a registry, not a scoreboard: several designs can sit side by side for the same GPU
 > and model, each documenting its own trade-offs.
 
@@ -74,8 +75,8 @@ Find what already exists. Stop rebuilding it.
 > your use rather than the one with the biggest number.
 
 **A jump-off point for developers 🛠️**
-> Every engine pins its complete source, in its folder or at a commit in the contributor's
-> repository, with its checkpoint pinned by SHA-256 and its toolchain recorded. Start from a working engine to improve it, port it to another GPU or adapt it
+> Every engine pins its complete source at a commit, in [crit-engines](https://github.com/crit-labs/crit-engines) or the
+> contributor's repository, with its checkpoint pinned by SHA-256 and its toolchain recorded. Start from a working engine to improve it, port it to another GPU or adapt it
 > to a related model, and follow the contributor's repository for its upstream work.
 
 ---
@@ -93,25 +94,29 @@ Every working engine you add saves the next person from building it again.
 
 <br />
 
-1. [Export the sealed candidate](#export) into the [folder layout](engines/README.md#engine-folder-layout),
-   `engines/<your account>/<name>/`, with a name that describes its design, for example
-   `mtp7-fp8attn`. Several designs can share a GPU and model/encoding, whether they were built
-   with crit or not.
-2. Include runnable source and a README that follows the [engine README template](docs/ENGINE_README.md):
-   model, design, measured results, checks, limits, build and chat.
+1. [Export the sealed candidate](#export): its runnable source into `<name>/` of a
+   [crit-engines](https://github.com/crit-labs/crit-engines) checkout, then, once that is committed, its entry into the
+   [folder layout](engines/README.md#engine-folder-layout), `engines/<your account>/<name>/`, which
+   holds only `README.md` and `engine.json` pinned to that commit. Name it after its design, for
+   example `mtp7-fp8attn`. Several designs can share a GPU and model/encoding, whether they were
+   built with crit or not.
+2. Write a README that follows the [engine README template](docs/ENGINE_README.md): model, design,
+   measured results, checks, limits, build and chat from the pinned crit-engines commit.
 3. Document the measured workload, results, check coverage and known limits.
 4. Fill in [engine.json](engines/README.md#engine-json): the summary, features, the source's license
    and, for every GPU and model, the measured figures with `measured_with` naming the crit Eval
    protocol, for example `crit-eval-v5`, and the Hugging Face checkpoint of every model it runs
    under `checkpoints`. Hugging Face tells crit-hub the rest: base model, lab, quantization.
 5. [Credit your repository](#credit) directly under the README's title.
-6. Retain dependency credits and applicable license texts and notices.
-7. `python -B tools/build_index.py --refresh` reads your checkpoints from Hugging Face and updates
+6. Retain dependency credits and applicable license texts and notices next to the source.
+7. Open one pull request to [crit-engines](https://github.com/crit-labs/crit-engines) with the source and, once it is merged, one to
+   crit-hub with the entry pinned to the merged commit.
+8. `python -B tools/build_index.py --refresh` reads your checkpoints from Hugging Face and updates
    [browse/](browse/README.md), and `python -B tools/check_engines.py` passes for your folder; commit
    both.
 
 Keep model weights, builds, binaries, development scripts and full experiment records
-outside the repository. The [.gitignore](.gitignore) uses a whitelist for published files.
+outside both repositories. Each [.gitignore](.gitignore) uses a whitelist for published files.
 
 </details>
 
@@ -195,13 +200,16 @@ external-engine notice from the [template](docs/ENGINE_README.md) instead.
 <br />
 
 ```sh
-python -B tools/export_engine.py --help
+python -B tools/export_engine.py source --help   # the source, into a crit-engines checkout
+python -B tools/export_engine.py entry --help    # the crit-hub entry, pinned to its commit
 ```
 
-The exporter verifies the complete candidate seal and copies explicitly selected
-runtime source and data into a **new** engine folder, retaining the supplied
-README, licenses, dependency credits and configuration, and writes `engine.json` with the
-sealed run's provenance. `--model-repo` and `--model-revision` name the checkpoint the run used;
+Both steps verify the complete candidate seal. `source` copies explicitly selected runtime source
+and data into a **new** `<name>/` of a crit-engines checkout, with the configuration, dependency
+credits and supplied license texts. Commit it there; `entry` then writes a **new**
+`engines/<contributor>/<name>/` with the supplied README and an `engine.json` carrying the sealed
+run's provenance, pinned to the crit-engines commit that holds the source (the checkout's HEAD; the
+README writes it as `<crit-engines commit>`). `--model-repo` and `--model-revision` name the checkpoint the run used;
 `engine.json` lists its files with the hashes the run recorded. `--contributor` and
 `--contributor-repo` credit your repository under the README's title and in `engine.json`, and
 `--contributor` names the engine's folder, `engines/<contributor>/<name>/`. `--gpu` and `--model`
@@ -216,5 +224,6 @@ in `engine.json`. Keep the original sealed run separately.
 
 ## License
 
-Original content is licensed under [Apache-2.0](LICENSE). Third-party components
-retain their own terms; see each engine's `THIRD_PARTY.md` and `LICENSES.txt`.
+Original content is licensed under [Apache-2.0](LICENSE). Engine source retains its own terms:
+crit engines' dependency credits and license texts sit next to their source in
+[crit-engines](https://github.com/crit-labs/crit-engines), and external engines' in their own repositories.

@@ -1,8 +1,8 @@
 # Engine README template
 
 Every engine README in crit-hub uses these sections, with these names, in this order. Keep it
-to about 100 lines; put longer history, validation detail or design notes in a file under
-`engine/` and link it from the section it belongs to.
+to about 100 lines; put longer history, validation detail or design notes in a file next to the
+source and link it at the pinned commit from the section it belongs to.
 
 An engine for one GPU and one model is titled `<Model> @ <encoding> · <GPU> · <engine name>`. An
 engine that runs several is titled `<engine name>`, its opening paragraph names the GPUs and model
@@ -63,8 +63,15 @@ free memory) and what sets the speed.
 
 ## Build and chat
 
-Build commands, the checkpoint check, `crit serve` and, when the engine ships one, its standalone
-chat command.
+A clone of the pinned source, then the build commands, the checkpoint check, `crit serve` and, when
+the engine ships one, its standalone chat command:
+
+```sh
+git clone https://github.com/crit-labs/crit-engines && git -C crit-engines checkout <crit-engines commit>
+ENGINE=crit-engines/<engine name>/engine
+```
+
+`tools/export_engine.py entry` fills in `<crit-engines commit>`.
 
 ## Benchmark your machine
 
@@ -72,7 +79,9 @@ Only when the engine ships a benchmark tool: how to run it and how to share resu
 
 ## Credits
 
-Credits and licenses are in [THIRD_PARTY.md](THIRD_PARTY.md) and [LICENSES.txt](LICENSES.txt).
+Credits and licenses are in [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/<crit-engines commit>/<engine name>/THIRD_PARTY.md)
+and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/<crit-engines commit>/<engine name>/LICENSES.txt),
+next to the source in [crit-labs/crit-engines](https://github.com/crit-labs/crit-engines/tree/<crit-engines commit>/<engine name>).
 ````
 
 ## External engines
