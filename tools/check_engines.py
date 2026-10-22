@@ -4,9 +4,10 @@ Each engine lives in engines/<owner>/<name>/, where <owner> is its contributor, 
 itself in engine.json: summary, origin, contributor, license, features, the GPU/model pairs it
 measured (results) or supports, its provenance and the exact Hugging Face checkpoint of every model
 it measures or supports, which browse/hf.json must already place in Hugging Face's model tree.
-A crit engine needs its sealed-run provenance and the built-with-crit line under its credit.
-An external engine holds only README.md and engine.json, pins its source to a full commit SHA and
-opens its README with the external-engine notice.
+Every engine holds only README.md and engine.json and pins its source to a full commit SHA in a
+repository, optionally a folder in it, which its README links. A crit engine's source is in
+crit-labs/crit-engines; it needs its sealed-run provenance and the built-with-crit line under its
+credit. An external engine opens its README with the external-engine notice.
 """
 import argparse
 import json
@@ -22,7 +23,7 @@ MODEL = re.compile(r"[a-z0-9][a-z0-9.-]*@[A-Za-z0-9.+-]+")
 FEATURES = {"openai-api", "tool-calls", "vision", "speculative"}
 FIELDS = {"summary", "origin", "contributor", "license", "features", "results", "supports", "provenance", "checkpoints"}
 RESULT_FIELDS = {"gpu", "model", "measured_with", "decode_tok_s", "prefill_tok_s", "ttft_ms", "context_tokens", "host_ram_gib"}
-EXTERNAL_FILES = {"README.md", "engine.json"}
+ENGINE_FILES = {"README.md", "engine.json"}
 
 
 def check_checkpoint(model, checkpoint):
@@ -165,25 +166,12 @@ def check_card(folder, engine):
     return problems
 
 
-def check_crit(folder, provenance, head):
-    problems = []
-    if not provenance.get("run_id") or not provenance.get("candidate_id"):
-        problems.append("engine.json provenance needs the sealed run_id and candidate_id")
-    if not (folder / "engine").is_dir():
-        problems.append("a crit engine carries its runtime source in engine/")
-    if not any(line.startswith("> **Contributed by**") for line in head):
-        problems.append("README.md needs the credit directly under its title")
-    if not any(line.startswith("> Built with [crit]") for line in head):
-        problems.append("README.md needs the built-with-crit line under the credit")
-    return problems
-
-
-def check_external(folder, provenance, head, text):
+def check_source(folder, provenance, text):
     problems = []
     files = {p.relative_to(folder).as_posix() for p in folder.rglob("*") if p.is_file()}
-    if files - EXTERNAL_FILES:
-        extra = sorted(files - EXTERNAL_FILES)
-        problems.append(f"an external engine holds only README.md and engine.json; also found {len(extra)} other file(s), e.g. {extra[0]}")
+    if files - ENGINE_FILES:
+        extra = sorted(files - ENGINE_FILES)
+        problems.append(f"an engine folder holds only README.md and engine.json; also found {len(extra)} other file(s), e.g. {extra[0]}")
     source = provenance.get("source") or {}
     if not REPOSITORY.fullmatch(str(source.get("repository"))):
         problems.append("engine.json provenance needs the https URL of source.repository")
@@ -192,6 +180,27 @@ def check_external(folder, provenance, head, text):
         problems.append("engine.json provenance source.revision must be a full 40-character commit SHA")
     elif revision not in text:
         problems.append("README.md must link the pinned source commit")
+    if "path" in source and not (isinstance(source["path"], str) and source["path"]
+                                 and all(NAME.fullmatch(part) and part not in (".", "..") for part in source["path"].split("/"))):
+        problems.append("engine.json provenance source.path is a folder in the source repository, like mtp7-fp8attn")
+    return problems
+
+
+def check_crit(provenance, head):
+    problems = []
+    if not provenance.get("run_id") or not provenance.get("candidate_id"):
+        problems.append("engine.json provenance needs the sealed run_id and candidate_id")
+    if not SHA256.fullmatch(str(provenance.get("source_manifest_sha256"))):
+        problems.append("engine.json provenance needs the sealed source_manifest_sha256")
+    if not any(line.startswith("> **Contributed by**") for line in head):
+        problems.append("README.md needs the credit directly under its title")
+    if not any(line.startswith("> Built with [crit]") for line in head):
+        problems.append("README.md needs the built-with-crit line under the credit")
+    return problems
+
+
+def check_external(head):
+    problems = []
     if "> [!WARNING]" not in head or not any(line.startswith("> **External engine.**") for line in head):
         problems.append("README.md must open with the external-engine notice")
     return problems
@@ -216,11 +225,12 @@ def check(folder, cache):
     head = lines[1:12]
     problems = check_card(folder, engine) + check_results(engine, text) + check_supports(engine) + check_checkpoints(engine, cache)
     provenance = engine.get("provenance") if isinstance(engine.get("provenance"), dict) else {}
+    problems += check_source(folder, provenance, text)
     origin = engine.get("origin")
     if origin == "crit":
-        problems += check_crit(folder, provenance, head)
+        problems += check_crit(provenance, head)
     elif origin == "external":
-        problems += check_external(folder, provenance, head, text)
+        problems += check_external(head)
     else:
         problems.append('engine.json needs "origin": "crit" or "external"')
     return problems

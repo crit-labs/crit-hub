@@ -81,12 +81,14 @@ many drafts get accepted: about 2.6 tokens per round on chat and 7.8 on the agen
 ## Build and chat
 
 ```sh
+git clone https://github.com/crit-labs/crit-engines && git -C crit-engines checkout 89a3cd29f2076b20a0673a78dc18787071dd9d09
+ENGINE=crit-engines/mtp7-fp8attn/engine
 git clone https://github.com/crit-labs/crit && git -C crit checkout v0.1.0
 cmake -S crit/core -B build/core -G Ninja -DCMAKE_BUILD_TYPE=Release -DCRIT_CORE_CUDA=ON -DBUILD_TESTING=OFF \
       -DCMAKE_CUDA_ARCHITECTURES=120a -DCMAKE_POSITION_INDEPENDENT_CODE=ON
 cmake --build build/core && cmake --install build/core --prefix core-install
-bash engine/build.sh engine build/kestrel package core-install
-cp engine/configuration.json package/
+bash "$ENGINE/build.sh" "$ENGINE" build/kestrel package core-install
+cp "$ENGINE/configuration.json" package/
 ```
 
 Builds need CMake 3.28+, Ninja, GCC 13 and the CUDA 13.1 toolkit (`NVCC` overrides the compiler
@@ -101,12 +103,13 @@ Or chat in the terminal (Python 3.12 with `tokenizers`, `jinja2` and crit's Pyth
 `/new` starts a fresh conversation, Ctrl+C stops a reply, `/quit` releases the engine:
 
 ```sh
-PYTHONPATH=crit/core/python python engine/python/chat.py --model /path/to/Qwen3.8-27B-NVFP4 --package package
+PYTHONPATH=crit/core/python python "$ENGINE/python/chat.py" --model /path/to/Qwen3.8-27B-NVFP4 --package package
 ```
 
-[engine/configuration.json](engine/configuration.json) has the applied settings; `chat.py` was added
+[engine/configuration.json](https://github.com/crit-labs/crit-engines/blob/89a3cd29f2076b20a0673a78dc18787071dd9d09/mtp7-fp8attn/engine/configuration.json) has the applied settings; `chat.py` was added
 at export and is not part of the sealed source.
 
 ## Credits
 
-Credits and licenses are in [THIRD_PARTY.md](THIRD_PARTY.md) and [LICENSES.txt](LICENSES.txt).
+Credits and licenses are in [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/89a3cd29f2076b20a0673a78dc18787071dd9d09/mtp7-fp8attn/THIRD_PARTY.md) and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/89a3cd29f2076b20a0673a78dc18787071dd9d09/mtp7-fp8attn/LICENSES.txt),
+next to the source in [crit-labs/crit-engines](https://github.com/crit-labs/crit-engines/tree/89a3cd29f2076b20a0673a78dc18787071dd9d09/mtp7-fp8attn).

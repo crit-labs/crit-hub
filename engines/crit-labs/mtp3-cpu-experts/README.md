@@ -77,11 +77,13 @@ the speed, so decode depends on the CPU: other heavy programs on the PC slow it.
 ## Build and chat
 
 ```sh
+git clone https://github.com/crit-labs/crit-engines && git -C crit-engines checkout 89a3cd29f2076b20a0673a78dc18787071dd9d09
+ENGINE=crit-engines/mtp3-cpu-experts/engine
 git clone https://github.com/crit-labs/crit && git -C crit checkout v0.2.1
 cmake -S crit/core -B build/core -G Ninja -DCMAKE_BUILD_TYPE=Release -DCRIT_CORE_CUDA=ON -DBUILD_TESTING=OFF \
       -DCMAKE_CUDA_ARCHITECTURES=120a -DCMAKE_POSITION_INDEPENDENT_CODE=ON
 cmake --build build/core && cmake --install build/core --prefix core-install
-bash engine/package.sh engine build/nmh package core-install
+bash "$ENGINE/package.sh" "$ENGINE" build/nmh package core-install
 ```
 
 Builds need CMake 3.28+, Ninja, GCC 13 and the CUDA 13.1 toolkit; `libcudart` must be on the loader
@@ -93,9 +95,10 @@ original run:
 crit serve --workspace <runs root> --run run-20261018T173355Z-f764c819 --candidate candidate-0003 --project <crit checkout>
 ```
 
-[engine/configuration.json](engine/configuration.json) has the applied settings; the original run
+[engine/configuration.json](https://github.com/crit-labs/crit-engines/blob/89a3cd29f2076b20a0673a78dc18787071dd9d09/mtp3-cpu-experts/engine/configuration.json) has the applied settings; the original run
 keeps the full records, Eval results and summary.
 
 ## Credits
 
-Credits and licenses are in [THIRD_PARTY.md](THIRD_PARTY.md) and [LICENSES.txt](LICENSES.txt).
+Credits and licenses are in [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/89a3cd29f2076b20a0673a78dc18787071dd9d09/mtp3-cpu-experts/THIRD_PARTY.md) and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/89a3cd29f2076b20a0673a78dc18787071dd9d09/mtp3-cpu-experts/LICENSES.txt),
+next to the source in [crit-labs/crit-engines](https://github.com/crit-labs/crit-engines/tree/89a3cd29f2076b20a0673a78dc18787071dd9d09/mtp3-cpu-experts).

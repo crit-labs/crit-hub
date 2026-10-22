@@ -15,9 +15,13 @@
         "tool-calls",
         "speculative"
       ],
-      "source": null,
+      "source": {
+        "repository": "https://github.com/crit-labs/crit-engines",
+        "revision": "89a3cd29f2076b20a0673a78dc18787071dd9d09",
+        "path": "assistant6-fp8qk"
+      },
       "added": "2026-10-20",
-      "updated": "2026-10-20",
+      "updated": "2026-10-23",
       "pairs": [
         {
           "gpu": "rtx5090",
@@ -93,9 +97,13 @@
         "tool-calls",
         "speculative"
       ],
-      "source": null,
+      "source": {
+        "repository": "https://github.com/crit-labs/crit-engines",
+        "revision": "89a3cd29f2076b20a0673a78dc18787071dd9d09",
+        "path": "mtp3-cpu-experts"
+      },
       "added": "2026-10-20",
-      "updated": "2026-10-20",
+      "updated": "2026-10-23",
       "pairs": [
         {
           "gpu": "rtx5090",
@@ -177,9 +185,13 @@
         "tool-calls",
         "speculative"
       ],
-      "source": null,
+      "source": {
+        "repository": "https://github.com/crit-labs/crit-engines",
+        "revision": "89a3cd29f2076b20a0673a78dc18787071dd9d09",
+        "path": "mtp3-expert-cache"
+      },
       "added": "2026-10-20",
-      "updated": "2026-10-20",
+      "updated": "2026-10-23",
       "pairs": [
         {
           "gpu": "rtx5090",
@@ -252,9 +264,13 @@
         "tool-calls",
         "speculative"
       ],
-      "source": null,
+      "source": {
+        "repository": "https://github.com/crit-labs/crit-engines",
+        "revision": "89a3cd29f2076b20a0673a78dc18787071dd9d09",
+        "path": "mtp7-fp8attn"
+      },
       "added": "2026-10-20",
-      "updated": "2026-10-20",
+      "updated": "2026-10-23",
       "pairs": [
         {
           "gpu": "rtx5090",

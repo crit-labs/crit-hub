@@ -88,12 +88,14 @@ round on chat up to 6.4 on the agent case.
 ## Build and chat
 
 ```sh
+git clone https://github.com/crit-labs/crit-engines && git -C crit-engines checkout 89a3cd29f2076b20a0673a78dc18787071dd9d09
+ENGINE=crit-engines/assistant6-fp8qk/engine
 git clone https://github.com/crit-labs/crit && git -C crit checkout v0.2.1
 cmake -S crit/core -B build/core -G Ninja -DCMAKE_BUILD_TYPE=Release -DCRIT_CORE_CUDA=ON -DBUILD_TESTING=OFF \
       -DCMAKE_CUDA_ARCHITECTURES=120a -DCMAKE_POSITION_INDEPENDENT_CODE=ON
 cmake --build build/core && cmake --install build/core --prefix core-install
-bash engine/build.sh engine build/g4 package core-install
-cp engine/configuration.json package/
+bash "$ENGINE/build.sh" "$ENGINE" build/g4 package core-install
+cp "$ENGINE/configuration.json" package/
 ```
 
 Builds need CMake 3.28+, Ninja, GCC 13 and the CUDA 13.1 toolkit (`NVCC` overrides the compiler
@@ -107,9 +109,10 @@ original run:
 crit serve --workspace <runs root> --run run-20261018T211706Z-f7e30ecd --candidate candidate-0005 --project <crit checkout>
 ```
 
-[engine/configuration.json](engine/configuration.json) has the applied settings; the original run
+[engine/configuration.json](https://github.com/crit-labs/crit-engines/blob/89a3cd29f2076b20a0673a78dc18787071dd9d09/assistant6-fp8qk/engine/configuration.json) has the applied settings; the original run
 keeps the full records, Eval results and summary.
 
 ## Credits
 
-Credits and licenses are in [THIRD_PARTY.md](THIRD_PARTY.md) and [LICENSES.txt](LICENSES.txt).
+Credits and licenses are in [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/89a3cd29f2076b20a0673a78dc18787071dd9d09/assistant6-fp8qk/THIRD_PARTY.md) and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/89a3cd29f2076b20a0673a78dc18787071dd9d09/assistant6-fp8qk/LICENSES.txt),
+next to the source in [crit-labs/crit-engines](https://github.com/crit-labs/crit-engines/tree/89a3cd29f2076b20a0673a78dc18787071dd9d09/assistant6-fp8qk).

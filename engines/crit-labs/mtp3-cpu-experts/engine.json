@@ -33,6 +33,11 @@
     }
   ],
   "provenance": {
+    "source": {
+      "repository": "https://github.com/crit-labs/crit-engines",
+      "revision": "89a3cd29f2076b20a0673a78dc18787071dd9d09",
+      "path": "mtp3-cpu-experts"
+    },
     "run_id": "run-20261018T173355Z-f764c819",
     "candidate_id": "candidate-0003",
     "source_manifest_sha256": "38f80f4df7e1560973d122d077a105004b59bd0b03357b7601bb8a96bb3a059d",

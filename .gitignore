@@ -10,15 +10,13 @@
 !/browse/
 !/.github/
 
-# Inside an engine folder (engines/<owner>/<name>/) only these are tracked.
+# Inside an engine folder (engines/<owner>/<name>/) only these are tracked; its source lives in
+# the repository engine.json pins (crit-labs/crit-engines for crit engines).
 /engines/*/*/*
 !/engines/*/*/README.md
-!/engines/*/*/THIRD_PARTY.md
-!/engines/*/*/LICENSES.txt
 !/engines/*/*/engine.json
-!/engines/*/*/engine/
 
-# Never tracked anywhere, even inside engine/.
+# Never tracked anywhere.
 evidence/
 build/
 __pycache__/

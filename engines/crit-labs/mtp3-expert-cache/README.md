@@ -8,7 +8,7 @@
 An engine written from scratch on crit Core 0.1.0, which it links as an installed SDK. It runs text
 generation on WSL2 Ubuntu 24.04 with CUDA 13.1 on sm_120a (RTX 5090, 32 GB) and a host with about
 82 GiB of RAM available to WSL, at a 262,144-token context. The release is candidate-0010;
-[engine/VALIDATION.md](engine/VALIDATION.md) has its history and the full validation detail.
+[engine/VALIDATION.md](https://github.com/crit-labs/crit-engines/blob/89a3cd29f2076b20a0673a78dc18787071dd9d09/mtp3-expert-cache/engine/VALIDATION.md) has its history and the full validation detail.
 
 ## Model
 
@@ -32,7 +32,7 @@ SHA-256 the run recorded; `python -B tools/verify_model.py` checks a download ag
 | Prompts | 16K-token chunks of FP16 tensor-core GEMMs with one batched expert copy per layer |
 | Chat | crit's shared ResidentChat: tool calls through the model's chat template, per-request temperature, top_p, top_k and seed (default temperature 1, top-p 0.95, top-k 20, thinking off); sampled requests decode one token per pass with crit Core's sampler |
 
-[engine/README.md](engine/README.md) has the full design notes.
+[engine/README.md](https://github.com/crit-labs/crit-engines/blob/89a3cd29f2076b20a0673a78dc18787071dd9d09/mtp3-expert-cache/engine/README.md) has the full design notes.
 
 ## Measured
 
@@ -82,16 +82,17 @@ processing is far below its compute ceiling.
 - Allow more than 100 s for the first token near full context; cancellation does not interrupt a long
   prefill immediately.
 - Released crit 0.2.0 caps conversation text at 1,000,000 characters; the standalone prompt-file
-  command avoids that limit. [engine/VALIDATION.md](engine/VALIDATION.md) lists the remaining limits.
+  command avoids that limit. [engine/VALIDATION.md](https://github.com/crit-labs/crit-engines/blob/89a3cd29f2076b20a0673a78dc18787071dd9d09/mtp3-expert-cache/engine/VALIDATION.md) lists the remaining limits.
 
 ## Build and chat
 
-Start in the crit-hub root. Set WORK to a writable directory on the Linux filesystem and keep builds
-and checkpoints outside the repository. The native SDK is pinned to Core 0.1.0; Python text handling
-and serving use crit 0.2.0.
+Start in a crit-hub checkout, whose `tools/verify_model.py` checks the checkpoint. Set WORK to a
+writable directory on the Linux filesystem and keep builds and checkpoints outside the repository.
+The native SDK is pinned to Core 0.1.0; Python text handling and serving use crit 0.2.0.
 
 ```sh
-ENGINE="$PWD/engines/crit-labs/mtp3-expert-cache/engine"
+git clone https://github.com/crit-labs/crit-engines && git -C crit-engines checkout 89a3cd29f2076b20a0673a78dc18787071dd9d09
+ENGINE="$PWD/crit-engines/mtp3-expert-cache/engine"
 WORK="/path/to/your/wsl-run-root/flash-build"
 mkdir -p "$WORK"
 git clone --branch v0.1.0 --depth 1 https://github.com/crit-labs/crit "$WORK/crit-sdk"
@@ -117,7 +118,7 @@ terminal (`/new` clears the conversation, `/quit` exits):
 
 ```sh
 MODEL="/path/to/downloaded/checkpoint"
-python -B tools/verify_model.py "$ENGINE/.." "$MODEL"
+python -B tools/verify_model.py engines/crit-labs/mtp3-expert-cache "$MODEL"
 python "$WORK/package/chat.py" --model "$MODEL" --package "$WORK/package"
 # One request from a UTF-8 document, including multiline/long prompts:
 python "$WORK/package/chat.py" --model "$MODEL" --package "$WORK/package" \
@@ -151,4 +152,5 @@ and attach `flashnext-bench.json` if a share failed (it holds the error).
 
 ## Credits
 
-Credits and licenses are in [THIRD_PARTY.md](THIRD_PARTY.md) and [LICENSES.txt](LICENSES.txt).
+Credits and licenses are in [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/89a3cd29f2076b20a0673a78dc18787071dd9d09/mtp3-expert-cache/THIRD_PARTY.md) and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/89a3cd29f2076b20a0673a78dc18787071dd9d09/mtp3-expert-cache/LICENSES.txt),
+next to the source in [crit-labs/crit-engines](https://github.com/crit-labs/crit-engines/tree/89a3cd29f2076b20a0673a78dc18787071dd9d09/mtp3-expert-cache).

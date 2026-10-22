@@ -24,6 +24,11 @@
     }
   ],
   "provenance": {
+    "source": {
+      "repository": "https://github.com/crit-labs/crit-engines",
+      "revision": "89a3cd29f2076b20a0673a78dc18787071dd9d09",
+      "path": "mtp3-expert-cache"
+    },
     "run_id": "run-20261016T225118Z-8d49a6ce",
     "candidate_id": "candidate-0010",
     "source_manifest_sha256": "178de93d6c7a19a9a748f268e772c3a0ce2e8cbcd435711c57ba66994fc43ff4",

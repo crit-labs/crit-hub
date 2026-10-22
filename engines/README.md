@@ -9,22 +9,23 @@ many sit side by side there.
 Each engine records its origin in `engine.json`, whatever toolkit built it:
 
 - **`crit`**: built with [crit](https://github.com/crit-labs/crit) and exported from a sealed
-  candidate with `tools/export_engine.py`. The folder carries the runtime source.
-- **`external`**: built with any other toolkit. The folder pins the source at a commit in the
-  contributor's repository and carries no source of its own. crit-hub has not reviewed that
-  code; read it before you build or run it.
+  candidate with `tools/export_engine.py`. Its source, dependency credits and license texts are in
+  `<name>/` of [crit-engines](https://github.com/crit-labs/crit-engines), at the commit the engine pins.
+- **`external`**: built with any other toolkit. The source is at a commit in the contributor's
+  repository. crit-hub has not reviewed that code; read it before you build or run it.
+
+Either way the folder holds exactly two files and no source of its own:
 
 ```text
-engines/<owner>/<name>/        origin: crit
-  README.md          contributor repository, target, measured results, limits, build and chat
-  engine.json        what the engine is and runs, its provenance and exact checkpoints
-  engine/            source, configuration and required runtime data
-  THIRD_PARTY.md     dependency credits, when applicable
-  LICENSES.txt       applicable license texts and notices
+engines/<owner>/<name>/
+  README.md          contributor repository, target, measured results, limits, build and chat;
+                     an external engine's opens with the external-engine notice
+  engine.json        what the engine is and runs, its pinned source, provenance and exact checkpoints
 
-engines/<owner>/<name>/        origin: external
-  README.md          the same template, opening with the external-engine notice
-  engine.json        the same, with the source repository and commit
+crit-engines: <name>/          origin: crit, at the pinned commit
+  engine/            source, configuration and required runtime data
+  THIRD_PARTY.md     dependency credits
+  LICENSES.txt       applicable license texts and notices
 ```
 
 Check a model download against the checkpoint an engine was measured on with
@@ -49,7 +50,10 @@ people read.
      "decode_tok_s": 215.7, "prefill_tok_s": 8917, "ttft_ms": 120, "context_tokens": 262144}
   ],
   "supports": [{"gpus": ["rtx4090"], "models": ["qwen3.8-27b@NVFP4"]}],
-  "provenance": {"run_id": "...", "candidate_id": "...", "toolchain": {"os": "...", "cuda": "..."}},
+  "provenance": {"source": {"repository": "https://github.com/crit-labs/crit-engines", "revision": "<commit>",
+                            "path": "mtp7-fp8attn"},
+                 "run_id": "...", "candidate_id": "...", "source_manifest_sha256": "...",
+                 "toolchain": {"os": "...", "cuda": "..."}},
   "checkpoints": {
     "qwen3.8-27b@NVFP4": {"repository": "unsloth/Qwen3.8-27B-NVFP4", "revision": "<commit>",
                           "files": [{"path": "config.json", "bytes": 4321, "sha256": "<sha256>"}]}
@@ -70,9 +74,10 @@ people read.
   report.
 - **`supports`** (optional) names further pairs the engine runs but nobody has measured yet. Each
   group pairs every GPU in `gpus` with every model in `models`.
-- **`provenance`**: for a crit engine the sealed run, candidate, hashes and toolchain the exporter
-  records; for an external engine `source` (`repository` and the 40-character `revision`), the
-  toolchain and runtime prerequisites.
+- **`provenance`**: `source`, the `repository` and 40-character commit `revision` that hold the
+  engine's source, which the README links, and optionally `path`, its folder there; then for a crit
+  engine the sealed run, candidate, hashes and toolchain the exporter records, so the seal can be
+  checked against that commit, and for an external engine the toolchain and runtime prerequisites.
 - **`checkpoints`** pins the exact Hugging Face checkpoint of every model the engine measures or
   supports: `repository` and the 40-character commit `revision`, and for a measured model the
   `path`, `bytes` and `sha256` of each file. crit-hub reads the checkpoint's base model, lab and
