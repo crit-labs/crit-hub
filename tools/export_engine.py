@@ -1,17 +1,22 @@
-"""Export a sealed crit candidate as a compact source delivery; never copy research.
+"""Export a sealed crit candidate in two steps: its source into crit-engines, then its crit-hub entry.
 
-The destination, engines/<contributor>/<name>/, must be new. Supply a short README and the
-applicable original license files. Full candidate records and executable packages stay in the
-run. The exported engine.json carries the provenance and the exact checkpoint, and names the GPU
-and model the candidate was measured on; fill in the summary, features, measured_with and the
-README's measured figures, and the SPDX license of the engine source, before tools/check_engines.py
-passes.
+source copies the explicitly selected runtime source and data, the configuration, dependency credits
+and the applicable license texts into <name>/ of a crit-engines checkout; never research, full
+candidate records or executable packages, which stay in the run. Commit that folder in crit-engines.
+entry then writes engines/<contributor>/<name>/ in crit-hub, README.md and engine.json only, pinned to
+the crit-engines commit that holds the source: the checkout's HEAD, which must contain <name>/ with no
+uncommitted changes. The supplied README writes that commit as <crit-engines commit>, which entry
+fills in. engine.json carries the provenance and the exact checkpoint, and names the GPU and model the
+candidate was measured on; fill in the summary, features, measured_with and the README's measured
+figures, and the SPDX license of the engine source, before tools/check_engines.py passes. Both steps
+verify the complete seal, and both destinations must be new.
 """
 import argparse
 import hashlib
 import json
 import re
 import shutil
+import subprocess
 from pathlib import Path, PurePosixPath
 
 
@@ -71,6 +76,8 @@ REPOSITORY = re.compile(r"https://[A-Za-z0-9.-]+(/[A-Za-z0-9_.~-]+)+/?")
 
 BUILT_WITH_CRIT = "> Built with [crit](https://github.com/crit-labs/crit): a sealed crit candidate, exported with `tools/export_engine.py`."
 
+REVISION = "<crit-engines commit>"
+
 
 def credit(text, name, repository):
     """The contributor's repository sits directly under the engine README's title."""
@@ -84,14 +91,11 @@ def credit(text, name, repository):
     return f"{lines[0]}\n\n> [!NOTE]\n> **Contributed by** {name} · [{shown}]({repository})\n>\n{BUILT_WITH_CRIT}\n\n{rest}\n"
 
 
-def export(args):
-    for name in (args.gpu, args.model, args.name, args.candidate):
-        if not re.fullmatch(r"[A-Za-z0-9@_.+-]+", name) or name in (".", ".."):
-            raise ValueError("GPU/model/name/candidate must be a single folder name")
-    if not re.fullmatch(r"[A-Za-z0-9_.-]+", args.contributor) or args.contributor in (".", ".."):
-        raise ValueError("The contributor names the engine's folder: use your GitHub account or organization")
-    if not re.fullmatch(r"[a-z0-9][a-z0-9.-]*", args.gpu) or not re.fullmatch(r"[a-z0-9][a-z0-9.-]*@[A-Za-z0-9.+-]+", args.model):
-        raise ValueError("Name the GPU like rtx5090 and the model like qwen3.8-27b@NVFP4")
+def sealed(args):
+    """The run, and the candidate's verified seal, source and package."""
+    for name in (args.name, args.candidate):
+        if not re.fullmatch(r"[A-Za-z0-9_.-]+", name) or name in (".", ".."):
+            raise ValueError("The name and candidate must each be a single folder name")
     run = Path(args.run).resolve()
     candidate = child(run, f"candidates/{args.candidate}")
     seal = read(candidate / "seal.json")
@@ -102,16 +106,15 @@ def export(args):
         path = child(candidate, entry["path"])
         if not path.is_file() or path.stat().st_size != entry["bytes"] or digest(path) != entry["sha256"]:
             raise ValueError(f"Seal mismatch: {entry['path']}")
-    source = candidate / "source"
-    package = candidate / "package"
-    manifest = read(package / "manifest.json")
-    target = Path(args.hub).resolve() / "engines" / args.contributor / args.name
+    return run, seal, candidate / "source", candidate / "package"
+
+
+def export_source(args):
+    run, seal, source, package = sealed(args)
+    target = Path(args.engines).resolve() / args.name
     if target.exists():
         raise ValueError("Destination exists; archive it before replacing it")
     # Validate all caller-supplied inputs before creating the destination.
-    readme = Path(args.readme).resolve()
-    if not readme.is_file():
-        raise ValueError("A concise engine README is required")
     licenses = []
     for item in args.license:
         label, filename = item.split("=", 1)
@@ -121,10 +124,6 @@ def export(args):
         licenses.append((label, path))
     if not licenses:
         raise ValueError("Retain applicable licenses, including original contributions")
-    if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", args.model_repo) or not re.fullmatch(r"[0-9a-f]{40}", args.model_revision):
-        raise ValueError("Name the model as a Hugging Face repository and its full commit revision")
-    if not args.contributor.strip() or "\n" in args.contributor or not REPOSITORY.fullmatch(args.contributor_repo):
-        raise ValueError("Credit the contributor by name and the https URL of their repository")
     if not args.runtime_source:
         raise ValueError("Select the engine's runtime source explicitly")
     selected = []
@@ -143,22 +142,68 @@ def export(args):
     required = [third_party, package / "configuration.json"] + [path for path, _ in data]
     if not selected or any(not path.is_file() for path in required):
         raise ValueError("Incomplete runtime source, data or notices")
-    refuse_local_paths(selected + data + [(third_party, "THIRD_PARTY.md"), (readme, "README.md"),
+    refuse_local_paths(selected + data + [(third_party, "THIRD_PARTY.md"),
                                           (package / "configuration.json", "configuration.json")], run)
-    credited = credit(readme.read_text(encoding="utf-8"), args.contributor.strip(), args.contributor_repo)
     engine = target / "engine"
     target.mkdir(parents=True)
     for path, name in selected:
         copy(path, child(engine, name))
     copy(third_party, target / "THIRD_PARTY.md")
-    (target / "README.md").write_text(credited, encoding="utf-8", newline="\n")
     copy(package / "configuration.json", engine / "configuration.json")
     # Runtime data is explicit, never inferred from work/ or historical scripts.
     for path, name in data:
         copy(path, child(engine, name))
     text = "\n\n".join(f"{'=' * 72}\n{label}\n{'=' * 72}\n{path.read_text(encoding='utf-8')}" for label, path in licenses)
     (target / "LICENSES.txt").write_text(text + "\n", encoding="utf-8")
+    print(json.dumps({"export": str(target), "files": sum(p.is_file() for p in target.rglob("*")), "verified_seal_files": len(seal["files"]),
+                      "next": f"commit {args.name}/ in crit-engines, then run entry"}))
+
+
+def committed(engines, name):
+    """The crit-engines commit that holds <name>/: HEAD, with nothing under <name>/ left uncommitted."""
+    def git(*command):
+        return subprocess.run(["git", "-C", str(engines), *command], capture_output=True, text=True)
+    head = git("rev-parse", "HEAD").stdout.strip()
+    if not re.fullmatch(r"[0-9a-f]{40}", head):
+        raise ValueError(f"{engines} is not a crit-engines checkout with a commit")
+    if not git("ls-tree", "-r", "--name-only", "HEAD", "--", f"{name}/engine").stdout.strip():
+        raise ValueError(f"HEAD of {engines} has no {name}/engine/; run source and commit {name}/ first")
+    if git("status", "--porcelain", "--", name).stdout.strip():
+        raise ValueError(f"{name}/ in {engines} has uncommitted changes; commit them first")
+    return head
+
+
+def export_entry(args):
+    for name in (args.gpu, args.model):
+        if not re.fullmatch(r"[A-Za-z0-9@_.+-]+", name) or name in (".", ".."):
+            raise ValueError("GPU/model must be a single folder name")
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+", args.contributor) or args.contributor in (".", ".."):
+        raise ValueError("The contributor names the engine's folder: use your GitHub account or organization")
+    if not re.fullmatch(r"[a-z0-9][a-z0-9.-]*", args.gpu) or not re.fullmatch(r"[a-z0-9][a-z0-9.-]*@[A-Za-z0-9.+-]+", args.model):
+        raise ValueError("Name the GPU like rtx5090 and the model like qwen3.8-27b@NVFP4")
+    run, seal, _, package = sealed(args)
+    manifest = read(package / "manifest.json")
+    target = Path(args.hub).resolve() / "engines" / args.contributor / args.name
+    if target.exists():
+        raise ValueError("Destination exists; archive it before replacing it")
+    # Validate all caller-supplied inputs before creating the destination.
+    readme = Path(args.readme).resolve()
+    if not readme.is_file():
+        raise ValueError("A concise engine README is required")
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", args.model_repo) or not re.fullmatch(r"[0-9a-f]{40}", args.model_revision):
+        raise ValueError("Name the model as a Hugging Face repository and its full commit revision")
+    if not args.contributor.strip() or "\n" in args.contributor or not REPOSITORY.fullmatch(args.contributor_repo):
+        raise ValueError("Credit the contributor by name and the https URL of their repository")
+    if not REPOSITORY.fullmatch(args.source_repo):
+        raise ValueError("Name the https URL of the crit-engines repository the commit is pushed to")
+    revision = committed(Path(args.engines).resolve(), args.name)
+    refuse_local_paths([(readme, "README.md")], run)
+    text = readme.read_text(encoding="utf-8")
+    if REVISION not in text:
+        raise ValueError(f"The README's Build and chat checks out {REVISION} of crit-engines; entry fills in the commit")
+    credited = credit(text.replace(REVISION, revision), args.contributor.strip(), args.contributor_repo)
     provenance = {
+        "source": {"repository": args.source_repo, "revision": revision, "path": args.name},
         "run_id": seal["run_id"],
         "candidate_id": args.candidate,
         "source_manifest_sha256": manifest["source_manifest_sha256"],
@@ -169,7 +214,7 @@ def export(args):
         "runtime_prerequisites": manifest.get("extensions", {}).get("runtime_prerequisites", []),
     }
     if LOCAL_PATH.search(json.dumps(provenance)) or run.parent.as_posix() in json.dumps(provenance):
-        raise ValueError("Local path in the candidate's toolchain record; remove the export and describe the toolchain without it")
+        raise ValueError("Local path in the candidate's toolchain record; describe the toolchain without it")
     # The summary, features, protocol and measured figures come from the README; the contributor fills them in.
     engine_json = {
         "summary": None,
@@ -181,25 +226,36 @@ def export(args):
         "provenance": provenance,
         "checkpoints": {args.model: checkpoint(args.model_repo, args.model_revision, read(run / "inputs.json")["model_manifest"])},
     }
+    target.mkdir(parents=True)
+    (target / "README.md").write_text(credited, encoding="utf-8", newline="\n")
     (target / "engine.json").write_text(json.dumps(engine_json, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps({"export": str(target), "files": sum(p.is_file() for p in target.rglob("*")), "verified_seal_files": len(seal["files"])}))
+    print(json.dumps({"export": str(target), "source": f"{args.source_repo}/tree/{revision}/{args.name}", "verified_seal_files": len(seal["files"])}))
 
 
 if __name__ == "__main__":
-    p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--run", required=True)
-    p.add_argument("--candidate", required=True)
-    p.add_argument("--hub", required=True, help="crit-hub repository root")
-    p.add_argument("--gpu", required=True, help="GPU id the candidate was measured on, e.g. rtx5090")
-    p.add_argument("--model", required=True, help="model id, <model>@<encoding>, e.g. qwen3.8-27b@NVFP4")
-    p.add_argument("--name", required=True, help="engine name describing its design, e.g. mtp6-cleanroom")
-    p.add_argument("--model-repo", required=True, help="Hugging Face repository, e.g. unsloth/Qwen3.8-27B-NVFP4")
-    p.add_argument("--model-revision", required=True, help="full commit of that repository the run used")
-    p.add_argument("--contributor", required=True, help="your GitHub account or organization: credited in the README and the engine's folder, engines/<contributor>/<name>/")
-    p.add_argument("--contributor-repo", required=True, help="https URL of your repository, shown under the README's title")
-    p.add_argument("--readme", required=True)
-    p.add_argument("--third-party", help="THIRD_PARTY.md to use when the sealed source has none")
-    p.add_argument("--runtime-source", action="append", default=[])
-    p.add_argument("--runtime-data", action="append", default=[])
-    p.add_argument("--license", action="append", default=[])
-    export(p.parse_args())
+    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    steps = p.add_subparsers(dest="step", required=True)
+    for step, about in (("source", "copy the candidate's runtime source into a crit-engines checkout"),
+                        ("entry", "write its crit-hub entry, pinned to the crit-engines commit that holds the source")):
+        q = steps.add_parser(step, help=about, description=about)
+        q.add_argument("--run", required=True)
+        q.add_argument("--candidate", required=True)
+        q.add_argument("--engines", required=True, help="crit-engines checkout")
+        q.add_argument("--name", required=True, help="engine name describing its design, e.g. mtp6-cleanroom: <name>/ in crit-engines and engines/<contributor>/<name>/ in crit-hub")
+        if step == "source":
+            q.add_argument("--third-party", help="THIRD_PARTY.md to use when the sealed source has none")
+            q.add_argument("--runtime-source", action="append", default=[])
+            q.add_argument("--runtime-data", action="append", default=[])
+            q.add_argument("--license", action="append", default=[])
+            continue
+        q.add_argument("--hub", required=True, help="crit-hub repository root")
+        q.add_argument("--source-repo", default="https://github.com/crit-labs/crit-engines", help="https URL the crit-engines commit is pushed to (default: %(default)s)")
+        q.add_argument("--gpu", required=True, help="GPU id the candidate was measured on, e.g. rtx5090")
+        q.add_argument("--model", required=True, help="model id, <model>@<encoding>, e.g. qwen3.8-27b@NVFP4")
+        q.add_argument("--model-repo", required=True, help="Hugging Face repository, e.g. unsloth/Qwen3.8-27B-NVFP4")
+        q.add_argument("--model-revision", required=True, help="full commit of that repository the run used")
+        q.add_argument("--contributor", required=True, help="your GitHub account or organization: credited in the README and the engine's folder, engines/<contributor>/<name>/")
+        q.add_argument("--contributor-repo", required=True, help="https URL of your repository, shown under the README's title")
+        q.add_argument("--readme", required=True, help=f"the engine README; it writes the crit-engines commit as {REVISION}")
+    args = p.parse_args()
+    (export_source if args.step == "source" else export_entry)(args)
