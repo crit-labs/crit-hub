@@ -198,11 +198,20 @@ def crit_eval(measured_with):
     return re.fullmatch(r"crit-eval-v[0-9]+(\.[0-9]+)?", str(measured_with)) is not None
 
 
+def sampled_text(sampling):
+    """How a crit-eval-v7 decode was sampled: at the model's defaults, or the settings and why they differ."""
+    if not sampling:
+        return "decode sampled at the model's defaults"
+    settings = ", ".join(f"{key} {value}" for key, value in sampling["settings"].items())
+    why = "a user override, not the model's defaults" if sampling["source"] == "override" else "the protocol default"
+    return f"decode sampled at {settings}: {why}"
+
+
 def result_block(result):
     """One result: its stats table, and right under it one caption line saying what was measured,
     how, when, from which evidence, and any further figures."""
     how = (f"crit Eval ({result['measured_with']}, "
-           + ("greedy decode" if eval_major(result["measured_with"]) <= 6 else "decode sampled at the model's defaults") + ")"
+           + ("greedy decode" if eval_major(result["measured_with"]) <= 6 else sampled_text(result.get("sampling"))) + ")"
            if crit_eval(result.get("measured_with")) else f"self-reported ({result['measured_with']})")
     parts = [f"{result['gpu']} · `{result['model']}`", how]
     if result.get("measured_on"):

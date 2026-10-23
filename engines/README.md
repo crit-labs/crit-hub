@@ -63,7 +63,10 @@ at the model's `generation_config.json` sampling (`sampled_speed.decode_score` i
 the greedy decode goes under `more` as `greedy_decode_tok_s` (`speed.decode_score`). A crit-eval-v6
 result's decode is greedy and has no `greedy_decode_tok_s`. The README and the website label the
 column Decode (sampled) or Decode (greedy) from `measured_with`; a self-reported result says in its
-prose which it is.
+prose which it is. A v7 decode sampled at other settings than the model's own (a user's
+`crit eval prepare --sampling` override, or the protocol default for a model that does not sample)
+states them under the result's `sampling: {source, settings}`, as its result file records them, and
+the caption names them.
 
 <a id="provenance"></a>
 

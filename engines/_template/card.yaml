@@ -80,6 +80,9 @@ results:
   # Anything else (a leaderboard, your own benchmark) is shown as your own report.
   measured_with: crit-eval-v7
   measured_on: "2026-10-23"        # the day it was measured; null when unknown (never for crit Eval)
+  # crit-eval-v7, only when the decode was not sampled at the model's generation_config.json: as the result
+  # file's sampled_speed records it (a user's crit eval prepare --sampling override, or the protocol default).
+  # sampling: {source: override, settings: {temperature: 0.6, top_p: 0.95, top_k: 20}}
   # The six headline stats, in this order, on every page that shows the engine. null when not measured.
   stats:
     decode_tok_s: 100.0            # tokens per second; [low, high] for a range across runs. From crit-eval-v7

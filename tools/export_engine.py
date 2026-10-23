@@ -221,9 +221,13 @@ def measured(args, seal, candidate, target):
         more["heldout_decode_tok_s"] = figure(heldout, 1)
     if budget is not None:
         more["quality_budget_pct"] = round(budget * 100, 1)
-    return {"gpu": args.gpu, "model": args.model, "measured_with": results[0]["protocol"],
-            "measured_on": max(str(r.get("started_at", ""))[:10] for r in results),
-            "stats": stats, "more": more, "evidence": evidence}
+    entry = {"gpu": args.gpu, "model": args.model, "measured_with": results[0]["protocol"],
+             "measured_on": max(str(r.get("started_at", ""))[:10] for r in results)}
+    # A sampled decode not at the model's generation_config.json says so on the card and in its caption.
+    source = (results[0].get("sampled_speed") or {}).get("sampling_source") or "generation_config"
+    if sampled and source != "generation_config":
+        entry["sampling"] = {"source": source, "settings": results[0]["sampled_speed"]["sampling"]}
+    return {**entry, "stats": stats, "more": more, "evidence": evidence}
 
 
 def export_entry(args):

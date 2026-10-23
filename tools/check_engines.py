@@ -43,7 +43,7 @@ HF_REPOSITORY = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
 FEATURES = {"openai-api", "tool-calls", "vision", "speculative"}
 CARD_FIELDS = {"title", "summary", "origin", "contributor", "license", "features", "source", "requirements", "downloads",
                "checkpoints", "supports", "results", "readme"}
-RESULT_FIELDS = {"gpu", "model", "measured_with", "measured_on", "stats", "more", "evidence"}
+RESULT_FIELDS = {"gpu", "model", "measured_with", "measured_on", "sampling", "stats", "more", "evidence"}
 PLATFORMS = {"linux", "wsl2", "windows", "macos"}
 GPU_ARCH = re.compile(r"sm_[0-9]{2,3}[a-z]?")
 CUDA = re.compile(r"[0-9]+\.[0-9]+")
@@ -320,6 +320,14 @@ def check_crit_eval(name, result, loaded):
             problems.append(f"{name}: {file} is not a complete speed run")
         if cardlib.eval_major(result["measured_with"]) >= 7 and not (data.get("sampled_speed") or {}).get("complete"):
             problems.append(f"{name}: {file} is not a complete sampled speed run")
+        if cardlib.eval_major(result["measured_with"]) >= 7:
+            sampled = data.get("sampled_speed") or {}
+            source = sampled.get("sampling_source") or "generation_config"
+            stated = result.get("sampling")
+            found = None if source == "generation_config" else {"source": source, "settings": sampled.get("sampling")}
+            if stated != found:
+                problems.append(f"{name}: {file} sampled its decode at {sampled.get('sampling')} ({source}); the card's "
+                                f"sampling must be {found if found else 'absent (the model defaults)'}")
         failed = [g.get("name") for g in (data.get("status") or {}).get("gates", []) if isinstance(g, dict) and g.get("state") == "fail"]
         if failed:
             problems.append(f"{name}: {file} failed gate(s) {', '.join(map(str, failed))}")
@@ -426,6 +434,9 @@ def check_results(folder, card):
         on = result.get("measured_on")
         if on is not None and not (isinstance(on, str) and re.fullmatch(r"\d{4}-\d{2}-\d{2}", on)):
             problems.append(f"{name}: measured_on is the day it was measured, YYYY-MM-DD, or null when unknown")
+        if "sampling" in result and not (cardlib.crit_eval(result["measured_with"])
+                                         and cardlib.eval_major(result["measured_with"]) >= 7):
+            problems.append(f"{name}: sampling states a crit-eval-v7 result's non-default sampling")
         stat_problems = check_stats(name, result.get("stats"), result.get("more", {}))
         problems += stat_problems
         evidence = result.get("evidence", [])

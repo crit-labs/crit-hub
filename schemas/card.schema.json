@@ -105,6 +105,16 @@
         "measured_with": {"type": "string", "description": "A crit Eval protocol (crit-eval-v7) or how else it was measured (LocalMaxxing, your own benchmark)."},
         "measured_on": {"description": "The day it was measured, YYYY-MM-DD (quoted); null when unknown, never for crit Eval.",
                         "oneOf": [{"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"}, {"type": "null"}]},
+        "sampling": {
+          "type": "object", "additionalProperties": false, "required": ["source", "settings"],
+          "description": "crit-eval-v7, only when the sampled decode was not measured at the model's generation_config.json: the result file's sampled_speed sampling_source and sampling.",
+          "properties": {
+            "source": {"enum": ["override", "protocol_default"]},
+            "settings": {"type": "object", "additionalProperties": false, "required": ["temperature"],
+                         "properties": {"temperature": {"type": "number", "exclusiveMinimum": 0}, "top_p": {"type": "number"},
+                                        "top_k": {"type": "integer"}, "min_p": {"type": "number"}}}
+          }
+        },
         "stats": {
           "type": "object", "additionalProperties": false, "description": "The six headline stats, in this order; null when not measured.",
           "required": ["decode_tok_s", "prefill_tok_s", "ttft_ms", "ppl", "kld_mean", "context_tokens"],
