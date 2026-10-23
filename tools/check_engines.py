@@ -3,7 +3,7 @@
 Each engine lives in engines/<owner>/<name>/, where <owner> is its contributor, and describes
 itself in engine.json: summary, origin, contributor, license, features, the GPU/model pairs it
 measured (results) or supports, its provenance and the exact Hugging Face checkpoint of every model
-it measures or supports, which browse/hf.json must already place in Hugging Face's model tree.
+it measures or supports.
 Every engine holds only README.md and engine.json and pins its source to a full commit SHA in a
 repository, optionally a folder in it, which its README links. A crit engine's source is in
 crit-labs/crit-engines; it needs its sealed-run provenance and the built-with-crit line under its
@@ -96,9 +96,9 @@ def check_results(engine, text):
     return problems
 
 
-def check_checkpoints(engine, cache):
+def check_checkpoints(engine):
     """Every measured or supported model pins its Hugging Face checkpoint, measured ones with the
-    hashes of its files, and browse/hf.json already places each one in Hugging Face's tree."""
+    hashes of its files."""
     checkpoints = engine.get("checkpoints")
     if not isinstance(checkpoints, dict):
         return ["engine.json checkpoints pins the exact checkpoint of every measured or supported model, keyed by model"]
@@ -125,9 +125,6 @@ def check_checkpoints(engine, cache):
         revision = str(checkpoint.get("revision"))
         if not COMMIT.fullmatch(revision):
             problems.append(f"engine.json checkpoints[{model}] revision must be the full 40-character commit")
-        elif f"{checkpoint['repository']}@{revision}" not in cache:
-            problems.append(f"browse/hf.json has no entry for {checkpoint['repository']} at {revision[:12]}; run "
-                            "python -B tools/build_index.py --refresh to read it from Hugging Face, and commit browse/")
     return problems
 
 
@@ -206,7 +203,7 @@ def check_external(head):
     return problems
 
 
-def check(folder, cache):
+def check(folder):
     if not NAME.fullmatch(folder.name) or not NAME.fullmatch(folder.parent.name):
         return ["engine folder names use only letters, digits, '.', '_' and '-'"]
     for name in ("README.md", "engine.json"):
@@ -223,7 +220,7 @@ def check(folder, cache):
     if not lines or not lines[0].startswith("# "):
         return ["README.md must open with a '# ' title"]
     head = lines[1:12]
-    problems = check_card(folder, engine) + check_results(engine, text) + check_supports(engine) + check_checkpoints(engine, cache)
+    problems = check_card(folder, engine) + check_results(engine, text) + check_supports(engine) + check_checkpoints(engine)
     provenance = engine.get("provenance") if isinstance(engine.get("provenance"), dict) else {}
     problems += check_source(folder, provenance, text)
     origin = engine.get("origin")
@@ -237,12 +234,10 @@ def check(folder, cache):
 
 
 def main(hub):
-    path = Path(hub) / "browse" / "hf.json"
-    cache = json.loads(path.read_text(encoding="utf-8")).get("checkpoints", {}) if path.is_file() else {}
     folders = sorted(p for p in (Path(hub) / "engines").glob("*/*") if p.is_dir())
     failed = 0
     for folder in folders:
-        problems = check(folder, cache)
+        problems = check(folder)
         name = folder.relative_to(Path(hub) / "engines").as_posix()
         if problems:
             failed += 1

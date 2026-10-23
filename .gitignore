@@ -7,7 +7,6 @@
 !/tools/
 !/docs/
 !/engines/
-!/browse/
 !/.github/
 
 # Inside an engine folder (engines/<owner>/<name>/) only these are tracked; its source lives in

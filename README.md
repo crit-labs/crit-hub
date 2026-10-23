@@ -8,11 +8,11 @@
 ### Huggingface for tailored inference engines. Don't rebuild an engine that already exists.
 
 [![License Apache-2.0](docs/assets/badge-license.svg)](LICENSE)
-[![Registry of engines](docs/assets/badge-registry.svg)](browse/README.md)
+[![Registry of engines](docs/assets/badge-registry.svg)](engines/)
 [![Built with crit](docs/assets/badge-crit.svg)](https://github.com/crit-labs/crit)
 
 [Summary](#summary) • [Quick start](#quick-start) • [What crit-hub solves](#what-crit-hub-solves) •
-[Browse engines](browse/README.md) • [Contributing](#contributing) • [License](#license)
+[Engines](engines/) • [Contributing](#contributing) • [License](#license)
 
 </div>
 
@@ -27,10 +27,10 @@ so you can find one built for your hardware and target LLM.**
 > [!IMPORTANT]
 > Tailored engines are scattered across personal repositories, forks and forum posts, and
 > there is no Hugging Face for inference engines. crit-hub collects them in one place: each
-> engine lives once in `engines/<owner>/<engine>/` and lists the GPUs and models it runs, and
-> [browse/](browse/README.md) indexes them by GPU, then model, then checkpoint. Each engine pins its
-> source and the exact checkpoint it was built on, and states what was measured, its known limits
-> and a link to the repository of whoever contributed it.
+> engine lives once in [`engines/<owner>/<engine>/`](engines/), the single source of truth: an
+> `engine.json` that lists the GPUs and models it runs and a README. Each engine pins its source
+> and the exact checkpoint it was built on, and states what was measured, its known limits and a
+> link to the repository of whoever contributed it.
 > Engines come from any toolkit, and every one links its source at a pinned commit. Those built
 > with [crit](https://github.com/crit-labs/crit) keep their sealed source in
 > [crit-engines](https://github.com/crit-labs/crit-engines); external engines link the contributor's repository and are
@@ -44,12 +44,11 @@ so you can find one built for your hardware and target LLM.**
 
 ## Quick start
 
-Open [browse/](browse/README.md), pick your GPU, then your model, then its checkpoint, the Hugging Face
-repository an engine runs. The table there lists every engine that runs that checkpoint, whether it was built for exactly that pair or for a whole
-model family, and whether it was measured on it or only supports it. Each engine folder's
-README explains how to build it and open chat, and says whether it was built with crit or is
-an external engine, whose source you should read before you build it. Or give this prompt to your coding agent and
-name your GPU and target LLM:
+Look through [engines/](engines/): each engine's `engine.json` lists the GPUs and models it was
+measured on or supports and the exact Hugging Face checkpoint it runs. Its README explains how to
+build it and open chat, and says whether it was built with crit or is an external engine, whose
+source you should read before you build it. Or give this prompt to your coding agent and name your
+GPU and target LLM:
 ```bash
 Check github.com/crit-labs/crit-hub for an inference engine for my GPU and model, then build and run it.
 ```
@@ -66,8 +65,8 @@ Find what already exists. Stop rebuilding it.
 
 **Discovery in one place 🔎**
 > Today you can rarely tell whether an engine for your exact hardware and model exists.
-> crit-hub makes that a folder lookup: GPU, then model, then checkpoint, then every engine
-> that runs it.
+> crit-hub makes that a lookup: every engine states the GPUs, models and exact checkpoints it
+> runs in one `engine.json`.
 
 **A registry, not a scoreboard 📇**
 > Engines are listed by what they target, not ranked against each other. Each one states
@@ -111,9 +110,7 @@ Every working engine you add saves the next person from building it again.
 6. Retain dependency credits and applicable license texts and notices next to the source.
 7. Open one pull request to [crit-engines](https://github.com/crit-labs/crit-engines) with the source and, once it is merged, one to
    crit-hub with the entry pinned to the merged commit.
-8. `python -B tools/build_index.py --refresh` reads your checkpoints from Hugging Face and updates
-   [browse/](browse/README.md), and `python -B tools/check_engines.py` passes for your folder; commit
-   both.
+8. `python -B tools/check_engines.py` passes for your folder.
 
 Keep model weights, builds, binaries, development scripts and full experiment records
 outside both repositories. Each [.gitignore](.gitignore) uses a whitelist for published files.
@@ -151,9 +148,7 @@ crit-hub records where it is, what it targets and what it measured.
    does for crit's own engines behind `crit serve`. Pin the Hugging Face checkpoint of every model it
    runs under `checkpoints`; Hugging Face tells crit-hub the rest: base model, lab, quantization.
 6. Name your source's license in the README's **Credits** section and in `engine.json`.
-7. `python -B tools/build_index.py --refresh` reads your checkpoints from Hugging Face and updates
-   [browse/](browse/README.md), and `python -B tools/check_engines.py` passes for your folder; commit
-   both.
+7. `python -B tools/check_engines.py` passes for your folder.
 
 To update an external engine, change the pinned commit, the measurements and anything else the new
 commit changes in one change.

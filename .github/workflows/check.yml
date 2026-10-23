@@ -15,5 +15,3 @@ jobs:
           python-version: "3.12"
       - name: Engine folders match their layout
         run: python -B tools/check_engines.py
-      - name: browse/ is up to date
-        run: python -B tools/build_index.py --check

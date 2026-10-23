@@ -2,9 +2,9 @@
 
 Each engine lives once, in `engines/<owner>/<name>/`: `<owner>` is the contributor's GitHub
 account or organization and `<name>` describes the engine's design. Its `engine.json` says what
-it is and which GPUs and models it runs, and [browse/](../browse/README.md) indexes every engine by
-GPU, then model, then checkpoint, as Hugging Face relates them. An engine tailored to one GPU and one model and an engine that runs
-many sit side by side there.
+it is and which GPUs and models it runs. These folders are the single source of truth: anything
+that lists engines by GPU, model or checkpoint, such as the website, is generated from them. An
+engine tailored to one GPU and one model and an engine that runs many sit side by side.
 
 Each engine records its origin in `engine.json`, whatever toolkit built it:
 
@@ -80,12 +80,12 @@ people read.
   checked against that commit, and for an external engine the toolchain and runtime prerequisites.
 - **`checkpoints`** pins the exact Hugging Face checkpoint of every model the engine measures or
   supports: `repository` and the 40-character commit `revision`, and for a measured model the
-  `path`, `bytes` and `sha256` of each file. crit-hub reads the checkpoint's base model, lab and
-  quantization from Hugging Face (`tools/build_index.py --refresh`, kept in browse/hf.json), so a
-  checkpoint whose model card names its `base_model` lands under the right model by itself.
+  `path`, `bytes` and `sha256` of each file. The website reads the checkpoint's base model, lab and
+  quantization from Hugging Face when it lists engines, so a checkpoint whose model card names its
+  `base_model` lands under the right model by itself.
 
 A GPU id is the card in lowercase, such as `rtx5090`; a model id is the model in lowercase and its
-encoding, such as `qwen3.8-27b@NVFP4`. Reuse the ids already in [browse/](../browse/README.md) so an
-engine lands on the same page as the others for that GPU and model.
+encoding, such as `qwen3.8-27b@NVFP4`. Reuse the ids other engines here already use so an engine
+lands on the same page as the others for that GPU and model.
 
 To add an engine, follow [Contributing](../README.md#contributing).
