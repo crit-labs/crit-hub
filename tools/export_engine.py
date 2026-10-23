@@ -7,8 +7,11 @@ entry then writes engines/<contributor>/<name>/ in crit-hub, README.md and engin
 the crit-engines commit that holds the source: the checkout's HEAD, which must contain <name>/ with no
 uncommitted changes. The supplied README writes that commit as <crit-engines commit>, which entry
 fills in. engine.json carries the provenance and the exact checkpoint, and names the GPU and model the
-candidate was measured on; fill in the summary, features, measured_with and the README's measured
-figures, the requirements, any downloads, and the SPDX license of the engine source, before
+candidate was measured on. --eval names the candidate's sealed crit Eval attempts (attempt-0003):
+entry copies each result into eval/ and takes the result's figures from them, measured_with, decode,
+prefill, first token, context and the quality budget its worst path uses; without --eval, fill them
+in as your own report. Fill in the summary, features, the README's measured figures, the
+requirements, any downloads, and the SPDX license of the engine source, before
 tools/check_engines.py passes. Both steps
 verify the complete seal, and both destinations must be new.
 """
@@ -174,6 +177,47 @@ def committed(engines, name):
     return head
 
 
+def measured(args, seal, candidate, target):
+    """The result for --gpu and --model: from the candidate's sealed crit Eval attempts, copied into
+    eval/, or left for the contributor to fill in. Creates the destination."""
+    sealed_files = {entry["path"] for entry in seal["files"]}
+    attempts, results = [], []
+    for attempt in args.eval:
+        if not re.fullmatch(r"attempt-[0-9]+", attempt) or f"eval/{attempt}.json" not in sealed_files:
+            raise ValueError(f"No sealed crit Eval result eval/{attempt}.json in {args.candidate}")
+        attempts.append(child(candidate, f"eval/{attempt}.json"))
+        results.append(read(attempts[-1]))
+        if not re.fullmatch(r"crit-eval-v[0-9]+(\.[0-9]+)?", str(results[-1].get("protocol"))) or not (results[-1].get("speed") or {}).get("complete"):
+            raise ValueError(f"eval/{attempt}.json is not a complete crit Eval speed run")
+    if len({r["protocol"] for r in results}) > 1:
+        raise ValueError("The --eval attempts ran under different crit Eval protocols")
+    target.mkdir(parents=True)
+    if not args.eval:
+        return {"gpu": args.gpu, "model": args.model, "measured_with": None, "decode_tok_s": None}
+    files = []
+    for number, path in enumerate(attempts, 1):
+        name = f"eval/{args.gpu}--{args.model}" + (f"--{number}" if len(attempts) > 1 else "") + ".json"
+        copy(path, target / name)
+        files.append({"file": name, "sha256": digest(target / name)})
+
+    def figure(field, places):
+        scores = [round(r["speed"][field], places) if places else round(r["speed"][field]) for r in results]
+        return scores[0] if len(scores) == 1 else [min(scores), max(scores)]
+
+    entry = {"gpu": args.gpu, "model": args.model, "measured_with": results[0]["protocol"],
+             "decode_tok_s": figure("decode_score", 1), "prefill_tok_s": figure("prefill_score", 0),
+             "ttft_ms": figure("ttft_score_ms", 0)}
+    tokens = {(r.get("context") or {}).get("tokens") for r in results}
+    if len(tokens) == 1 and isinstance(next(iter(tokens)), int):
+        entry["context_tokens"] = next(iter(tokens))
+    budgets = [max((s["budget_used"] for s in ((r.get("quality") or {}).get("sets") or {}).values()
+                    if isinstance(s, dict) and isinstance(s.get("budget_used"), (int, float))), default=None) for r in results]
+    if budgets and None not in budgets:
+        entry["quality"] = {"metric": "budget_pct", "value": round(max(budgets) * 100, 1)}
+    entry["eval"] = files
+    return entry
+
+
 def export_entry(args):
     for name in (args.gpu, args.model):
         if not re.fullmatch(r"[A-Za-z0-9@_.+-]+", name) or name in (".", ".."):
@@ -223,12 +267,11 @@ def export_entry(args):
         "contributor": {"name": args.contributor.strip(), "repository": args.contributor_repo},
         "license": None,
         "features": [],
-        "results": [{"gpu": args.gpu, "model": args.model, "measured_with": None, "decode_tok_s": None}],
+        "results": [measured(args, seal, package.parent, target)],
         "requirements": {"platforms": [], "gpu_arch": [], "gpu_memory_gb": None, "cuda": None},
         "provenance": provenance,
         "checkpoints": {args.model: checkpoint(args.model_repo, args.model_revision, read(run / "inputs.json")["model_manifest"])},
     }
-    target.mkdir(parents=True)
     (target / "README.md").write_text(credited, encoding="utf-8", newline="\n")
     (target / "engine.json").write_text(json.dumps(engine_json, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({"export": str(target), "source": f"{args.source_repo}/tree/{revision}/{args.name}", "verified_seal_files": len(seal["files"])}))
@@ -259,5 +302,8 @@ if __name__ == "__main__":
         q.add_argument("--contributor", required=True, help="your GitHub account or organization: credited in the README and the engine's folder, engines/<contributor>/<name>/")
         q.add_argument("--contributor-repo", required=True, help="https URL of your repository, shown under the README's title")
         q.add_argument("--readme", required=True, help=f"the engine README; it writes the crit-engines commit as {REVISION}")
+        q.add_argument("--eval", action="append", default=[], metavar="ATTEMPT",
+                       help="a sealed crit Eval attempt of the candidate, e.g. attempt-0003: its result goes to eval/ and gives the "
+                            "result's figures; repeat it for a range across runs")
     args = p.parse_args()
     (export_source if args.step == "source" else export_entry)(args)

@@ -14,13 +14,14 @@ Each engine records its origin in `engine.json`, whatever toolkit built it:
 - **`external`**: built with any other toolkit. The source is at a commit in the contributor's
   repository. crit-hub has not reviewed that code; read it before you build or run it.
 
-Either way the folder holds exactly two files and no source of its own:
+Either way the folder holds no source of its own:
 
 ```text
 engines/<owner>/<name>/
   README.md          contributor repository, target, measured results, limits, build and chat;
                      an external engine's opens with the external-engine notice
   engine.json        what the engine is and runs, its pinned source, provenance and exact checkpoints
+  eval/              the crit Eval result files its crit Eval figures come from, unchanged
 
 crit-engines: <name>/          origin: crit, at the pinned commit
   engine/            source, configuration and required runtime data
@@ -30,6 +31,16 @@ crit-engines: <name>/          origin: crit, at the pinned commit
 
 Check a model download against the checkpoint an engine was measured on with
 `python -B tools/verify_model.py <engine folder> <model folder>`.
+
+<a id="provenance"></a>
+
+A figure is either **crit Eval with its provenance** or **the contributor's own report**, whoever
+contributed the engine. A result whose `measured_with` is a crit Eval protocol (`crit-eval-v6`)
+lists the `result.json` files `crit eval run` wrote, unchanged in `eval/`, with their SHA-256;
+`tools/check_engines.py` reads them and requires the protocol, the GPU, a complete speed run with no
+failed gate, and the figures engine.json states: decode, prefill, first token, context and quality.
+Any other `measured_with`, such as a leaderboard or your own benchmark, needs no files and is shown
+as your own report.
 
 <a id="engine-json"></a>
 
@@ -75,7 +86,9 @@ people read.
   README as written there, for example `8,917` or `1.61 s`. **`measured_with`** names the
   method: figures under the same major version of the crit Eval protocol, such as `crit-eval-v5`
   and `crit-eval-v5.1`, are comparable across engines; anything else is the contributor's own
-  report. **`quality`** (optional) is one quality figure, as the README writes it: `budget_pct`,
+  report. A crit Eval result lists its result files under **`eval`**,
+  `[{"file": "eval/<gpu>--<model>.json", "sha256": "<sha256>"}]`, one per run, two or more for a
+  `[low, high]` range ([provenance](#provenance)). **`quality`** (optional) is one quality figure, as the README writes it: `budget_pct`,
   the share of crit Eval's quality budget the worst path uses; `kld_mean`, a KL divergence mean,
   with its `budget`; or `perplexity`, with the `method` that measured it.
 - **`supports`** (optional) names further pairs the engine runs but nobody has measured yet. Each

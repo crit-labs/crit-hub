@@ -15,7 +15,7 @@
     {
       "gpu": "rtx5090",
       "model": "qwen3.8-flash-next@FP4-Local",
-      "measured_with": "crit-eval-v3",
+      "measured_with": "crit-eval-v3, result file not retained",
       "decode_tok_s": 84.5,
       "prefill_tok_s": 1801,
       "ttft_ms": 1610,

@@ -15,7 +15,7 @@
     {
       "gpu": "rtx5090",
       "model": "nemotron-3.5-super-120b-a12b@NVFP4",
-      "measured_with": "crit-eval-v4",
+      "measured_with": "crit-eval-v4, result file not retained",
       "decode_tok_s": [
         42.5,
         44.6

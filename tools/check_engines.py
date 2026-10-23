@@ -5,12 +5,16 @@ itself in engine.json: summary, origin, contributor, license, features, the GPU/
 measured (results) or supports, what it needs to run (requirements) and fetch besides its checkpoint
 (downloads), its provenance and the exact Hugging Face checkpoint of every model it measures or
 supports.
-Every engine holds only README.md and engine.json and pins its source to a full commit SHA in a
-repository, optionally a folder in it, which its README links. A crit engine's source is in
+Every engine holds only README.md, engine.json and, in eval/, the crit Eval results its figures
+come from, and pins its source to a full commit SHA in a repository, optionally a folder in it,
+which its README links. A result measured with crit Eval ("measured_with": "crit-eval-v6") lists its
+result files with their SHA-256, and its figures must be the ones those files hold; any other
+result is the contributor's own report. A crit engine's source is in
 crit-labs/crit-engines; it needs its sealed-run provenance and the built-with-crit line under its
 credit. An external engine opens its README with the external-engine notice.
 """
 import argparse
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -26,7 +30,12 @@ HF_REPOSITORY = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
 FIELDS = {"summary", "origin", "contributor", "license", "features", "results", "supports", "requirements", "downloads",
           "provenance", "checkpoints"}
 RESULT_FIELDS = {"gpu", "model", "measured_with", "decode_tok_s", "prefill_tok_s", "ttft_ms", "context_tokens", "host_ram_gib",
-                 "quality"}
+                 "quality", "eval"}
+CRIT_EVAL = re.compile(r"crit-eval-v[0-9]+(\.[0-9]+)?")
+EVAL_FILE = re.compile(r"eval/[A-Za-z0-9_.@+-]+\.json")
+EVAL_BYTES = 16 * 1024 * 1024
+# engine.json figure -> where its crit Eval result keeps it
+SCORES = {"decode_tok_s": ("speed", "decode_score"), "prefill_tok_s": ("speed", "prefill_score"), "ttft_ms": ("speed", "ttft_score_ms")}
 QUALITY_METRICS = {"budget_pct", "kld_mean", "perplexity"}
 PLATFORMS = {"linux", "wsl2", "windows", "macos"}
 GPU_ARCH = re.compile(r"sm_[0-9]{2,3}[a-z]?")
@@ -97,7 +106,7 @@ def check_quality(pair, quality, text):
     return problems
 
 
-def check_results(engine, text):
+def check_results(folder, engine, text):
     problems = []
     results = engine.get("results")
     if not isinstance(results, list) or not results:
@@ -135,6 +144,92 @@ def check_results(engine, text):
                 problems.append(f"engine.json result {pair}: {key} is a positive whole number")
         if "quality" in result:
             problems += check_quality(pair, result["quality"], text)
+        problems += check_eval(folder, pair, result)
+    return problems
+
+
+def matches(value, score):
+    """A figure as written (260.9, 116) is its score rounded to the figure's own precision."""
+    if not isinstance(score, (int, float)) or isinstance(score, bool):
+        return False
+    decimals = len(repr(float(value)).split(".")[1].rstrip("0")) if not float(value).is_integer() else 0
+    return abs(value - score) <= 0.5 * 10 ** -decimals + 1e-9
+
+
+def worst(quality, key):
+    """The worst served path's figure in a crit Eval result's quality section."""
+    values = [s.get(key) for s in (quality.get("sets") or {}).values() if isinstance(s, dict)]
+    values = [v for v in values if isinstance(v, (int, float)) and not isinstance(v, bool)]
+    return max(values) if values else None
+
+
+def check_eval(folder, pair, result):
+    """A crit Eval result's files: present, unchanged, complete, with every gate passed and the
+    figures engine.json states. Any other result names no files."""
+    measured_with = str(result.get("measured_with"))
+    files = result.get("eval")
+    if not CRIT_EVAL.fullmatch(measured_with):
+        return [f"engine.json result {pair}: eval files belong to a crit Eval result (measured_with crit-eval-vN)"] if files else []
+    name = f"engine.json result {pair}"
+    if not (isinstance(files, list) and files and all(isinstance(f, dict) and set(f) == {"file", "sha256"} for f in files)):
+        return [f'{name} is measured with {measured_with}: list its result files, "eval": [{{"file": "eval/<name>.json", "sha256": "<sha256>"}}], '
+                "or name how else it was measured"]
+    problems, loaded = [], []
+    for entry in files:
+        file = str(entry["file"])
+        path = folder / file
+        if not EVAL_FILE.fullmatch(file) or not path.is_file():
+            problems.append(f"{name}: no result file {file} in eval/")
+            continue
+        data = path.read_bytes()
+        if len(data) > EVAL_BYTES:
+            problems.append(f"{name}: {file} is over {EVAL_BYTES // 2**20} MiB")
+        if hashlib.sha256(data).hexdigest() != entry["sha256"]:
+            problems.append(f"{name}: {file} does not match its sha256")
+            continue
+        try:
+            loaded.append((file, json.loads(data)))
+        except json.JSONDecodeError as e:
+            problems.append(f"{name}: {file} is not JSON: {e}")
+    for file, data in loaded:
+        if not isinstance(data, dict):
+            problems.append(f"{name}: {file} is not a crit Eval result")
+            continue
+        if data.get("protocol") != measured_with:
+            problems.append(f"{name}: {file} ran under {data.get('protocol')}, not {measured_with}")
+        if data.get("aborted") or not (data.get("speed") or {}).get("complete"):
+            problems.append(f"{name}: {file} is not a complete speed run")
+        failed = [g.get("name") for g in (data.get("status") or {}).get("gates", []) if isinstance(g, dict) and g.get("state") == "fail"]
+        if failed:
+            problems.append(f"{name}: {file} failed gate(s) {', '.join(map(str, failed))}")
+        device = re.sub(r"[^a-z0-9]", "", str((data.get("device") or {}).get("device", "")).lower())
+        if re.sub(r"[^a-z0-9]", "", result["gpu"]) not in device:
+            problems.append(f"{name}: {file} ran on {(data.get('device') or {}).get('device')}, not {result['gpu']}")
+        tokens = (data.get("context") or {}).get("tokens")
+        if "context_tokens" in result and tokens != result["context_tokens"]:
+            problems.append(f"{name}: context_tokens {result['context_tokens']} is not {file}'s context, {tokens}")
+    if len(loaded) != len(files):
+        return problems
+    for key, (section, field) in SCORES.items():
+        scores = [(data.get(section) or {}).get(field) for _, data in loaded]
+        value = result.get(key)
+        if value is None:
+            continue
+        if isinstance(value, list):
+            if len(loaded) < 2 or not (matches(value[0], min(scores)) and matches(value[1], max(scores))):
+                problems.append(f"{name}: {key} {value} is not the range of its result files' {field}, {scores}")
+        elif len(loaded) != 1 or not matches(value, scores[0]):
+            problems.append(f"{name}: {key} {value} is not its result file's {field}, {scores}")
+    quality = result.get("quality")
+    if isinstance(quality, dict):
+        metric = quality.get("metric")
+        if metric not in ("budget_pct", "kld_mean"):
+            problems.append(f"{name}: a crit Eval quality figure is budget_pct or kld_mean")
+        else:
+            key, scale = ("budget_used", 100) if metric == "budget_pct" else ("kld_mean", 1)
+            scores = [worst(data.get("quality") or {}, key) for _, data in loaded]
+            if None in scores or not any(matches(quality.get("value", 0), s * scale) for s in scores):
+                problems.append(f"{name}: quality {quality.get('value')} is not its result files' worst served {key}")
     return problems
 
 
@@ -264,12 +359,15 @@ def check_card(folder, engine):
     return problems
 
 
-def check_source(folder, provenance, text):
+def check_source(folder, engine, provenance, text):
     problems = []
     files = {p.relative_to(folder).as_posix() for p in folder.rglob("*") if p.is_file()}
-    if files - ENGINE_FILES:
-        extra = sorted(files - ENGINE_FILES)
-        problems.append(f"an engine folder holds only README.md and engine.json; also found {len(extra)} other file(s), e.g. {extra[0]}")
+    listed = {str(f.get("file")) for r in engine.get("results") or [] if isinstance(r, dict)
+              for f in (r.get("eval") if isinstance(r.get("eval"), list) else []) if isinstance(f, dict)}
+    extra = sorted(files - ENGINE_FILES - listed)
+    if extra:
+        problems.append(f"an engine folder holds only README.md, engine.json and the eval/ result files its results list; "
+                        f"also found {len(extra)} other file(s), e.g. {extra[0]}")
     source = provenance.get("source") or {}
     if not REPOSITORY.fullmatch(str(source.get("repository"))):
         problems.append("engine.json provenance needs the https URL of source.repository")
@@ -321,10 +419,10 @@ def check(folder):
     if not lines or not lines[0].startswith("# "):
         return ["README.md must open with a '# ' title"]
     head = lines[1:12]
-    problems = (check_card(folder, engine) + check_results(engine, text) + check_supports(engine) + check_requirements(engine)
+    problems = (check_card(folder, engine) + check_results(folder, engine, text) + check_supports(engine) + check_requirements(engine)
                 + check_downloads(engine) + check_checkpoints(engine))
     provenance = engine.get("provenance") if isinstance(engine.get("provenance"), dict) else {}
-    problems += check_source(folder, provenance, text)
+    problems += check_source(folder, engine, provenance, text)
     origin = engine.get("origin")
     if origin == "crit":
         problems += check_crit(provenance, head)

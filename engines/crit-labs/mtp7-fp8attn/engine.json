@@ -15,7 +15,7 @@
     {
       "gpu": "rtx5090",
       "model": "qwen3.8-27b@NVFP4",
-      "measured_with": "crit-eval-v3",
+      "measured_with": "crit-eval-v3, result file not retained",
       "decode_tok_s": 215.7,
       "prefill_tok_s": 8917,
       "ttft_ms": 120,

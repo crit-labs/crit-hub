@@ -103,10 +103,10 @@ Every working engine you add saves the next person from building it again.
    measured results, checks, limits, build and chat from the pinned crit-engines commit.
 3. Document the measured workload, results, check coverage and known limits.
 4. Fill in [engine.json](engines/README.md#engine-json): the summary, features, the source's license
-   and, for every GPU and model, the measured figures with `measured_with` naming the crit Eval
-   protocol, for example `crit-eval-v5`, and its quality figure; the `requirements` to run it
-   (platforms, GPU architecture and memory, CUDA, runtime) and any `downloads` besides the
-   checkpoint, such as a drafter; and the Hugging Face checkpoint of every model it runs under
+   and, for every GPU and model, the measured figures: `entry --eval` copies the candidate's
+   sealed crit Eval results into `eval/` and takes the figures from them. Then the `requirements`
+   to run it (platforms, GPU architecture and memory, CUDA, runtime), any `downloads` besides the
+   checkpoint, such as a drafter, and the Hugging Face checkpoint of every model it runs under
    `checkpoints`. Hugging Face tells the website the rest: base model, lab, quantization.
 5. [Credit your repository](#credit) directly under the README's title.
 6. Retain dependency credits and applicable license texts and notices next to the source.
@@ -133,8 +133,8 @@ crit-hub records where it is, what it targets and what it measured.
 
 1. Place it under the [folder layout](engines/README.md#engine-folder-layout),
    `engines/<your account>/<name>/`, with a name that describes its design. The folder holds
-   exactly two files: `README.md` and `engine.json`. No source, binaries, test data, scripts or
-   license texts; those stay with your source.
+   `README.md`, `engine.json` and, for crit Eval figures, their result files in `eval/`. No source,
+   binaries, test data, scripts or license texts; those stay with your source.
 2. Pin your source to a full 40-character commit SHA, the commit you built and measured.
 3. Write the README from the [engine README template](docs/ENGINE_README.md), opening with the
    external-engine notice. Build and chat start from a clone of the pinned commit.
@@ -142,13 +142,15 @@ crit-hub records where it is, what it targets and what it measured.
 5. Fill in [engine.json](engines/README.md#engine-json): `"origin": "external"`, the pinned source
    under `provenance.source`, the exact checkpoint of every measured model, the `requirements` to
    run it and any `downloads`, such as a converted artifact, and the measured figures with
-   `measured_with`. Figures measured with crit Eval (`"crit-eval-v5"`) are compared
-   with every other engine's on the same protocol; anything else, such as your own benchmark or a
+   `measured_with`. Figures measured with crit Eval (`"crit-eval-v6"`) are compared
+   with every other engine's on the same protocol, provided the `result.json` files they come from
+   sit unchanged in the folder's `eval/` and the result lists them
+   ([provenance](engines/README.md#provenance)); anything else, such as your own benchmark or a
    leaderboard run, is shown as your own report. An engine behind any OpenAI-compatible chat API
    gets crit Eval figures without changes:
    [`crit eval run --url`](https://github.com/crit-labs/crit/blob/main/docs/eval/README.md#engines-behind-a-server)
    sends every prompt to `/chat/completions` and scores quality on the engine's own replies, as it
-   does for crit's own engines behind `crit serve`. Pin the Hugging Face checkpoint of every model it
+   does for crit's own engines behind `crit serve`; run it on the pinned commit. Pin the Hugging Face checkpoint of every model it
    runs under `checkpoints`; Hugging Face tells the website the rest: base model, lab, quantization.
 6. Name your source's license in the README's **Credits** section and in `engine.json`.
 7. `python -B tools/check_engines.py` passes for your folder.
@@ -211,8 +213,10 @@ README writes it as `<crit-engines commit>`). `--model-repo` and `--model-revisi
 `engine.json` lists its files with the hashes the run recorded. `--contributor` and
 `--contributor-repo` credit your repository under the README's title and in `engine.json`, and
 `--contributor` names the engine's folder, `engines/<contributor>/<name>/`. `--gpu` and `--model`
-name what the run was measured on; fill in the summary, features, license and measured figures
-in `engine.json`. Keep the original sealed run separately.
+name what the run was measured on, and each `--eval attempt-N` one of the candidate's sealed crit
+Eval results: `entry` copies it into `eval/` and fills in the result's figures from it. Fill in the
+summary, features, license and requirements in `engine.json`. Keep the original sealed run
+separately.
 
 </details>
 
