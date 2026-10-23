@@ -1,52 +1,81 @@
 ## Engine folder layout
 
 Each engine lives once, in `engines/<owner>/<name>/`: `<owner>` is the contributor's GitHub
-account or organization and `<name>` describes the engine's design. Its `engine.json` says what
-it is and which GPUs and models it runs. These folders are the single source of truth: anything
-that lists engines by GPU, model or checkpoint, such as the website, is generated from them. An
-engine tailored to one GPU and one model and an engine that runs many sit side by side.
-
-Each engine records its origin in `engine.json`, whatever toolkit built it:
-
-- **`crit`**: built with [crit](https://github.com/crit-labs/crit) and exported from a sealed
-  candidate with `tools/export_engine.py`. Its source, dependency credits and license texts are in
-  `<name>/` of [crit-engines](https://github.com/crit-labs/crit-engines), at the commit the engine pins.
-- **`external`**: built with any other toolkit. The source is at a commit in the contributor's
-  repository. crit-hub has not reviewed that code; read it before you build or run it.
-
-Either way the folder holds no source of its own:
+account or organization and `<name>` describes the engine's design. These folders are the single
+source of truth: anything that lists engines by GPU, model or checkpoint, such as the website, is
+generated from them. An engine tailored to one GPU and one model and an engine that runs many sit
+side by side.
 
 ```text
 engines/<owner>/<name>/
-  README.md          contributor repository, target, measured results, limits, build and chat;
-                     an external engine's opens with the external-engine notice
-  engine.json        what the engine is and runs, its pinned source, provenance and exact checkpoints
-  eval/
-    crit-eval.json     the crit Eval result its crit Eval figures come from, unchanged
-    self-reported.json optional: the evidence behind its own figures (method, link, settings)
+  card.yaml            what the engine is, what it measured and its README's prose: the one file you write
+  card.lock.json       what tools write: the exact checkpoint files and how the engine was built
+  evidence/
+    crit-eval.json     the crit Eval result behind crit Eval figures, unchanged (crit-eval-2.json and on)
+    self-reported.json optional: the evidence behind your own figures (method, link, settings)
+  README.md            rendered from card.yaml by tools/card.py; never edited by hand
 
-crit-engines: <name>/          origin: crit, at the pinned commit
-  engine/            source, configuration and required runtime data
-  THIRD_PARTY.md     dependency credits
-  LICENSES.txt       applicable license texts and notices
+crit-engines: <name>/  origin: crit, at the pinned commit
+  engine/              source, configuration and required runtime data
+  THIRD_PARTY.md       dependency credits
+  LICENSES.txt         applicable license texts and notices
 ```
 
-Check a model download against the checkpoint an engine was measured on with
-`python -B tools/verify_model.py <engine folder> <model folder>`.
+Each engine records its origin in card.yaml, whatever toolkit built it:
+
+- **`crit`**: built with [crit](https://github.com/crit-labs/crit) and exported from a sealed
+  candidate with `tools/export_engine.py`. Its source, dependency credits and license texts are in
+  `<name>/` of [crit-engines](https://github.com/crit-labs/crit-engines), at the commit the card pins.
+- **`external`**: built with any other toolkit. The source is at a commit in the contributor's
+  repository. crit-hub has not reviewed that code; read it before you build or run it.
+
+Start from [`_template/`](_template/): its card.yaml documents every key, and
+[`schemas/card.schema.json`](../schemas/card.schema.json) describes it for editors and agents. Render
+the README with `python -B tools/card.py engines/<owner>/<name>`, then run
+`python -B tools/check_engines.py`. Check a model download against the checkpoint an engine was
+measured on with `python -B tools/verify_model.py <engine folder> <model folder>`.
+
+<a id="stats"></a>
+
+## The five stats
+
+Every result states the same five headline stats, in this order, and every page that shows an engine
+shows them the same way: its README opens with them, the website's engine pages and tables use
+them, and crit's case studies use them.
+
+| Stat | card.yaml | Shown as |
+| --- | --- | --- |
+| Decode | `decode_tok_s` | `252.4 tok/s` |
+| Prefill | `prefill_tok_s` | `7,425 tok/s` |
+| Context | `context_tokens`: the maximum context it was measured at | `262,144 tok` |
+| Perplexity vs reference | `ppl: {vs_reference: 1.001}`, or `ppl: {absolute: 4.28}` when no reference was measured | `+0.1%`, or `4.28` |
+| Mean KL divergence | `kld_mean`: against the reference | `0.0028` |
+
+A stat nobody measured is `null` and shows as `–`; decode is required. Decode, prefill and the
+first token may be `[low, high]` across runs. Further figures go under `more`: `ttft_ms`,
+`long_context_decode_tok_s`, `heldout_decode_tok_s`, `host_ram_gib` and `quality_budget_pct`.
 
 <a id="provenance"></a>
 
-A figure is either **crit Eval with its provenance** or **the contributor's own report**, whoever
-contributed the engine. A result whose `measured_with` is a crit Eval protocol (`crit-eval-v6`)
-lists the result file `crit eval run` wrote, unchanged, as `eval/crit-eval.json` with its SHA-256
-(`crit-eval-2.json` and on for further runs or GPU/model pairs);
-`tools/check_engines.py` reads them and requires the protocol, the GPU, a complete speed run with no
-failed gate, and the figures engine.json states: decode, prefill, first token, context and quality.
-Any other `measured_with`, such as a leaderboard or your own benchmark, is shown as your own report.
-Its evidence can go in `eval/self-reported.json` (optional): for each GPU and model, the
-measurements behind its figures, each with its `method`, a `link` to the run, leaderboard or card,
-the `settings` measured, and the `figures` as measured. engine.json keeps the headline figures,
-and each one it states must be one the file records:
+## Evidence
+
+A figure is either **crit Eval with its evidence** or **the contributor's own report**, whoever
+contributed the engine.
+
+- A result whose `measured_with` is a crit Eval protocol (`crit-eval-v6`) lists the result file
+  `crit eval run` wrote, unchanged, as `evidence/crit-eval.json` with its SHA-256 (`crit-eval-2.json`
+  and on for further runs or GPU/model pairs), and gives `measured_on`, the day it ran.
+  `tools/check_engines.py` reads it and requires the protocol, the GPU, a complete speed run with no
+  failed gate, and every stat and figure the card states: decode, prefill, first token and held-out
+  decode from the speed scores, context from the measured context, perplexity and KL divergence from
+  the worst served path of the quality section, the quality budget share and long-context decode.
+  Figures under the same major version of the protocol, such as `crit-eval-v6` and `crit-eval-v6.1`,
+  are comparable across engines.
+- Any other `measured_with`, such as a leaderboard or your own benchmark, is shown as your own
+  report. Its evidence can go in `evidence/self-reported.json` (optional): for each GPU and model,
+  the measurements behind its figures, each with its `method`, a `link` to the run, leaderboard or
+  card, the `settings` measured, and the `figures` as measured. Each stat and figure the card states
+  must then be one the file records:
 
 ```json
 {"results": [{"gpu": "rtx5090", "model": "qwen3.8-27b@NVFP4", "measurements": [
@@ -54,81 +83,36 @@ and each one it states must be one the file records:
    "settings": "--max-concurrency 1, INT8 KV, 9 draft tokens", "figures": {"decode_tok_s": 510.7}}]}]}
 ```
 
-`eval/` holds only these files: `crit-eval.json` (`crit-eval-2.json` and on) and
-`self-reported.json`.
+<a id="card"></a>
 
-<a id="engine-json"></a>
+## card.yaml
 
-## engine.json
+The website and coding agents read every engine from its card; the rendered README is the page
+people read. [`_template/card.yaml`](_template/card.yaml) documents every key; in short:
 
-The website and coding agents read every engine from its `engine.json`; the README is the page
-people read.
-
-```json
-{
-  "summary": "Qwen3.8-27B with up to 7 MTP drafts per round, stopped on draft confidence on the GPU in one CUDA graph",
-  "origin": "crit",
-  "contributor": {"name": "crit-labs", "repository": "https://github.com/crit-labs/crit"},
-  "license": "Apache-2.0",
-  "features": ["openai-api", "tool-calls", "speculative"],
-  "results": [
-    {"gpu": "rtx5090", "model": "qwen3.8-27b@NVFP4", "measured_with": "crit-eval-v6",
-     "decode_tok_s": 252.4, "prefill_tok_s": 7425, "ttft_ms": 150, "context_tokens": 262144,
-     "quality": {"metric": "budget_pct", "value": 5.8},
-     "eval": [{"file": "eval/crit-eval.json", "sha256": "<sha256>"}]}
-  ],
-  "supports": [{"gpus": ["rtx4090"], "models": ["qwen3.8-27b@NVFP4"]}],
-  "requirements": {"platforms": ["wsl2"], "gpu_arch": ["sm_120a"], "gpu_memory_gb": 32, "cuda": "13.1",
-                   "runtime": "crit Core 0.5.0"},
-  "downloads": [{"kind": "drafter", "repository": "<owner>/<name>", "revision": "<commit>"}],
-  "provenance": {"source": {"repository": "https://github.com/crit-labs/crit-engines", "revision": "<commit>",
-                            "path": "mtp7-device-confidence"},
-                 "run_id": "...", "candidate_id": "...", "source_manifest_sha256": "...",
-                 "toolchain": {"os": "...", "cuda": "..."}},
-  "checkpoints": {
-    "qwen3.8-27b@NVFP4": {"repository": "unsloth/Qwen3.8-27B-NVFP4", "revision": "<commit>",
-                          "files": [{"path": "config.json", "bytes": 4321, "sha256": "<sha256>"}]}
-  }
-}
-```
-
-- **`summary`**: one line, at most 120 characters, on what the engine does.
-- **`license`**: the SPDX id of the engine source. **`features`**: any of `openai-api`,
-  `tool-calls`, `vision` and `speculative`.
-- **`results`** (required) lists every GPU and model the engine was measured on, with the
-  headline figures of the README's **Measured** section: `decode_tok_s` (required),
-  `prefill_tok_s`, `ttft_ms`, `context_tokens` and, when the engine keeps weights in host memory,
-  `host_ram_gib`. A figure is a number, or `[low, high]` across runs, and must appear in the
-  README as written there, for example `8,917` or `1.61 s`. **`measured_with`** names the
-  method: figures under the same major version of the crit Eval protocol, such as `crit-eval-v6`
-  and `crit-eval-v6.1`, are comparable across engines; anything else is the contributor's own
-  report. A crit Eval result lists its result files under **`eval`**,
-  `[{"file": "eval/crit-eval.json", "sha256": "<sha256>"}]`, one per run, two or more for a
-  `[low, high]` range ([provenance](#provenance)). **`quality`** (optional) is one quality figure, as the README writes it: `budget_pct`,
-  the share of crit Eval's quality budget the worst path uses; `kld_mean`, a KL divergence mean,
-  with its `budget`; or `perplexity`, with the `method` that measured it.
-- **`supports`** (optional) names further pairs the engine runs but nobody has measured yet. Each
-  group pairs every GPU in `gpus` with every model in `models`.
-- **`requirements`** (required) is what the engine needs to run: the `platforms` it was built and
-  run on (`linux`, `wsl2`, `windows`, `macos`), the `gpu_arch` it is compiled for (`sm_120a`), the
-  `gpu_memory_gb` it needs, the `cuda` toolkit version it builds with and, optionally, the
-  `runtime` it links, such as `crit Core 0.2.1`.
-- **`downloads`** (optional) lists what to fetch besides the pinned checkpoint, such as a
-  `drafter` model or a converted `artifact`: its Hugging Face `repository`, pinned by `revision` or
-  by the `sha256` of its `file`, with an optional `path` in the repository, `size_gb` and a
-  one-line `note`.
-- **`provenance`**: `source`, the `repository` and 40-character commit `revision` that hold the
-  engine's source, which the README links, and optionally `path`, its folder there; then for a crit
-  engine the sealed run, candidate, hashes and toolchain the exporter records, so the seal can be
-  checked against that commit, and for an external engine the toolchain and runtime prerequisites.
-- **`checkpoints`** pins the exact Hugging Face checkpoint of every model the engine measures or
-  supports: `repository` and the 40-character commit `revision`, and for a measured model the
-  `path`, `bytes` and `sha256` of each file. The website reads the checkpoint's base model, lab and
-  quantization from Hugging Face when it lists engines, so a checkpoint whose model card names its
-  `base_model` lands under the right model by itself.
+- **`title`**, **`summary`** (one line, at most 120 characters), **`origin`**, **`contributor`**
+  (`name`, which names the folder, and `repository`), **`license`** (SPDX id) and **`features`**
+  (any of `openai-api`, `tool-calls`, `vision`, `speculative`).
+- **`source`**: the `repository` and 40-character commit `revision` that hold the engine's source,
+  and optionally `path`, its folder there.
+- **`requirements`**: the `platforms` it was built and run on, the `gpu_arch` it is compiled for,
+  the `gpu_memory_gb` it needs, the `cuda` toolkit and optionally the `runtime` it links.
+- **`downloads`** (optional): what to fetch besides the checkpoint, such as a `drafter` or a
+  converted `artifact`, pinned by `revision` or the `sha256` of its `file`.
+- **`checkpoints`**: the Hugging Face `repository` and `revision` of every model the engine measures
+  or supports, keyed by model id; card.lock.json lists every file of each measured one with its size
+  and SHA-256. The website reads the checkpoint's base model, lab and quantization from Hugging Face,
+  so a checkpoint whose model card names its `base_model` lands under the right model by itself.
+- **`supports`** (optional): further pairs it runs that nobody has measured yet.
+- **`results`**: for each GPU and model it was measured on, `measured_with`, `measured_on`, the five
+  `stats`, optional `more` and its `evidence`.
+- **`readme`**: the README's prose as markdown blocks, rendered in this order: `intro`, `model`,
+  `design`, `measured`, `checks`, `limits`, `build_and_chat`, the optional `benchmark` and
+  `credits`. The renderer adds the title, the credit (or the external-engine notice), one stats row
+  per result and the facts: requirements, checkpoints, downloads, source and license.
 
 A GPU id is the card in lowercase, such as `rtx5090`; a model id is the model in lowercase and its
 encoding, such as `qwen3.8-27b@NVFP4`. Reuse the ids other engines here already use so an engine
 lands on the same page as the others for that GPU and model.
 
-To add an engine, follow [Contributing](../README.md#contributing).
+To add an engine, follow [CONTRIBUTING.md](../CONTRIBUTING.md).
