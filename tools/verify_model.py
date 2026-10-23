@@ -1,6 +1,6 @@
 """Check that a local model folder is the exact checkpoint an engine was measured on.
 
-Reads the checkpoint from the engine's engine.json and compares every listed file's size and SHA-256.
+Reads the checkpoint's files from the engine's card.lock.json and compares every listed file's size and SHA-256.
 """
 import argparse
 import hashlib
@@ -17,7 +17,7 @@ def digest(path):
 
 
 def verify(engine, folder, model_id=None):
-    checkpoints = json.loads((Path(engine) / "engine.json").read_text(encoding="utf-8"))["checkpoints"]
+    checkpoints = json.loads((Path(engine) / "card.lock.json").read_text(encoding="utf-8"))["checkpoints"]
     if model_id is None and len(checkpoints) != 1:
         raise SystemExit(f"{engine} pins several checkpoints; name one with --model: {', '.join(sorted(checkpoints))}")
     model = checkpoints[model_id] if model_id else next(iter(checkpoints.values()))

@@ -1,0 +1,274 @@
+"""An engine's card: card.yaml is the engine's single hand-written record, and README.md is rendered from it.
+
+card.yaml holds what the engine is (summary, contributor, license, source pin, requirements,
+downloads, checkpoints), what it measured (results, each with the five headline stats, more
+figures and its evidence), and the README's prose as markdown block scalars under `readme`.
+card.lock.json holds what tools write: the exact checkpoint files and how the engine was built.
+
+    python -B tools/card.py engines/<owner>/<name> [...]          render README.md from card.yaml
+    python -B tools/card.py --check engines/<owner>/<name> [...]  fail if README.md is out of date
+
+Without a folder, every engine under engines/ is rendered or checked.
+"""
+import argparse
+import json
+import re
+from pathlib import Path
+
+import yaml
+
+# The README's prose, in order: the card key and the heading it renders under (None: no heading).
+SECTIONS = [
+    ("intro", None),
+    ("model", "Model"),
+    ("design", "Design"),
+    ("measured", "Measured"),
+    ("checks", "Checks"),
+    ("limits", "Limits"),
+    ("build_and_chat", "Build and chat"),
+    ("benchmark", "Benchmark your machine"),
+    ("credits", "Credits"),
+]
+REQUIRED_SECTIONS = {"intro", "model", "design", "measured", "checks", "limits", "build_and_chat", "credits"}
+
+# The five headline stats, in the order every page shows them.
+STATS = ("decode_tok_s", "prefill_tok_s", "context_tokens", "ppl", "kld_mean")
+# Further figures a result may give, shown after the stats.
+MORE = ("ttft_ms", "long_context_decode_tok_s", "heldout_decode_tok_s", "host_ram_gib", "quality_budget_pct")
+
+HEADER = "<!-- Rendered by tools/card.py from card.yaml: edit card.yaml, then run python -B tools/card.py on this folder. -->"
+PLATFORMS = {"linux": "Linux", "wsl2": "WSL2", "windows": "Windows", "macos": "macOS"}
+BUILT_WITH_CRIT = "Built with [crit](https://github.com/crit-labs/crit): a sealed crit candidate, exported with `tools/export_engine.py`."
+
+
+# ---------------------------------------------------------------------------------------------
+# Reading and writing
+
+class _Dumper(yaml.SafeDumper):
+    pass
+
+
+def _str(dumper, value):
+    # Prose as block scalars: markdown stays readable and needs no escaping.
+    style = "|" if "\n" in value else None
+    return dumper.represent_scalar("tag:yaml.org,2002:str", value, style=style)
+
+
+_Dumper.add_representer(str, _str)
+
+
+def dumps(card):
+    return yaml.dump(card, Dumper=_Dumper, sort_keys=False, allow_unicode=True, width=4096, default_flow_style=False)
+
+
+def load(folder):
+    return yaml.safe_load((Path(folder) / "card.yaml").read_text(encoding="utf-8"))
+
+
+def load_lock(folder):
+    path = Path(folder) / "card.lock.json"
+    return json.loads(path.read_text(encoding="utf-8")) if path.is_file() else None
+
+
+def write(folder, card, lock=None):
+    folder = Path(folder)
+    text = dumps(card)
+    if yaml.safe_load(text) != card:
+        raise ValueError("card.yaml would not read back as written (trailing spaces or tabs in the prose?)")
+    (folder / "card.yaml").write_text(text, encoding="utf-8", newline="\n")
+    if lock is not None:
+        (folder / "card.lock.json").write_text(json.dumps(lock, indent=2) + "\n", encoding="utf-8", newline="\n")
+
+
+def split_readme(text):
+    """A README's title and its prose sections, keyed as in SECTIONS. The credit block under the
+    title (a GitHub alert) is dropped: the card renders it. Unknown headings raise."""
+    headings = {heading: key for key, heading in SECTIONS if heading}
+    lines = text.replace("\r\n", "\n").split("\n")
+    if not lines or not lines[0].startswith("# "):
+        raise ValueError("The README must open with a '# ' title")
+    title = lines[0][2:].strip()
+    body = lines[1:]
+    while body and (not body[0].strip() or body[0].startswith(">")):
+        body = body[1:]
+    sections, key, current, fenced = {}, "intro", [], False
+    for line in body:
+        if line.lstrip().startswith("```"):
+            fenced = not fenced
+        if not fenced and line.startswith("## "):
+            sections[key] = "\n".join(current).strip("\n")
+            name = line[3:].strip()
+            if name not in headings:
+                raise ValueError(f"Unknown README section: {name}")
+            key, current = headings[name], []
+            continue
+        current.append(line)
+    sections[key] = "\n".join(current).strip("\n")
+    return title, {k: v + "\n" for k, _ in SECTIONS if (v := sections.get(k))}
+
+
+# ---------------------------------------------------------------------------------------------
+# Rendering
+
+def number(value):
+    return f"{value:,}"
+
+
+def figure(value, unit=""):
+    if value is None:
+        return "–"
+    if isinstance(value, list):
+        return f"{number(value[0])}–{number(value[1])}{unit}"
+    return f"{number(value)}{unit}"
+
+
+def ppl_cell(ppl):
+    """The perplexity tile: the change against the reference when measured, else the absolute value."""
+    if not ppl:
+        return "–", "Perplexity vs reference"
+    if "vs_reference" in ppl:
+        return f"{(ppl['vs_reference'] - 1) * 100:+.1f}%", "Perplexity vs reference"
+    return f"{ppl['absolute']:g}", "Perplexity (absolute)"
+
+
+def stat_cells(stats):
+    """The five headline stats as (value, label), in the order every page shows them."""
+    ppl, ppl_label = ppl_cell(stats.get("ppl"))
+    return [
+        (figure(stats.get("decode_tok_s"), " tok/s"), "Decode"),
+        (figure(stats.get("prefill_tok_s"), " tok/s"), "Prefill"),
+        (figure(stats.get("context_tokens"), " tok"), "Context"),
+        (ppl, ppl_label),
+        (figure(stats.get("kld_mean")), "Mean KL divergence"),
+    ]
+
+
+def more_text(more):
+    parts = []
+    if more.get("ttft_ms") is not None:
+        value = more["ttft_ms"]
+        high = value[1] if isinstance(value, list) else value
+        parts.append(f"first token {figure(value, ' ms')}" if high < 1000 else
+                     f"first token {figure([v / 1000 for v in value] if isinstance(value, list) else value / 1000, ' s')}")
+    if more.get("long_context_decode_tok_s") is not None:
+        parts.append(f"long-context decode {figure(more['long_context_decode_tok_s'], ' tok/s')}")
+    if more.get("heldout_decode_tok_s") is not None:
+        parts.append(f"held-out decode {figure(more['heldout_decode_tok_s'], ' tok/s')}")
+    if more.get("host_ram_gib") is not None:
+        parts.append(f"{more['host_ram_gib']} GiB host RAM")
+    if more.get("quality_budget_pct") is not None:
+        parts.append(f"{more['quality_budget_pct']}% of the quality budget")
+    return " · ".join(parts)
+
+
+def tiles(cells):
+    width = f"{100 // len(cells)}%"
+    rows = "\n".join(f"""    <td align="center" width="{width}">
+      <strong>
+
+{value}</strong>
+
+{label}
+    </td>""" for value, label in cells)
+    return f'<div align="center">\n<table>\n  <tr>\n{rows}\n  </tr>\n</table>\n</div>'
+
+
+def crit_eval(measured_with):
+    return re.fullmatch(r"crit-eval-v[0-9]+(\.[0-9]+)?", str(measured_with)) is not None
+
+
+def result_block(result):
+    how = (f"crit Eval ({result['measured_with']})" if crit_eval(result.get("measured_with"))
+           else f"self-reported ({result['measured_with']})")
+    when = f", measured {result['measured_on']}" if result.get("measured_on") else ""
+    evidence = " · ".join(f"[{Path(e['file']).name}]({e['file']})" for e in result.get("evidence") or [])
+    caption = f"**{result['gpu']} · `{result['model']}`** · {how}{when}" + (f" · {evidence}" if evidence else "")
+    lines = [caption, "", tiles(stat_cells(result.get("stats") or {}))]
+    more = more_text(result.get("more") or {})
+    if more:
+        lines += ["", f"<p align=\"center\">{more}</p>"]
+    return "\n".join(lines)
+
+
+def short(revision):
+    return revision[:8]
+
+
+def facts(card):
+    lines = []
+    r = card.get("requirements") or {}
+    if r:
+        parts = [", ".join(PLATFORMS.get(p, p) for p in r.get("platforms", [])), ", ".join(r.get("gpu_arch", [])),
+                 f"{r.get('gpu_memory_gb')} GB GPU memory", f"CUDA {r.get('cuda')}", r.get("runtime")]
+        lines.append("- **Requires:** " + " · ".join(p for p in parts if p))
+    for model, c in (card.get("checkpoints") or {}).items():
+        lines.append(f"- **Checkpoint** (`{model}`): [`{c['repository']}`](https://huggingface.co/{c['repository']}/tree/{c['revision']}) "
+                     f"at `{short(c['revision'])}`")
+    for d in card.get("downloads") or []:
+        where = f"https://huggingface.co/{d['repository']}/tree/{d.get('revision', 'main')}" + (f"/{d['path']}" if d.get("path") else "")
+        size = f", about {d['size_gb']} GB" if d.get("size_gb") else ""
+        note = f": {d['note']}" if d.get("note") else ""
+        lines.append(f"- **Download** ({d['kind']}): [`{d['repository']}" + (f"/{d['path']}" if d.get("path") else "") + f"`]({where}){size}{note}")
+    s = card["source"]
+    at = f"/{s['path']}" if s.get("path") else ""
+    shown = s["repository"].split("://", 1)[1].split("/", 1)[1].rstrip("/")
+    lines.append(f"- **Source:** [{shown}{at} @ `{short(s['revision'])}`]({s['repository'].rstrip('/')}/tree/{s['revision']}{at})")
+    lines.append(f"- **License:** {card['license']}")
+    return "\n".join(lines)
+
+
+def credit(card):
+    c = card["contributor"]
+    shown = c["repository"].split("://", 1)[1].split("/", 1)[1].rstrip("/")
+    if card["origin"] == "crit":
+        return f"> [!NOTE]\n> **Contributed by** {c['name']} · [{shown}]({c['repository']})\n>\n> {BUILT_WITH_CRIT}"
+    s = card["source"]
+    return ("> [!WARNING]\n> **External engine.** Not built with crit, and its source has not been reviewed by crit-hub. Read\n"
+            "> it before you build or run it.\n>\n"
+            f"> **Contributed by** {c['name']} · [{shown}]({c['repository']}) · source at\n"
+            f"> [`{short(s['revision'])}`]({s['repository'].rstrip('/')}/tree/{s['revision']})")
+
+
+def render(card):
+    """README.md for a card: title, credit, one stats row per result, the facts, then the prose."""
+    parts = [HEADER, "", f"# {card['title']}", "", credit(card), ""]
+    for result in card.get("results") or []:
+        parts += [result_block(result), ""]
+    parts += [facts(card), ""]
+    readme = card.get("readme") or {}
+    for key, heading in SECTIONS:
+        if not readme.get(key):
+            continue
+        if heading:
+            parts += [f"## {heading}", ""]
+        parts += [readme[key].rstrip("\n"), ""]
+    return "\n".join(parts).rstrip("\n") + "\n"
+
+
+def engine_folders(hub):
+    return sorted(p for p in (Path(hub) / "engines").glob("*/*") if p.is_dir() and (p / "card.yaml").is_file())
+
+
+def main(folders, check):
+    stale = []
+    for folder in folders:
+        text = render(load(folder))
+        path = Path(folder) / "README.md"
+        if check:
+            if not path.is_file() or path.read_text(encoding="utf-8") != text:
+                stale.append(path.as_posix())
+        else:
+            path.write_text(text, encoding="utf-8", newline="\n")
+            print(f"rendered {path.as_posix()}")
+    if stale:
+        raise SystemExit("README.md out of date; run python -B tools/card.py on its folder:\n  " + "\n  ".join(stale))
+    if check:
+        print(f"{len(folders)} READMEs match their cards")
+
+
+if __name__ == "__main__":
+    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    p.add_argument("folders", nargs="*", help="engine folders (default: every engine under engines/)")
+    p.add_argument("--check", action="store_true", help="fail if a README.md differs from its rendered card")
+    args = p.parse_args()
+    main([Path(f) for f in args.folders] or engine_folders("."), args.check)

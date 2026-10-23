@@ -1,89 +1,4 @@
 {
-  "summary": "NInfer: Qwen3.8-27B QUASAR with DFlash2 block drafting, 9 tokens per round, and an INT8 KV cache",
-  "origin": "external",
-  "contributor": {
-    "name": "giveen",
-    "repository": "https://github.com/giveen/ninfer-ext"
-  },
-  "license": "Apache-2.0",
-  "features": [
-    "openai-api",
-    "speculative"
-  ],
-  "results": [
-    {
-      "gpu": "rtx5090",
-      "model": "qwen3.8-27b@NVFP4",
-      "measured_with": "LocalMaxxing",
-      "decode_tok_s": 510.7,
-      "context_tokens": 196032,
-      "quality": {
-        "metric": "perplexity",
-        "value": 4.28116,
-        "method": "ninfer-perplexity on ninfer-ppl-1m-v1, --quick, 16,384-token context, INT8 KV"
-      }
-    }
-  ],
-  "requirements": {
-    "platforms": [
-      "linux"
-    ],
-    "gpu_arch": [
-      "sm_120a"
-    ],
-    "gpu_memory_gb": 32,
-    "cuda": "13.3"
-  },
-  "downloads": [
-    {
-      "kind": "artifact",
-      "repository": "jabbatheduck/ninfer-ext-models",
-      "path": "qwen3.8-27b-quasar-nvfp4",
-      "file": "qwen3_8_27b_quasar_nvfp4.ninfer",
-      "sha256": "bfd7f9e100fc26399096f920c937a168f51b4a2af1ba1d2cd7df57242456787a",
-      "size_gb": 19.6,
-      "note": "the converted artifact, with SHA256SUMS; download it instead of converting the checkpoint"
-    },
-    {
-      "kind": "drafter",
-      "repository": "incoai/Qwen3.8-27B-DFlash2",
-      "revision": "015e795645c74b1a0eeef3b570031fb62e769bc5",
-      "note": "only to convert the checkpoint yourself; the published artifact already holds it"
-    }
-  ],
-  "provenance": {
-    "source": {
-      "repository": "https://github.com/giveen/ninfer-ext",
-      "revision": "7b586bde50747eac26d198530aa04d83216947a9"
-    },
-    "artifact": {
-      "format": "ninfer-v3",
-      "converter": "ninfer-v3",
-      "recipe": "qwen3_8_27b_quasar_nvfp4",
-      "components": [
-        "text",
-        "vision",
-        "mtp",
-        "dflash2"
-      ],
-      "not_redistributed": "the converted .ninfer artifact (about 19.6 GB) is published with SHA256SUMS and is not part of this submission"
-    },
-    "toolchain": {
-      "os": "Ubuntu 26.10",
-      "cxx": "gcc 15.3.0",
-      "cmake": "4.3.4",
-      "ninja": "1.13.0",
-      "cuda": "13.3 (cuda_13.3.r13.3/compiler.38244171_0)",
-      "cuda_architectures": "120a",
-      "runtime_libraries": "libcudart, libcublasLt from the CUDA 13.3 toolkit; FFmpeg and libcurl from the system (not redistributed)"
-    },
-    "runtime_prerequisites": [
-      "Linux x86-64 with a 32 GB-class NVIDIA GPU (RTX 5090, sm_120a) and a CUDA 13.x driver/toolkit",
-      "CMake 3.28+, Ninja, a C++23 host compiler",
-      "FFmpeg development libraries (libavformat, libavcodec, libavutil, libswscale) and libcurl 7.85+",
-      "Python 3.11 with numpy and torch for the converter and the perplexity report; the runtime needs none"
-    ]
-  },
   "checkpoints": {
     "qwen3.8-27b@NVFP4": {
       "repository": "QUASAR-QAT/Qwen3.8-27B-QUASAR-NVFP4",
@@ -171,5 +86,34 @@
         }
       ]
     }
+  },
+  "provenance": {
+    "artifact": {
+      "format": "ninfer-v3",
+      "converter": "ninfer-v3",
+      "recipe": "qwen3_8_27b_quasar_nvfp4",
+      "components": [
+        "text",
+        "vision",
+        "mtp",
+        "dflash2"
+      ],
+      "not_redistributed": "the converted .ninfer artifact (about 19.6 GB) is published with SHA256SUMS and is not part of this submission"
+    },
+    "toolchain": {
+      "os": "Ubuntu 26.10",
+      "cxx": "gcc 15.3.0",
+      "cmake": "4.3.4",
+      "ninja": "1.13.0",
+      "cuda": "13.3 (cuda_13.3.r13.3/compiler.38244171_0)",
+      "cuda_architectures": "120a",
+      "runtime_libraries": "libcudart, libcublasLt from the CUDA 13.3 toolkit; FFmpeg and libcurl from the system (not redistributed)"
+    },
+    "runtime_prerequisites": [
+      "Linux x86-64 with a 32 GB-class NVIDIA GPU (RTX 5090, sm_120a) and a CUDA 13.x driver/toolkit",
+      "CMake 3.28+, Ninja, a C++23 host compiler",
+      "FFmpeg development libraries (libavformat, libavcodec, libavutil, libswscale) and libcurl 7.85+",
+      "Python 3.11 with numpy and torch for the converter and the perplexity report; the runtime needs none"
+    ]
   }
 }

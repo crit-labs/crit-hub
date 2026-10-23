@@ -1,23 +1,25 @@
 # Whitelist: only the registry itself is tracked. Anything else in the working
-# tree (evidence, builds, binaries, models, scratch) stays local by default.
+# tree (run records, builds, binaries, models, scratch) stays local by default.
 /*
 !/.gitignore
 !/LICENSE
 !/README.md
+!/CONTRIBUTING.md
 !/tools/
+!/schemas/
 !/docs/
 !/engines/
 !/.github/
 
 # Inside an engine folder (engines/<owner>/<name>/) only these are tracked; its source lives in
-# the repository engine.json pins (crit-labs/crit-engines for crit engines).
+# the repository card.yaml pins (crit-labs/crit-engines for crit engines).
 /engines/*/*/*
 !/engines/*/*/README.md
-!/engines/*/*/engine.json
-!/engines/*/*/eval/
+!/engines/*/*/card.yaml
+!/engines/*/*/card.lock.json
+!/engines/*/*/evidence/
 
 # Never tracked anywhere.
-evidence/
 build/
 __pycache__/
 *.pyc

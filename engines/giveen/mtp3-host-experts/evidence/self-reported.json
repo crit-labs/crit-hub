@@ -17,12 +17,11 @@
           "link": "https://huggingface.co/jabbatheduck/ninfer-ext-models/tree/main/qwen3.8-flash-next",
           "settings": "FP8 KV, --spec mtp with 3 draft tokens; causal perplexity on ninfer-ppl-1m-v1, quick; decode for one request; peak host RSS with --ngram-residency stream (about 65 GiB)",
           "figures": {
-            "quality": {
-              "metric": "perplexity",
-              "value": 3.518
-            },
             "decode_tok_s": 81,
-            "host_ram_gib": 65
+            "host_ram_gib": 65,
+            "ppl": {
+              "absolute": 3.518
+            }
           }
         },
         {

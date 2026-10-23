@@ -3,18 +3,16 @@
 source copies the explicitly selected runtime source and data, the configuration, dependency credits
 and the applicable license texts into <name>/ of a crit-engines checkout; never research, full
 candidate records or executable packages, which stay in the run. Commit that folder in crit-engines.
-entry then writes engines/<contributor>/<name>/ in crit-hub, README.md and engine.json only, pinned to
-the crit-engines commit that holds the source: the checkout's HEAD, which must contain <name>/ with no
-uncommitted changes. The supplied README writes that commit as <crit-engines commit>, which entry
-fills in. engine.json carries the provenance and the exact checkpoint, and names the GPU and model the
-candidate was measured on. --eval names the candidate's sealed crit Eval attempts (attempt-0003):
-entry copies each result into eval/ as crit-eval.json (then crit-eval-2.json and on) and takes the
-result's figures from them, measured_with, decode,
-prefill, first token, context and the quality budget its worst path uses; without --eval, fill them
-in as your own report. Fill in the summary, features, the README's measured figures, the
-requirements, any downloads, and the SPDX license of the engine source, before
-tools/check_engines.py passes. Both steps
-verify the complete seal, and both destinations must be new.
+entry then writes engines/<contributor>/<name>/ in crit-hub, pinned to the crit-engines commit that
+holds the source (the checkout's HEAD, which must contain <name>/ with no uncommitted changes):
+card.yaml with the supplied README's sections as its prose, card.lock.json with the exact checkpoint
+and the sealed run's provenance, and README.md rendered from the card. The supplied README writes the
+commit as <crit-engines commit>, which entry fills in. --eval names the candidate's sealed crit Eval
+attempts (attempt-0003): entry copies each result into evidence/ as crit-eval.json (then
+crit-eval-2.json and on) and fills the result's five stats and further figures from them; without
+--eval, fill them in as your own report. Then fill in the summary, license, features and
+requirements in card.yaml and render the README with tools/card.py before tools/check_engines.py
+passes. Both steps verify the complete seal, and both destinations must be new.
 """
 import argparse
 import hashlib
@@ -22,7 +20,11 @@ import json
 import re
 import shutil
 import subprocess
+import sys
 from pathlib import Path, PurePosixPath
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import card as cardlib  # noqa: E402
 
 
 def read(path):
@@ -79,21 +81,7 @@ def checkpoint(repository, revision, run_manifest):
 REPOSITORY = re.compile(r"https://[A-Za-z0-9.-]+(/[A-Za-z0-9_.~-]+)+/?")
 
 
-BUILT_WITH_CRIT = "> Built with [crit](https://github.com/crit-labs/crit): a sealed crit candidate, exported with `tools/export_engine.py`."
-
 REVISION = "<crit-engines commit>"
-
-
-def credit(text, name, repository):
-    """The contributor's repository sits directly under the engine README's title."""
-    lines = text.splitlines()
-    if not lines or not lines[0].startswith("# "):
-        raise ValueError("The engine README must open with a '# ' title")
-    if any(line.startswith("> **Contributed by**") and repository in line for line in lines[1:6]):
-        return text
-    shown = repository.split("://", 1)[1].split("/", 1)[1].rstrip("/")
-    rest = "\n".join(lines[1:]).lstrip("\n")
-    return f"{lines[0]}\n\n> [!NOTE]\n> **Contributed by** {name} · [{shown}]({repository})\n>\n{BUILT_WITH_CRIT}\n\n{rest}\n"
 
 
 def sealed(args):
@@ -179,8 +167,9 @@ def committed(engines, name):
 
 
 def measured(args, seal, candidate, target):
-    """The result for --gpu and --model: from the candidate's sealed crit Eval attempts, copied into
-    eval/, or left for the contributor to fill in. Creates the destination."""
+    """The result for --gpu and --model: its five stats and further figures from the candidate's
+    sealed crit Eval attempts, copied into evidence/, or left for the contributor to fill in.
+    Creates the destination."""
     sealed_files = {entry["path"] for entry in seal["files"]}
     attempts, results = [], []
     for attempt in args.eval:
@@ -188,35 +177,50 @@ def measured(args, seal, candidate, target):
             raise ValueError(f"No sealed crit Eval result eval/{attempt}.json in {args.candidate}")
         attempts.append(child(candidate, f"eval/{attempt}.json"))
         results.append(read(attempts[-1]))
-        if not re.fullmatch(r"crit-eval-v[0-9]+(\.[0-9]+)?", str(results[-1].get("protocol"))) or not (results[-1].get("speed") or {}).get("complete"):
+        if not cardlib.crit_eval(results[-1].get("protocol")) or not (results[-1].get("speed") or {}).get("complete"):
             raise ValueError(f"eval/{attempt}.json is not a complete crit Eval speed run")
     if len({r["protocol"] for r in results}) > 1:
         raise ValueError("The --eval attempts ran under different crit Eval protocols")
     target.mkdir(parents=True)
     if not args.eval:
-        return {"gpu": args.gpu, "model": args.model, "measured_with": None, "decode_tok_s": None}
-    files = []
+        return {"gpu": args.gpu, "model": args.model, "measured_with": None, "measured_on": None,
+                "stats": {key: None for key in cardlib.STATS}, "evidence": []}
+    evidence = []
     for number, path in enumerate(attempts, 1):
-        name = "eval/crit-eval.json" if number == 1 else f"eval/crit-eval-{number}.json"
+        name = "evidence/crit-eval.json" if number == 1 else f"evidence/crit-eval-{number}.json"
         copy(path, target / name)
-        files.append({"file": name, "sha256": digest(target / name)})
+        evidence.append({"file": name, "sha256": digest(target / name)})
 
-    def figure(field, places):
-        scores = [round(r["speed"][field], places) if places else round(r["speed"][field]) for r in results]
-        return scores[0] if len(scores) == 1 else [min(scores), max(scores)]
+    def figure(values, places):
+        values = [round(v, places) if places else round(v) for v in values]
+        return values[0] if len(values) == 1 else [min(values), max(values)]
 
-    entry = {"gpu": args.gpu, "model": args.model, "measured_with": results[0]["protocol"],
-             "decode_tok_s": figure("decode_score", 1), "prefill_tok_s": figure("prefill_score", 0),
-             "ttft_ms": figure("ttft_score_ms", 0)}
+    def worst(field):
+        values = [s[field] for r in results for s in ((r.get("quality") or {}).get("sets") or {}).values()
+                  if isinstance(s, dict) and isinstance(s.get(field), (int, float))]
+        return max(values) if values else None
+
     tokens = {(r.get("context") or {}).get("tokens") for r in results}
-    if len(tokens) == 1 and isinstance(next(iter(tokens)), int):
-        entry["context_tokens"] = next(iter(tokens))
-    budgets = [max((s["budget_used"] for s in ((r.get("quality") or {}).get("sets") or {}).values()
-                    if isinstance(s, dict) and isinstance(s.get("budget_used"), (int, float))), default=None) for r in results]
-    if budgets and None not in budgets:
-        entry["quality"] = {"metric": "budget_pct", "value": round(max(budgets) * 100, 1)}
-    entry["eval"] = files
-    return entry
+    ppl, kld, budget = worst("ppl_ratio"), worst("kld_mean"), worst("budget_used")
+    stats = {
+        "decode_tok_s": figure([r["speed"]["decode_score"] for r in results], 1),
+        "prefill_tok_s": figure([r["speed"]["prefill_score"] for r in results], 0),
+        "context_tokens": next(iter(tokens)) if len(tokens) == 1 and isinstance(next(iter(tokens)), int) else None,
+        "ppl": {"vs_reference": round(ppl, 3)} if ppl is not None else None,
+        "kld_mean": float(f"{kld:.2g}") if kld is not None else None,
+    }
+    more = {"ttft_ms": figure([r["speed"]["ttft_score_ms"] for r in results], 0)}
+    context = (((results[0].get("status") or {}).get("kpis") or {}).get("context") or {}).get("decode", {}).get("score")
+    if isinstance(context, (int, float)):
+        more["long_context_decode_tok_s"] = round(context, 1)
+    heldout = [(r.get("heldout") or {}).get("decode_score") for r in results]
+    if all(isinstance(v, (int, float)) for v in heldout):
+        more["heldout_decode_tok_s"] = figure(heldout, 1)
+    if budget is not None:
+        more["quality_budget_pct"] = round(budget * 100, 1)
+    return {"gpu": args.gpu, "model": args.model, "measured_with": results[0]["protocol"],
+            "measured_on": max(str(r.get("started_at", ""))[:10] for r in results),
+            "stats": stats, "more": more, "evidence": evidence}
 
 
 def export_entry(args):
@@ -247,9 +251,8 @@ def export_entry(args):
     text = readme.read_text(encoding="utf-8")
     if REVISION not in text:
         raise ValueError(f"The README's Build and chat checks out {REVISION} of crit-engines; entry fills in the commit")
-    credited = credit(text.replace(REVISION, revision), args.contributor.strip(), args.contributor_repo)
+    title, sections = cardlib.split_readme(text.replace(REVISION, revision))
     provenance = {
-        "source": {"repository": args.source_repo, "revision": revision, "path": args.name},
         "run_id": seal["run_id"],
         "candidate_id": args.candidate,
         "source_manifest_sha256": manifest["source_manifest_sha256"],
@@ -261,21 +264,25 @@ def export_entry(args):
     }
     if LOCAL_PATH.search(json.dumps(provenance)) or run.parent.as_posix() in json.dumps(provenance):
         raise ValueError("Local path in the candidate's toolchain record; describe the toolchain without it")
-    # The summary, features, protocol and measured figures come from the README; the contributor fills them in.
-    engine_json = {
+    locked = checkpoint(args.model_repo, args.model_revision, read(run / "inputs.json")["model_manifest"])
+    # The summary, license, features and requirements are the contributor's to fill in.
+    card = {
+        "title": title,
         "summary": None,
         "origin": "crit",
         "contributor": {"name": args.contributor.strip(), "repository": args.contributor_repo},
         "license": None,
         "features": [],
-        "results": [measured(args, seal, package.parent, target)],
+        "source": {"repository": args.source_repo, "revision": revision, "path": args.name},
         "requirements": {"platforms": [], "gpu_arch": [], "gpu_memory_gb": None, "cuda": None},
-        "provenance": provenance,
-        "checkpoints": {args.model: checkpoint(args.model_repo, args.model_revision, read(run / "inputs.json")["model_manifest"])},
+        "checkpoints": {args.model: {"repository": locked["repository"], "revision": locked["revision"]}},
+        "results": [measured(args, seal, package.parent, target)],
+        "readme": sections,
     }
-    (target / "README.md").write_text(credited, encoding="utf-8", newline="\n")
-    (target / "engine.json").write_text(json.dumps(engine_json, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps({"export": str(target), "source": f"{args.source_repo}/tree/{revision}/{args.name}", "verified_seal_files": len(seal["files"])}))
+    cardlib.write(target, card, {"checkpoints": {args.model: locked}, "provenance": provenance})
+    (target / "README.md").write_text(cardlib.render(card), encoding="utf-8", newline="\n")
+    print(json.dumps({"export": str(target), "source": f"{args.source_repo}/tree/{revision}/{args.name}", "verified_seal_files": len(seal["files"]),
+                      "next": "fill in summary, license, features and requirements in card.yaml, then python -B tools/card.py on the folder"}))
 
 
 if __name__ == "__main__":
@@ -304,7 +311,7 @@ if __name__ == "__main__":
         q.add_argument("--contributor-repo", required=True, help="https URL of your repository, shown under the README's title")
         q.add_argument("--readme", required=True, help=f"the engine README; it writes the crit-engines commit as {REVISION}")
         q.add_argument("--eval", action="append", default=[], metavar="ATTEMPT",
-                       help="a sealed crit Eval attempt of the candidate, e.g. attempt-0003: its result goes to eval/ and gives the "
+                       help="a sealed crit Eval attempt of the candidate, e.g. attempt-0003: its result goes to evidence/ and gives the "
                             "result's figures; repeat it for a range across runs")
     args = p.parse_args()
     (export_source if args.step == "source" else export_entry)(args)

@@ -1,90 +1,4 @@
 {
-  "summary": "NInfer: Qwen3.8-Flash-Next with routed experts in host RAM behind an LRU device cache, and 3-token MTP",
-  "origin": "external",
-  "contributor": {
-    "name": "giveen",
-    "repository": "https://github.com/giveen/ninfer-ext"
-  },
-  "license": "Apache-2.0",
-  "features": [
-    "openai-api",
-    "tool-calls",
-    "speculative"
-  ],
-  "results": [
-    {
-      "gpu": "rtx5090",
-      "model": "qwen3.8-flash-next@NVFP4",
-      "measured_with": "LocalMaxxing",
-      "decode_tok_s": 140.9,
-      "context_tokens": 262144,
-      "host_ram_gib": 65,
-      "quality": {
-        "metric": "perplexity",
-        "value": 3.518,
-        "method": "causal perplexity on ninfer-ppl-1m-v1, quick, FP8 KV, from the artifact card"
-      }
-    }
-  ],
-  "requirements": {
-    "platforms": [
-      "linux"
-    ],
-    "gpu_arch": [
-      "sm_120a"
-    ],
-    "gpu_memory_gb": 32,
-    "cuda": "13.3"
-  },
-  "downloads": [
-    {
-      "kind": "artifact",
-      "repository": "jabbatheduck/ninfer-ext-models",
-      "path": "qwen3.8-flash-next",
-      "file": "qwen3_8_flash_next_nvfp4.ninfer",
-      "sha256": "bed67cf5343dfc697b8ddd3f29052e5f8bda1a22eac9985f5c4c0ac58e064d0f",
-      "size_gb": 119,
-      "note": "the converted artifact, published as parts with SHA256SUMS; download it instead of converting the checkpoint"
-    }
-  ],
-  "provenance": {
-    "source": {
-      "repository": "https://github.com/giveen/ninfer-ext",
-      "revision": "7b586bde50747eac26d198530aa04d83216947a9"
-    },
-    "artifact": {
-      "format": "ninfer-v3",
-      "converter": "ninfer-v3",
-      "recipe": "qwen3_8_flash_next_nvfp4",
-      "components": [
-        "text",
-        "vision",
-        "mtp"
-      ],
-      "not_redistributed": "the artifact is published as parts with SHA256SUMS; it is not part of this submission"
-    },
-    "leaderboard": {
-      "site": "LocalMaxxing",
-      "output_tokens_per_second": 140.9,
-      "run": "https://www.localmaxxing.com/en/runs/cmvfjyuh70199rf011u8mvio2/qwen3-8-flash-next-nvfp4-rtx-5090-140-9-tps"
-    },
-    "toolchain": {
-      "os": "Ubuntu 26.10",
-      "cxx": "gcc 15.3.0",
-      "cmake": "4.3.4",
-      "ninja": "1.13.0",
-      "cuda": "13.3 (cuda_13.3.r13.3/compiler.38244171_0)",
-      "cuda_architectures": "120a",
-      "runtime_libraries": "libcudart and libcublasLt from the CUDA 13.3 toolkit; FFmpeg and libcurl from the system (not redistributed)"
-    },
-    "runtime_prerequisites": [
-      "Linux x86-64 with one 32 GB-class NVIDIA GPU (RTX 5090, sm_120a) and a CUDA 13.x driver/toolkit",
-      "About 65 GiB host RAM for pinned experts with --ngram-residency stream, and about 127 GB disk for the artifact",
-      "CMake 3.28+, Ninja, a C++23 host compiler",
-      "FFmpeg development libraries (libavformat, libavcodec, libavutil, libswscale) and libcurl 7.85+",
-      "Python 3.11 with numpy and torch for conversion; the runtime needs none"
-    ]
-  },
   "checkpoints": {
     "qwen3.8-flash-next@NVFP4": {
       "repository": "nvidia/Qwen3.8-Flash-Next-NVFP4",
@@ -212,5 +126,34 @@
         }
       ]
     }
+  },
+  "provenance": {
+    "artifact": {
+      "format": "ninfer-v3",
+      "converter": "ninfer-v3",
+      "recipe": "qwen3_8_flash_next_nvfp4",
+      "components": [
+        "text",
+        "vision",
+        "mtp"
+      ],
+      "not_redistributed": "the artifact is published as parts with SHA256SUMS; it is not part of this submission"
+    },
+    "toolchain": {
+      "os": "Ubuntu 26.10",
+      "cxx": "gcc 15.3.0",
+      "cmake": "4.3.4",
+      "ninja": "1.13.0",
+      "cuda": "13.3 (cuda_13.3.r13.3/compiler.38244171_0)",
+      "cuda_architectures": "120a",
+      "runtime_libraries": "libcudart and libcublasLt from the CUDA 13.3 toolkit; FFmpeg and libcurl from the system (not redistributed)"
+    },
+    "runtime_prerequisites": [
+      "Linux x86-64 with one 32 GB-class NVIDIA GPU (RTX 5090, sm_120a) and a CUDA 13.x driver/toolkit",
+      "About 65 GiB host RAM for pinned experts with --ngram-residency stream, and about 127 GB disk for the artifact",
+      "CMake 3.28+, Ninja, a C++23 host compiler",
+      "FFmpeg development libraries (libavformat, libavcodec, libavutil, libswscale) and libcurl 7.85+",
+      "Python 3.11 with numpy and torch for conversion; the runtime needs none"
+    ]
   }
 }

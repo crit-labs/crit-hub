@@ -23,9 +23,8 @@
           "method": "ninfer-perplexity on the repository's ninfer-ppl-1m-v1 corpus",
           "settings": "--quick, --context 16384 --stride 8192, 261,167 scored tokens, one run, INT8 KV (BF16 KV: 4.290495)",
           "figures": {
-            "quality": {
-              "metric": "perplexity",
-              "value": 4.28116
+            "ppl": {
+              "absolute": 4.28116
             }
           }
         }

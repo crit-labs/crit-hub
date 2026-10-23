@@ -1,9 +1,62 @@
+<!-- Rendered by tools/card.py from card.yaml: edit card.yaml, then run python -B tools/card.py on this folder. -->
+
 # Qwen3.8-27B @ NVFP4 · RTX 5090 · mtp7-device-confidence
 
 > [!NOTE]
 > **Contributed by** crit-labs · [crit-labs/crit](https://github.com/crit-labs/crit)
 >
 > Built with [crit](https://github.com/crit-labs/crit): a sealed crit candidate, exported with `tools/export_engine.py`.
+
+**rtx5090 · `qwen3.8-27b@NVFP4`** · crit Eval (crit-eval-v6), measured 2026-10-23 · [crit-eval.json](evidence/crit-eval.json)
+
+<div align="center">
+<table>
+  <tr>
+    <td align="center" width="20%">
+      <strong>
+
+252.4 tok/s</strong>
+
+Decode
+    </td>
+    <td align="center" width="20%">
+      <strong>
+
+7,425 tok/s</strong>
+
+Prefill
+    </td>
+    <td align="center" width="20%">
+      <strong>
+
+262,144 tok</strong>
+
+Context
+    </td>
+    <td align="center" width="20%">
+      <strong>
+
++0.1%</strong>
+
+Perplexity vs reference
+    </td>
+    <td align="center" width="20%">
+      <strong>
+
+0.0028</strong>
+
+Mean KL divergence
+    </td>
+  </tr>
+</table>
+</div>
+
+<p align="center">first token 150 ms · long-context decode 315.2 tok/s · held-out decode 163.3 tok/s · 5.8% of the quality budget</p>
+
+- **Requires:** WSL2 · sm_120a · 32 GB GPU memory · CUDA 13.1 · crit Core 0.5.0
+- **Checkpoint** (`qwen3.8-27b@NVFP4`): [`unsloth/Qwen3.8-27B-NVFP4`](https://huggingface.co/unsloth/Qwen3.8-27B-NVFP4/tree/f0b7c9e722f5565102fff8481c99e4d86ae099c7) at `f0b7c9e7`
+- **Source:** [crit-labs/crit-engines/mtp7-device-confidence @ `234d6af3`](https://github.com/crit-labs/crit-engines/tree/234d6af32bc549a8b77f7b273bd9109efb7d2c1a/mtp7-device-confidence)
+- **License:** Apache-2.0
 
 An engine written from scratch on crit Core 0.5.0, which it links as an installed SDK. It runs text
 generation on WSL2 Ubuntu 24.04 with CUDA 13.1 on sm_120a (RTX 5090, 32 GB) at a 262,144-token
@@ -19,7 +72,7 @@ DeltaNet and 16 gated-attention layers, NVFP4 MLPs except layers 56–63 (FP8), 
 projections and output head, and one bundled BF16 MTP layer. The target weights are used as stored.
 For drafting only, the MTP layer is re-encoded as row-scaled FP8 and the output head as NVFP4. The
 vision tower is not loaded. Thinking is off by default (`enable_thinking: false`) with the model
-card's non-thinking sampling defaults. [engine.json](engine.json) lists every checkpoint file with the
+card's non-thinking sampling defaults. [card.lock.json](card.lock.json) lists every checkpoint file with the
 size and SHA-256 the run recorded; `python -B tools/verify_model.py` checks a download against it.
 
 ## Design
@@ -39,7 +92,7 @@ The drafting threshold was tuned on a corpus written for the run, not on Eval: t
 ## Measured
 
 crit Eval (crit-eval-v6) of sealed candidate-0007, 6 speed cases at a 262,144-token context; the
-result file is in [eval/](eval/):
+result file is in [evidence/](evidence/):
 
 | Metric | Result |
 | --- | ---: |

@@ -1,3 +1,5 @@
+<!-- Rendered by tools/card.py from card.yaml: edit card.yaml, then run python -B tools/card.py on this folder. -->
+
 # Qwen3.8-Flash-Next @ NVFP4 · RTX 5090 · mtp3-host-experts
 
 > [!WARNING]
@@ -6,6 +8,58 @@
 >
 > **Contributed by** giveen · [giveen/ninfer-ext](https://github.com/giveen/ninfer-ext) · source at
 > [`7b586bde`](https://github.com/giveen/ninfer-ext/tree/7b586bde50747eac26d198530aa04d83216947a9)
+
+**rtx5090 · `qwen3.8-flash-next@NVFP4`** · self-reported (LocalMaxxing) · [self-reported.json](evidence/self-reported.json)
+
+<div align="center">
+<table>
+  <tr>
+    <td align="center" width="20%">
+      <strong>
+
+140.9 tok/s</strong>
+
+Decode
+    </td>
+    <td align="center" width="20%">
+      <strong>
+
+–</strong>
+
+Prefill
+    </td>
+    <td align="center" width="20%">
+      <strong>
+
+262,144 tok</strong>
+
+Context
+    </td>
+    <td align="center" width="20%">
+      <strong>
+
+3.518</strong>
+
+Perplexity (absolute)
+    </td>
+    <td align="center" width="20%">
+      <strong>
+
+–</strong>
+
+Mean KL divergence
+    </td>
+  </tr>
+</table>
+</div>
+
+<p align="center">65 GiB host RAM</p>
+
+- **Requires:** Linux · sm_120a · 32 GB GPU memory · CUDA 13.3
+- **Checkpoint** (`qwen3.8-flash-next@NVFP4`): [`nvidia/Qwen3.8-Flash-Next-NVFP4`](https://huggingface.co/nvidia/Qwen3.8-Flash-Next-NVFP4/tree/fc694b54fb0174e0913e6adf86691ef85a4ead47) at `fc694b54`
+- **Download** (artifact): [`jabbatheduck/ninfer-ext-models/qwen3.8-flash-next`](https://huggingface.co/jabbatheduck/ninfer-ext-models/tree/main/qwen3.8-flash-next), about 119 GB: the converted artifact, published as parts with SHA256SUMS; download it instead of converting the checkpoint
+- **Source:** [giveen/ninfer-ext @ `7b586bde`](https://github.com/giveen/ninfer-ext/tree/7b586bde50747eac26d198530aa04d83216947a9)
+- **License:** Apache-2.0
 
 NInfer, a from-scratch C++23/CUDA inference engine (an extended fork of upstream NInfer), on one
 RTX 5090 (32 GB) with Ubuntu 26.10, GCC 15.3 and CUDA 13.3. Qwen3.8-Flash-Next is a ~180B-parameter
@@ -23,7 +77,7 @@ folder; it is [giveen/ninfer-ext](https://github.com/giveen/ninfer-ext) at the p
 a per-layer n-gram table, an MTP block, and a vision tower). Routed experts keep their stored NVFP4
 codes and scales (the MTP bank is re-encoded from block FP8); the n-gram table becomes one row-scaled
 FP8 matrix; attention, GDN, hyper-connection and PLE projections are Q8; token embedding Q8 and the
-output head Q6. [engine.json](engine.json) lists every checkpoint file with the size and SHA-256 the
+output head Q6. [card.lock.json](card.lock.json) lists every checkpoint file with the size and SHA-256 the
 conversion recorded; `python -B tools/verify_model.py` from a crit-hub checkout checks a download
 against it.
 
@@ -94,7 +148,7 @@ two runs: no speculation 98.5 / 141.6 / 180.6 / 185.3 at C=1 / 2 / 4 / 8; `--spe
 
 - **Arithmetic:** the Qwen4Exp mathematics and state semantics are checked against FP64 oracles in
   `tests/models/qwen4_exp/` upstream; this entry does not re-run them.
-- **Artifact identity:** the published artifact carries `SHA256SUMS`; `engine.json` pins the source
+- **Artifact identity:** the published artifact carries `SHA256SUMS`; `card.lock.json` pins the source
   checkpoint files by revision and SHA-256.
 - **Benchmarks:** the tables above are the project's published runs and the leaderboard run; each
   row names its protocol and, where the fork's numbers come from an earlier commit, that commit.
@@ -126,7 +180,7 @@ cmake --build --preset release
 # binaries: build/apps/ninfer, build/apps/ninfer-serve, build/apps/ninfer-perplexity
 ```
 
-Check the checkpoint against [engine.json](engine.json) from a crit-hub checkout:
+Check the checkpoint against [card.lock.json](card.lock.json) from a crit-hub checkout:
 `python -B tools/verify_model.py <this engine folder> /path/to/checkpoint`.
 
 Convert the checkpoint from the cloned tree:

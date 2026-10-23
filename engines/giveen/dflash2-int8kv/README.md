@@ -1,3 +1,5 @@
+<!-- Rendered by tools/card.py from card.yaml: edit card.yaml, then run python -B tools/card.py on this folder. -->
+
 # Qwen3.8-27B @ NVFP4 · RTX 5090 · dflash2-int8kv
 
 > [!WARNING]
@@ -6,6 +8,57 @@
 >
 > **Contributed by** giveen · [giveen/ninfer-ext](https://github.com/giveen/ninfer-ext) · source at
 > [`7b586bde`](https://github.com/giveen/ninfer-ext/tree/7b586bde50747eac26d198530aa04d83216947a9)
+
+**rtx5090 · `qwen3.8-27b@NVFP4`** · self-reported (LocalMaxxing) · [self-reported.json](evidence/self-reported.json)
+
+<div align="center">
+<table>
+  <tr>
+    <td align="center" width="20%">
+      <strong>
+
+510.7 tok/s</strong>
+
+Decode
+    </td>
+    <td align="center" width="20%">
+      <strong>
+
+–</strong>
+
+Prefill
+    </td>
+    <td align="center" width="20%">
+      <strong>
+
+196,032 tok</strong>
+
+Context
+    </td>
+    <td align="center" width="20%">
+      <strong>
+
+4.28116</strong>
+
+Perplexity (absolute)
+    </td>
+    <td align="center" width="20%">
+      <strong>
+
+–</strong>
+
+Mean KL divergence
+    </td>
+  </tr>
+</table>
+</div>
+
+- **Requires:** Linux · sm_120a · 32 GB GPU memory · CUDA 13.3
+- **Checkpoint** (`qwen3.8-27b@NVFP4`): [`QUASAR-QAT/Qwen3.8-27B-QUASAR-NVFP4`](https://huggingface.co/QUASAR-QAT/Qwen3.8-27B-QUASAR-NVFP4/tree/4a22293aa6d1026844bc93a8727f1837e48acd89) at `4a22293a`
+- **Download** (artifact): [`jabbatheduck/ninfer-ext-models/qwen3.8-27b-quasar-nvfp4`](https://huggingface.co/jabbatheduck/ninfer-ext-models/tree/main/qwen3.8-27b-quasar-nvfp4), about 19.6 GB: the converted artifact, with SHA256SUMS; download it instead of converting the checkpoint
+- **Download** (drafter): [`incoai/Qwen3.8-27B-DFlash2`](https://huggingface.co/incoai/Qwen3.8-27B-DFlash2/tree/015e795645c74b1a0eeef3b570031fb62e769bc5): only to convert the checkpoint yourself; the published artifact already holds it
+- **Source:** [giveen/ninfer-ext @ `7b586bde`](https://github.com/giveen/ninfer-ext/tree/7b586bde50747eac26d198530aa04d83216947a9)
+- **License:** Apache-2.0
 
 NInfer, a from-scratch C++23/CUDA inference engine (an extended fork of upstream NInfer), on one
 RTX 5090 (32 GB) with Ubuntu 26.10, GCC 15.3 and CUDA 13.3. This entry runs the Qwen3.8-27B QUASAR
@@ -21,7 +74,7 @@ commit above.
 hidden 5,120, vocab 248,320, native context 262,144, with a bundled BF16 MTP layer and vision tower.
 All 496 Text linears are stored NVFP4 and imported as stored; the token embedding and output head are
 re-encoded to FP8 E4M3 per row; the GDN a/b projections are stored NVFP4 but have no NVFP4 route, so
-the converter decodes them to their BF16 values. [engine.json](engine.json) lists every checkpoint file
+the converter decodes them to their BF16 values. [card.lock.json](card.lock.json) lists every checkpoint file
 with the size and SHA-256 the conversion recorded; `python -B tools/verify_model.py` from a crit-hub
 checkout checks a download against it.
 
@@ -143,7 +196,7 @@ cmake --build --preset release
 # binaries: build/apps/ninfer, build/apps/ninfer-serve, build/apps/ninfer-perplexity
 ```
 
-Check the checkpoint against [engine.json](engine.json) from a crit-hub checkout:
+Check the checkpoint against [card.lock.json](card.lock.json) from a crit-hub checkout:
 `python -B tools/verify_model.py <this engine folder> /path/to/checkpoint`.
 
 Convert the checkpoint from the cloned tree:

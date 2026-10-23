@@ -1,71 +1,4 @@
 {
-  "summary": "Qwen3.8-27B with up to 7 MTP drafts per round, stopped on draft confidence on the GPU in one CUDA graph",
-  "origin": "crit",
-  "contributor": {
-    "name": "crit-labs",
-    "repository": "https://github.com/crit-labs/crit"
-  },
-  "license": "Apache-2.0",
-  "features": [
-    "openai-api",
-    "tool-calls",
-    "speculative"
-  ],
-  "results": [
-    {
-      "gpu": "rtx5090",
-      "model": "qwen3.8-27b@NVFP4",
-      "measured_with": "crit-eval-v6",
-      "decode_tok_s": 252.4,
-      "prefill_tok_s": 7425,
-      "ttft_ms": 150,
-      "context_tokens": 262144,
-      "quality": {
-        "metric": "budget_pct",
-        "value": 5.8
-      },
-      "eval": [
-        {
-          "file": "eval/crit-eval.json",
-          "sha256": "e91fb772272f268d05649cd9450c8a67d9532fc4a7533f7ae01236c38360be07"
-        }
-      ]
-    }
-  ],
-  "requirements": {
-    "platforms": [
-      "wsl2"
-    ],
-    "gpu_arch": [
-      "sm_120a"
-    ],
-    "gpu_memory_gb": 32,
-    "cuda": "13.1",
-    "runtime": "crit Core 0.5.0"
-  },
-  "provenance": {
-    "source": {
-      "repository": "https://github.com/crit-labs/crit-engines",
-      "revision": "234d6af32bc549a8b77f7b273bd9109efb7d2c1a",
-      "path": "mtp7-device-confidence"
-    },
-    "run_id": "run-20261023T011625Z-3141e655",
-    "candidate_id": "candidate-0007",
-    "source_manifest_sha256": "8ce93b9999993d9b6b534387cc6a26c553c5b70ab076f73010ea2af593fd12b5",
-    "original_package_sha256": "4ffd02d9ac414b5f1ba25efbe063128b96abec139eae450053caacba12989434",
-    "configuration_sha256": "0787604bd61171d3b4d49e210b2973584bc7be2e781b7f1b8b4cc906dce45765",
-    "model_manifest_sha256": "306701d28ce9480867281ad242dded1ff24bfcb2c557eb8aa14e2e7bef178248",
-    "toolchain": {
-      "os": "Ubuntu 24.04 (WSL2)",
-      "cuda": "13.1.2 (nvcc 13.1.115)",
-      "cxx": "g++ 13.3.0",
-      "cmake": "3.28.3",
-      "generator": "Ninja",
-      "cuda_arch": "sm_120a",
-      "crit_core": "crit 0.5.0 at 0bf823d41996866966b6620ed5a0cff107fbc533 (core/, built static)"
-    },
-    "runtime_prerequisites": []
-  },
   "checkpoints": {
     "qwen3.8-27b@NVFP4": {
       "repository": "unsloth/Qwen3.8-27B-NVFP4",
@@ -134,5 +67,23 @@
       ],
       "run_model_manifest_sha256": "306701d28ce9480867281ad242dded1ff24bfcb2c557eb8aa14e2e7bef178248"
     }
+  },
+  "provenance": {
+    "run_id": "run-20261023T011625Z-3141e655",
+    "candidate_id": "candidate-0007",
+    "source_manifest_sha256": "8ce93b9999993d9b6b534387cc6a26c553c5b70ab076f73010ea2af593fd12b5",
+    "original_package_sha256": "4ffd02d9ac414b5f1ba25efbe063128b96abec139eae450053caacba12989434",
+    "configuration_sha256": "0787604bd61171d3b4d49e210b2973584bc7be2e781b7f1b8b4cc906dce45765",
+    "model_manifest_sha256": "306701d28ce9480867281ad242dded1ff24bfcb2c557eb8aa14e2e7bef178248",
+    "toolchain": {
+      "os": "Ubuntu 24.04 (WSL2)",
+      "cuda": "13.1.2 (nvcc 13.1.115)",
+      "cxx": "g++ 13.3.0",
+      "cmake": "3.28.3",
+      "generator": "Ninja",
+      "cuda_arch": "sm_120a",
+      "crit_core": "crit 0.5.0 at 0bf823d41996866966b6620ed5a0cff107fbc533 (core/, built static)"
+    },
+    "runtime_prerequisites": []
   }
 }
