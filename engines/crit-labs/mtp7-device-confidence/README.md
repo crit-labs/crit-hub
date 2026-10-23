@@ -1,0 +1,117 @@
+# Qwen3.8-27B @ NVFP4 · RTX 5090 · mtp7-device-confidence
+
+> [!NOTE]
+> **Contributed by** crit-labs · [crit-labs/crit](https://github.com/crit-labs/crit)
+>
+> Built with [crit](https://github.com/crit-labs/crit): a sealed crit candidate, exported with `tools/export_engine.py`.
+
+An engine written from scratch on crit Core 0.5.0, which it links as an installed SDK. It runs text
+generation on WSL2 Ubuntu 24.04 with CUDA 13.1 on sm_120a (RTX 5090, 32 GB) at a 262,144-token
+context with an FP8 KV cache. Each decode round drafts up to 7 tokens with the model's own MTP layer
+and stops drafting once the drafter's probability for its latest draft falls below 0.5; the GPU
+makes that decision inside one CUDA graph per round, so the host never waits mid-round. Output equals
+plain greedy decoding.
+
+## Model
+
+`unsloth/Qwen3.8-27B-NVFP4` at revision `f0b7c9e722f5565102fff8481c99e4d86ae099c7`: 48 gated
+DeltaNet and 16 gated-attention layers, NVFP4 MLPs except layers 56–63 (FP8), FP8 attention, DeltaNet
+projections and output head, and one bundled BF16 MTP layer. The target weights are used as stored.
+For drafting only, the MTP layer is re-encoded as row-scaled FP8 and the output head as NVFP4. The
+vision tower is not loaded. Thinking is off by default (`enable_thinking: false`) with the model
+card's non-thinking sampling defaults. [engine.json](engine.json) lists every checkpoint file with the
+size and SHA-256 the run recorded; `python -B tools/verify_model.py` checks a download against it.
+
+## Design
+
+| Part | How |
+| --- | --- |
+| Engine | A Core engine library with crit's stock Eval and serve adapters: chat, streaming, tools, log-probabilities, scores and every sampling field through Core's sampler |
+| Weights | Plain stored layout; NVFP4 scales in cuBLASLt's 128×4 tile order; the 2.5 GB embedding table in pinned, mapped host memory |
+| Decode | One CUDA graph per round: an MTP catch-up step, up to six more draft steps each behind a conditional IF node whose gate checks the previous draft's probability (≥ 0.5), then a SWITCH node that runs the verify pass for the drafts made (2–8 columns) |
+| Exactness | DeltaNet and convolution state commit the accepted prefix at the next verify from a per-layer stash, so output equals plain greedy bit for bit |
+| GEMVs | FP8 and NVFP4 bytes read straight into `mma.m16n8k16` BF16 fragments, at 1.5–1.7 TB/s |
+| Prefill | 2048-token chunks: cuBLASLt NVFP4 W4A4 and FP8 W8A8 GEMMs, FP8 KV prompt attention (crit's `fp8-kv-attention`), a sequential gated-delta scan staged through shared memory, and MTP prompt rows |
+
+The drafting threshold was tuned on a corpus written for the run, not on Eval: thresholds 0.3 to
+0.85 were not better than 0.5, and a history-based draft width gained at most 1.4%, within noise.
+
+## Measured
+
+crit Eval (crit-eval-v6) of sealed candidate-0007, 6 speed cases at a 262,144-token context; the
+result file is in [eval/](eval/):
+
+| Metric | Result |
+| --- | ---: |
+| Decode | 252.4 tok/s |
+| Prefill | 7,425 tok/s |
+| Time to first token (geomean) | 150 ms |
+| Long-context decode (32K to 262K) | 315.2 tok/s |
+| Long-context first token (32K to 262K; 79.3 s at 262K) | 18.9 s |
+| Held-out decode (10 prompts, 8 languages and code) | 163.3 tok/s |
+| Whole requests (end to end) | 177.8 tok/s |
+| Quality, worst path (32K-token texts: KLD mean 2.8e-3, p99 2.9e-2) | 5.8% of the budget (PPL ×1.05, KLD mean 0.05, p99 0.5) |
+
+| Run benchmark, 256 output tokens | Decode | Time to first token | Prefill |
+| --- | ---: | ---: | ---: |
+| 512-token prompt | 154.6 tok/s | 76 ms | 6,762 tok/s |
+| 8,192-token prompt | 188.1 tok/s | 1.08 s | 7,585 tok/s |
+
+Decode by case: chat 169, code 220, math 268, tool call 377, long summary 181, agent 381 tok/s. Run
+benchmarks are medians of three repetitions after one warmup, concurrency one, resident. A
+verify pass reads 19.26 GB (about 11.3 ms at the card's read rate; measured about 13.7 ms) and each
+draft step adds about 0.8 ms, so decode speed is set by how many drafts get accepted: 2.9 tokens per
+round on chat up to 7.8 on the agent case. Prefill runs at about half its compute ceiling.
+
+## Checks
+
+- **Arithmetic:** operator checks in every build (`q27_kernel_tests`) against FP64 or plain decoding:
+  FP8/NVFP4 GEMVs for 1–8 columns with column invariance, the cuBLASLt prompt GEMMs, the DeltaNet scan
+  with its staged, verify and deferred-commit variants, convolution and row reductions. Eval quality
+  is within budget on every served path, and the honesty check found the served replies scored alike.
+- **Functional:** every Eval gate passed: coverage, repeatable, request history, prompt cache,
+  quality, capacity, retrieval at 4K to 262,144 tokens, lower context (no case slower at 65,536 than at
+  262,144 tokens) and generality. `crit serve` on the sealed candidate passed consecutive greedy
+  requests, a system message, streaming, a stop string, a tool call and its result, log-probabilities,
+  a sampled request and Ctrl+C shutdown.
+- **Resources:** at the full context at least 493 MB of VRAM and 83.6 GB of host RAM stayed free.
+
+## Limits
+
+- Needs the whole 32 GB GPU: under 0.5 GB stays free at the full context.
+- One sequence at a time; concurrency above one is not verified.
+- Text only: the vision tower is not loaded. Structured output is not declared.
+- Short prompts reach the first token in about 30 ms against a 13 ms floor (about 20 small kernels per
+  layer plus serving overhead); the token-by-token DeltaNet scan is about 17% of a long prompt.
+- Tested only on WSL2 Ubuntu 24.04 with CUDA 13.1; `build.sh` expects the toolkit at
+  `/usr/local/cuda-13.1`.
+
+## Build and chat
+
+```sh
+git clone https://github.com/crit-labs/crit-engines && git -C crit-engines checkout 234d6af32bc549a8b77f7b273bd9109efb7d2c1a
+ENGINE=crit-engines/mtp7-device-confidence/engine
+git clone https://github.com/crit-labs/crit && git -C crit checkout v0.5.0
+bash "$ENGINE/build.sh" build crit package
+cp "$ENGINE/configuration.json" package/
+```
+
+`build.sh` builds crit Core from the crit checkout, then the engine, runs the operator checks on the
+GPU and assembles the package with `libq27engine.so`, the adapters, and the CUDA runtime and cuBLASLt
+libraries it copies from the toolkit. Builds need CMake 3.28+, Ninja, GCC 13 and the CUDA 13.1
+toolkit. Check the checkpoint from a crit-hub checkout with
+`python -B tools/verify_model.py engines/crit-labs/mtp7-device-confidence /path/to/checkpoint`.
+Loading takes about 10 s.
+
+To chat, register the package as a crit run candidate following crit's
+[Building engines](https://github.com/crit-labs/crit/blob/v0.5.0/docs/BUILDING_ENGINES.md) and serve
+it with [`crit serve`](https://github.com/crit-labs/crit/blob/v0.5.0/docs/SERVING.md), which answers
+OpenAI-compatible chat requests at `http://127.0.0.1:8000/v1`.
+[engine/configuration.json](https://github.com/crit-labs/crit-engines/blob/234d6af32bc549a8b77f7b273bd9109efb7d2c1a/mtp7-device-confidence/engine/configuration.json)
+has the applied settings; the original run keeps the full records.
+
+## Credits
+
+Credits and licenses are in [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/234d6af32bc549a8b77f7b273bd9109efb7d2c1a/mtp7-device-confidence/THIRD_PARTY.md)
+and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/234d6af32bc549a8b77f7b273bd9109efb7d2c1a/mtp7-device-confidence/LICENSES.txt),
+next to the source in [crit-labs/crit-engines](https://github.com/crit-labs/crit-engines/tree/234d6af32bc549a8b77f7b273bd9109efb7d2c1a/mtp7-device-confidence).

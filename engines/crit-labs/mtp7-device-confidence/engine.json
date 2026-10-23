@@ -1,0 +1,138 @@
+{
+  "summary": "Qwen3.8-27B with up to 7 MTP drafts per round, stopped on draft confidence on the GPU in one CUDA graph",
+  "origin": "crit",
+  "contributor": {
+    "name": "crit-labs",
+    "repository": "https://github.com/crit-labs/crit"
+  },
+  "license": "Apache-2.0",
+  "features": [
+    "openai-api",
+    "tool-calls",
+    "speculative"
+  ],
+  "results": [
+    {
+      "gpu": "rtx5090",
+      "model": "qwen3.8-27b@NVFP4",
+      "measured_with": "crit-eval-v6",
+      "decode_tok_s": 252.4,
+      "prefill_tok_s": 7425,
+      "ttft_ms": 150,
+      "context_tokens": 262144,
+      "quality": {
+        "metric": "budget_pct",
+        "value": 5.8
+      },
+      "eval": [
+        {
+          "file": "eval/rtx5090--qwen3.8-27b@NVFP4.json",
+          "sha256": "e91fb772272f268d05649cd9450c8a67d9532fc4a7533f7ae01236c38360be07"
+        }
+      ]
+    }
+  ],
+  "requirements": {
+    "platforms": [
+      "wsl2"
+    ],
+    "gpu_arch": [
+      "sm_120a"
+    ],
+    "gpu_memory_gb": 32,
+    "cuda": "13.1",
+    "runtime": "crit Core 0.5.0"
+  },
+  "provenance": {
+    "source": {
+      "repository": "https://github.com/crit-labs/crit-engines",
+      "revision": "234d6af32bc549a8b77f7b273bd9109efb7d2c1a",
+      "path": "mtp7-device-confidence"
+    },
+    "run_id": "run-20261023T011625Z-3141e655",
+    "candidate_id": "candidate-0007",
+    "source_manifest_sha256": "8ce93b9999993d9b6b534387cc6a26c553c5b70ab076f73010ea2af593fd12b5",
+    "original_package_sha256": "4ffd02d9ac414b5f1ba25efbe063128b96abec139eae450053caacba12989434",
+    "configuration_sha256": "0787604bd61171d3b4d49e210b2973584bc7be2e781b7f1b8b4cc906dce45765",
+    "model_manifest_sha256": "306701d28ce9480867281ad242dded1ff24bfcb2c557eb8aa14e2e7bef178248",
+    "toolchain": {
+      "os": "Ubuntu 24.04 (WSL2)",
+      "cuda": "13.1.2 (nvcc 13.1.115)",
+      "cxx": "g++ 13.3.0",
+      "cmake": "3.28.3",
+      "generator": "Ninja",
+      "cuda_arch": "sm_120a",
+      "crit_core": "crit 0.5.0 at 0bf823d41996866966b6620ed5a0cff107fbc533 (core/, built static)"
+    },
+    "runtime_prerequisites": []
+  },
+  "checkpoints": {
+    "qwen3.8-27b@NVFP4": {
+      "repository": "unsloth/Qwen3.8-27B-NVFP4",
+      "revision": "f0b7c9e722f5565102fff8481c99e4d86ae099c7",
+      "files": [
+        {
+          "path": "README.md",
+          "bytes": 6746,
+          "sha256": "a319a7af9a6fcb1d2c30e487d2c05bc012bba92a41cac04c09bf23beaee9ba9a"
+        },
+        {
+          "path": "chat_template.jinja",
+          "bytes": 9993,
+          "sha256": "12827f24b742ea4e80cdc12dbcf9622227056b9f797252a3149263d4f9aaadce"
+        },
+        {
+          "path": "config.json",
+          "bytes": 22564,
+          "sha256": "1b3c71868d1299e52df6fc907deb202d5132b1ef0f72aae0ef6d15185dd53a5c"
+        },
+        {
+          "path": "generation_config.json",
+          "bytes": 214,
+          "sha256": "d0d0ed2e37cdfafef4a5067d5ea2407b05f4fb50526e47c008a5b235d50240fb"
+        },
+        {
+          "path": "model.safetensors",
+          "bytes": 22568192096,
+          "sha256": "c473512c70eace07e2256fe9fd76596ac03e3295bee7d54cfb72676416afcc05"
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "bytes": 164371,
+          "sha256": "429430e1b9e65b2cb98eff8cd10a06e70a09cee89c48487a3914684aeb6df57f"
+        },
+        {
+          "path": "model_mtp.safetensors",
+          "bytes": 849400392,
+          "sha256": "1d8268aa85ace093a561e3e7b63b9d390dac1cd55a90cd55b5ec509c3c9da9fe"
+        },
+        {
+          "path": "preprocessor_config.json",
+          "bytes": 390,
+          "sha256": "27225450ac9c6529872ee1924fcb0962ff5634834f817040f444118116f4e516"
+        },
+        {
+          "path": "tokenizer.json",
+          "bytes": 19989325,
+          "sha256": "06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523"
+        },
+        {
+          "path": "tokenizer_config.json",
+          "bytes": 1047,
+          "sha256": "529f30018c36dca5387c99b5edf368287f386f2c32d3790aa7141956bc5119fa"
+        },
+        {
+          "path": "video_preprocessor_config.json",
+          "bytes": 385,
+          "sha256": "7768af27c1fafa9cc9011c1dc20067e03f8915e03b63504550e11d5066986d13"
+        },
+        {
+          "path": "vocab.json",
+          "bytes": 6722759,
+          "sha256": "ce99b4cb2983d118806ce0a8b777a35b093e2000a503ebde25853284c9dfa003"
+        }
+      ],
+      "run_model_manifest_sha256": "306701d28ce9480867281ad242dded1ff24bfcb2c557eb8aa14e2e7bef178248"
+    }
+  }
+}
