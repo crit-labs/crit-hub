@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=../../../schemas/card.schema.json
 title: Qwen3.8-27B @ NVFP4 · RTX 5090 · dflash2-int8kv
 summary: 'NInfer: Qwen3.8-27B QUASAR with DFlash2 block drafting, 9 tokens per round, and an INT8 KV cache'
 origin: external

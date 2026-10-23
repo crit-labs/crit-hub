@@ -57,8 +57,12 @@ def _str(dumper, value):
 _Dumper.add_representer(str, _str)
 
 
+# Editors that read this modeline (the YAML language server) check the card against the schema as you type.
+MODELINE = "# yaml-language-server: $schema=../../../schemas/card.schema.json\n"
+
+
 def dumps(card):
-    return yaml.dump(card, Dumper=_Dumper, sort_keys=False, allow_unicode=True, width=4096, default_flow_style=False)
+    return MODELINE + yaml.dump(card, Dumper=_Dumper, sort_keys=False, allow_unicode=True, width=4096, default_flow_style=False)
 
 
 def load(folder):

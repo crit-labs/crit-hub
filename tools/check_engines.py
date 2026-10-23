@@ -25,6 +25,11 @@ from pathlib import Path
 
 import yaml
 
+try:
+    import jsonschema
+except ImportError:  # the checks below still run; CI installs it
+    jsonschema = None
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import card as cardlib  # noqa: E402
 
@@ -443,6 +448,18 @@ def check_results(folder, card):
 
 # ---------------------------------------------------------------------------------------------
 
+SCHEMA = Path(__file__).resolve().parent.parent / "schemas" / "card.schema.json"
+
+
+def check_schema(card):
+    """card.yaml against schemas/card.schema.json, the schema editors and agents write against."""
+    if jsonschema is None or not SCHEMA.is_file():
+        return []
+    validator = jsonschema.Draft202012Validator(json.loads(SCHEMA.read_text(encoding="utf-8")))
+    return [f"card.yaml {'.'.join(map(str, e.absolute_path)) or '(top)'}: {e.message}"
+            for e in sorted(validator.iter_errors(card), key=lambda e: list(map(str, e.absolute_path)))]
+
+
 def check_readme(folder, card):
     readme = card.get("readme")
     keys = [key for key, _ in cardlib.SECTIONS]
@@ -475,7 +492,7 @@ def check(folder):
         lock = cardlib.load_lock(folder)
     except json.JSONDecodeError as e:
         return [f"card.lock.json is not JSON: {e}"]
-    problems = check_identity(folder, card) + check_requirements(card) + check_downloads(card) + check_supports(card)
+    problems = check_schema(card) + check_identity(folder, card) + check_requirements(card) + check_downloads(card) + check_supports(card)
     result_problems, listed = check_results(folder, card)
     problems += result_problems + check_checkpoints(card, lock) + check_lock(card, lock)
     files = {p.relative_to(folder).as_posix() for p in folder.rglob("*") if p.is_file()}

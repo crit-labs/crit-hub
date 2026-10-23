@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=../../../schemas/card.schema.json
 title: Qwen3.8-27B @ NVFP4 · RTX 5090 · mtp7-device-confidence
 summary: Qwen3.8-27B with up to 7 MTP drafts per round, stopped on draft confidence on the GPU in one CUDA graph
 origin: crit

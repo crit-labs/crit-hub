@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/crit-labs/crit-hub/blob/main/schemas/card.schema.json",
+  "title": "crit-hub engine card (card.yaml)",
+  "description": "An engine's hand-written record: what it is, what it measured and the README's prose. tools/check_engines.py is authoritative; it also checks figures against evidence files and README.md against the rendered card.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["title", "summary", "origin", "contributor", "license", "features", "source", "requirements", "checkpoints", "results", "readme"],
+  "properties": {
+    "title": {"type": "string", "description": "The README's title: <Model> @ <encoding> · <GPU> · <engine name>, or the engine name when it runs several.", "pattern": "^[^\\n]+$"},
+    "summary": {"type": "string", "description": "One line on what the engine does.", "maxLength": 120, "pattern": "^[^\\n]+$"},
+    "origin": {"enum": ["crit", "external"], "description": "crit: exported from a sealed crit candidate; external: built with any other toolkit."},
+    "contributor": {
+      "type": "object", "additionalProperties": false, "required": ["name", "repository"],
+      "properties": {
+        "name": {"type": "string", "description": "GitHub account or organization; also the engine folder's <owner>."},
+        "repository": {"$ref": "#/$defs/https"}
+      }
+    },
+    "license": {"type": "string", "description": "SPDX id of the engine source, e.g. Apache-2.0."},
+    "features": {"type": "array", "uniqueItems": true, "items": {"enum": ["openai-api", "tool-calls", "vision", "speculative"]}},
+    "source": {
+      "type": "object", "additionalProperties": false, "required": ["repository", "revision"],
+      "description": "Where the engine's source is: crit-labs/crit-engines for crit engines, the contributor's repository otherwise.",
+      "properties": {
+        "repository": {"$ref": "#/$defs/https"},
+        "revision": {"$ref": "#/$defs/commit"},
+        "path": {"type": "string", "description": "The engine's folder in that repository.", "pattern": "^[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)*$"}
+      }
+    },
+    "requirements": {
+      "type": "object", "additionalProperties": false, "required": ["platforms", "gpu_arch", "gpu_memory_gb", "cuda"],
+      "properties": {
+        "platforms": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["linux", "wsl2", "windows", "macos"]}},
+        "gpu_arch": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^sm_[0-9]{2,3}[a-z]?$"}},
+        "gpu_memory_gb": {"type": "number", "exclusiveMinimum": 0},
+        "cuda": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+$", "description": "Quote it in YAML: \"13.1\"."},
+        "runtime": {"type": "string", "description": "What the engine links, e.g. crit Core 0.5.0."}
+      }
+    },
+    "downloads": {
+      "type": "array", "description": "What to fetch besides the pinned checkpoint, each pinned by revision or sha256.",
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["kind", "repository"],
+        "anyOf": [{"required": ["revision"]}, {"required": ["sha256"]}],
+        "properties": {
+          "kind": {"enum": ["drafter", "artifact"]},
+          "repository": {"$ref": "#/$defs/hf_repository"},
+          "revision": {"$ref": "#/$defs/commit"},
+          "path": {"type": "string"},
+          "file": {"type": "string"},
+          "sha256": {"$ref": "#/$defs/sha256"},
+          "size_gb": {"type": "number", "exclusiveMinimum": 0},
+          "note": {"type": "string", "pattern": "^[^\\n]+$"}
+        }
+      }
+    },
+    "checkpoints": {
+      "type": "object", "description": "The Hugging Face checkpoint of every measured or supported model, keyed by model id (qwen3.8-27b@NVFP4). card.lock.json lists the measured ones' files.",
+      "additionalProperties": {
+        "type": "object", "additionalProperties": false, "required": ["repository", "revision"],
+        "properties": {"repository": {"$ref": "#/$defs/hf_repository"}, "revision": {"$ref": "#/$defs/commit"}}
+      }
+    },
+    "supports": {
+      "type": "array", "description": "Further GPU and model pairs the engine runs, not measured yet.",
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["gpus", "models"],
+        "properties": {
+          "gpus": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/gpu"}},
+          "models": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/model"}}
+        }
+      }
+    },
+    "results": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/result"}},
+    "readme": {
+      "type": "object", "additionalProperties": false, "description": "The README's prose, markdown in block scalars (|), rendered in this order.",
+      "required": ["intro", "model", "design", "measured", "checks", "limits", "build_and_chat", "credits"],
+      "properties": {
+        "intro": {"type": "string"}, "model": {"type": "string"}, "design": {"type": "string"}, "measured": {"type": "string"},
+        "checks": {"type": "string"}, "limits": {"type": "string"}, "build_and_chat": {"type": "string"},
+        "benchmark": {"type": "string"}, "credits": {"type": "string"}
+      }
+    }
+  },
+  "$defs": {
+    "https": {"type": "string", "pattern": "^https://[A-Za-z0-9.-]+(/[A-Za-z0-9_.~-]+)+/?$"},
+    "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "hf_repository": {"type": "string", "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"},
+    "gpu": {"type": "string", "pattern": "^[a-z0-9][a-z0-9.-]*$", "description": "The card in lowercase, e.g. rtx5090."},
+    "model": {"type": "string", "pattern": "^[a-z0-9][a-z0-9.-]*@[A-Za-z0-9.+-]+$", "description": "Model and encoding, e.g. qwen3.8-27b@NVFP4."},
+    "figure": {
+      "description": "A positive number, or [low, high] across runs.",
+      "oneOf": [
+        {"type": "number", "exclusiveMinimum": 0},
+        {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "number", "exclusiveMinimum": 0}}
+      ]
+    },
+    "result": {
+      "type": "object", "additionalProperties": false, "required": ["gpu", "model", "measured_with", "measured_on", "stats", "evidence"],
+      "properties": {
+        "gpu": {"$ref": "#/$defs/gpu"},
+        "model": {"$ref": "#/$defs/model"},
+        "measured_with": {"type": "string", "description": "A crit Eval protocol (crit-eval-v6) or how else it was measured (LocalMaxxing, your own benchmark)."},
+        "measured_on": {"description": "The day it was measured, YYYY-MM-DD (quoted); null when unknown, never for crit Eval.",
+                        "oneOf": [{"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"}, {"type": "null"}]},
+        "stats": {
+          "type": "object", "additionalProperties": false, "description": "The five headline stats, in this order; null when not measured.",
+          "required": ["decode_tok_s", "prefill_tok_s", "context_tokens", "ppl", "kld_mean"],
+          "properties": {
+            "decode_tok_s": {"$ref": "#/$defs/figure"},
+            "prefill_tok_s": {"oneOf": [{"$ref": "#/$defs/figure"}, {"type": "null"}]},
+            "context_tokens": {"oneOf": [{"type": "integer", "exclusiveMinimum": 0}, {"type": "null"}]},
+            "ppl": {"oneOf": [
+              {"type": "object", "additionalProperties": false, "required": ["vs_reference"], "properties": {"vs_reference": {"type": "number", "exclusiveMinimum": 0, "description": "Perplexity ratio against the reference, e.g. 1.001."}}},
+              {"type": "object", "additionalProperties": false, "required": ["absolute"], "properties": {"absolute": {"type": "number", "exclusiveMinimum": 0, "description": "Absolute perplexity, when no reference was measured."}}},
+              {"type": "null"}
+            ]},
+            "kld_mean": {"oneOf": [{"type": "number", "exclusiveMinimum": 0}, {"type": "null"}], "description": "Mean KL divergence against the reference."}
+          }
+        },
+        "more": {
+          "type": "object", "additionalProperties": false, "description": "Further figures, shown after the stats.",
+          "properties": {
+            "ttft_ms": {"$ref": "#/$defs/figure"},
+            "long_context_decode_tok_s": {"$ref": "#/$defs/figure"},
+            "heldout_decode_tok_s": {"$ref": "#/$defs/figure"},
+            "host_ram_gib": {"type": "integer", "exclusiveMinimum": 0},
+            "quality_budget_pct": {"type": "number", "exclusiveMinimum": 0}
+          }
+        },
+        "evidence": {
+          "type": "array", "description": "evidence/crit-eval.json (and -2, -3 ...) for a crit Eval result; optionally evidence/self-reported.json otherwise.",
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["file", "sha256"],
+            "properties": {
+              "file": {"type": "string", "pattern": "^evidence/(crit-eval(-[2-9]|-[1-9][0-9]+)?|self-reported)\\.json$"},
+              "sha256": {"$ref": "#/$defs/sha256"}
+            }
+          }
+        }
+      }
+    }
+  }
+}

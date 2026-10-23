@@ -1,0 +1,150 @@
+# yaml-language-server: $schema=../../schemas/card.schema.json
+#
+# The engine card: copy this folder to engines/<your account>/<engine name>/, fill in every value,
+# then render the README and check the folder:
+#
+#   python -B tools/card.py engines/<owner>/<name>       # writes README.md from this card
+#   python -B tools/check_engines.py                     # must pass before you open a pull request
+#
+# README.md is never edited by hand: it is rendered from this file. A crit engine gets most of this
+# card from `python -B tools/export_engine.py entry` (see CONTRIBUTING.md); fill in the rest.
+# Strings that look like numbers or dates ("13.1", "2026-10-23") need quotes.
+
+# The README's title. One GPU and one model: <Model> @ <encoding> · <GPU> · <engine name>.
+# An engine that runs several: just <engine name>.
+title: <Model> @ <encoding> · <GPU> · <engine name>
+
+# One line, at most 120 characters, on what the engine does.
+summary: <Model> with <what makes this engine different>
+
+# crit: exported from a sealed crit candidate. external: built with any other toolkit.
+origin: external
+
+# Who contributed it: your GitHub account or organization (it names the folder engines/<name>/...)
+# and the repository people should follow.
+contributor:
+  name: <your account>
+  repository: https://github.com/<your account>/<your repository>
+
+# SPDX id of the engine source's license.
+license: Apache-2.0
+
+# Any of: openai-api, tool-calls, vision, speculative.
+features:
+- openai-api
+- speculative
+
+# Where the source is, at the exact commit you built and measured (all 40 characters).
+# crit engines: https://github.com/crit-labs/crit-engines with path: <engine name>.
+source:
+  repository: https://github.com/<your account>/<your repository>
+  revision: <40-character commit>
+  # path: <folder in that repository, when the engine is not at its root>
+
+# What it needs to run.
+requirements:
+  platforms:          # any of linux, wsl2, windows, macos: what you built and ran it on
+  - linux
+  gpu_arch:           # compute capabilities it is compiled for
+  - sm_120a
+  gpu_memory_gb: 32   # GPU memory it needs
+  cuda: "13.1"        # CUDA toolkit it builds with (quoted)
+  # runtime: crit Core 0.5.0      # optional: what it links
+
+# Optional: what to fetch besides the checkpoint, each pinned by revision or by the sha256 of its file.
+# downloads:
+# - kind: drafter                 # drafter or artifact
+#   repository: <owner>/<name>    # Hugging Face repository
+#   revision: <40-character commit>
+#   note: <one line: when it is needed>
+
+# The Hugging Face checkpoint of every model the engine was measured on or supports, keyed by
+# model id: the model in lowercase and its encoding. Reuse the ids other engines already use.
+# card.lock.json lists every file of each measured checkpoint with its size and SHA-256.
+checkpoints:
+  <model>@<encoding>:
+    repository: <owner>/<name>
+    revision: <40-character commit>
+
+# Optional: further GPU and model pairs it runs that nobody has measured yet.
+# supports:
+# - gpus: [rtx4090]
+#   models: [<model>@<encoding>]
+
+# What it measured: one entry per GPU and model.
+results:
+- gpu: rtx5090                     # the card in lowercase
+  model: <model>@<encoding>
+  # crit-eval-v6 when measured with crit Eval (crit eval run --url measures any OpenAI-compatible
+  # server): then evidence/crit-eval.json is required and every figure must be what it holds.
+  # Anything else (a leaderboard, your own benchmark) is shown as your own report.
+  measured_with: crit-eval-v6
+  measured_on: "2026-10-23"        # the day it was measured; null when unknown (never for crit Eval)
+  # The five headline stats, in this order, on every page that shows the engine. null when not measured.
+  stats:
+    decode_tok_s: 100.0            # tokens per second; [low, high] for a range across runs
+    prefill_tok_s: 1000            # prompt tokens per second
+    context_tokens: 262144         # maximum context the engine was measured at
+    ppl:                           # perplexity against the reference model,
+      vs_reference: 1.001          #   as a ratio (1.001 shows as +0.1%), or absolute: <perplexity>
+    kld_mean: 0.003                # mean KL divergence against the reference
+  # Optional further figures.
+  more:
+    ttft_ms: 150                   # time to first token
+    # long_context_decode_tok_s: 300.0
+    # heldout_decode_tok_s: 160.0
+    # host_ram_gib: 64             # when the engine keeps weights in host memory
+    # quality_budget_pct: 5.8      # share of crit Eval's quality budget the worst path uses
+  # The files behind these figures, with their SHA-256 (sha256sum evidence/<file>):
+  # evidence/crit-eval.json as crit eval run wrote it, unchanged; or, for your own report,
+  # optionally evidence/self-reported.json: for each GPU and model, the measurements behind the
+  # figures, each with method, link, settings and figures (see engines/README.md).
+  evidence:
+  - file: evidence/crit-eval.json
+    sha256: <64-character sha256>
+
+# The README's prose, rendered in this order under the header (title, credit, stats, facts).
+# Markdown in block scalars: everything indented under the key, no escaping.
+# Keep the whole README to about 100 lines; put long history or design notes next to the source.
+readme:
+  intro: |
+    One short paragraph: what the engine is (written from scratch or adapted; crit Core version, or
+    the toolkit or runtime of an external engine), the tested platform (OS, CUDA, GPU and memory, host
+    RAM when it matters) and the context length.
+  model: |
+    The checkpoint repository and revision, the architecture in one or two sentences, how the weights
+    are used (as stored, or what is re-encoded and why), any drafter or extra download, and a pointer to
+    card.lock.json and `tools/verify_model.py`.
+  design: |
+    | Part | How |
+    | --- | --- |
+    | ... | ... |
+
+    At most one short paragraph on how decoding and prompts run.
+  measured: |
+    | Metric | Result |
+    | --- | ---: |
+    | Decode | ... tok/s |
+    | Prefill | ... tok/s |
+    | Time to first token (geomean) | ... |
+
+    One short paragraph: measurement conditions (crit Eval version, repetitions, greedy or sampled,
+    free memory) and what sets the speed.
+  checks: |
+    - **Arithmetic:** ...
+    - **Functional:** ...
+    - **Resources:** ...
+  limits: |
+    - Known issues first, then platform, memory and feature limits.
+  build_and_chat: |
+    A clone of the pinned source, then the build commands, the checkpoint check
+    (`python -B tools/verify_model.py <engine folder> <model folder>`), how to serve it and, when the
+    engine ships one, its standalone chat command:
+
+    ```sh
+    git clone https://github.com/<your account>/<your repository> && git -C <your repository> checkout <40-character commit>
+    ```
+  # benchmark: |                   # optional: only when the engine ships a benchmark tool
+  #   How to run it and how to share results.
+  credits: |
+    The source's license, linked at the pinned commit, and the credits for what the engine uses.

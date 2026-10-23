@@ -1,0 +1,15 @@
+{
+  "checkpoints": {
+    "<model>@<encoding>": {
+      "repository": "<owner>/<name>",
+      "revision": "<40-character commit>",
+      "files": [
+        {"path": "config.json", "bytes": 4321, "sha256": "<64-character sha256>"}
+      ]
+    }
+  },
+  "provenance": {
+    "toolchain": {"os": "<OS and version>", "cuda": "<CUDA toolkit version>", "cxx": "<compiler and version>"},
+    "runtime_prerequisites": ["<what must be installed to run it>"]
+  }
+}
