@@ -106,24 +106,24 @@
         "measured_on": {"description": "The day it was measured, YYYY-MM-DD (quoted); null when unknown, never for crit Eval.",
                         "oneOf": [{"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"}, {"type": "null"}]},
         "stats": {
-          "type": "object", "additionalProperties": false, "description": "The five headline stats, in this order; null when not measured.",
-          "required": ["decode_tok_s", "prefill_tok_s", "context_tokens", "ppl", "kld_mean"],
+          "type": "object", "additionalProperties": false, "description": "The six headline stats, in this order; null when not measured.",
+          "required": ["decode_tok_s", "prefill_tok_s", "ttft_ms", "ppl", "kld_mean", "context_tokens"],
           "properties": {
             "decode_tok_s": {"$ref": "#/$defs/figure"},
             "prefill_tok_s": {"oneOf": [{"$ref": "#/$defs/figure"}, {"type": "null"}]},
-            "context_tokens": {"oneOf": [{"type": "integer", "exclusiveMinimum": 0}, {"type": "null"}]},
+            "ttft_ms": {"oneOf": [{"$ref": "#/$defs/figure"}, {"type": "null"}], "description": "Time to first token in ms."},
             "ppl": {"oneOf": [
               {"type": "object", "additionalProperties": false, "required": ["vs_reference"], "properties": {"vs_reference": {"type": "number", "exclusiveMinimum": 0, "description": "Perplexity ratio against the reference, e.g. 1.001."}}},
               {"type": "object", "additionalProperties": false, "required": ["absolute"], "properties": {"absolute": {"type": "number", "exclusiveMinimum": 0, "description": "Absolute perplexity, when no reference was measured."}}},
               {"type": "null"}
             ]},
-            "kld_mean": {"oneOf": [{"type": "number", "exclusiveMinimum": 0}, {"type": "null"}], "description": "Mean KL divergence against the reference."}
+            "kld_mean": {"oneOf": [{"type": "number", "exclusiveMinimum": 0}, {"type": "null"}], "description": "Mean KL divergence against the reference."},
+            "context_tokens": {"oneOf": [{"type": "integer", "exclusiveMinimum": 0}, {"type": "null"}], "description": "The maximum context it was measured at."}
           }
         },
         "more": {
           "type": "object", "additionalProperties": false, "description": "Further figures, shown after the stats.",
           "properties": {
-            "ttft_ms": {"$ref": "#/$defs/figure"},
             "long_context_decode_tok_s": {"$ref": "#/$defs/figure"},
             "heldout_decode_tok_s": {"$ref": "#/$defs/figure"},
             "host_ram_gib": {"type": "integer", "exclusiveMinimum": 0},

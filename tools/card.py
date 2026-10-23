@@ -1,7 +1,7 @@
 """An engine's card: card.yaml is the engine's single hand-written record, and README.md is rendered from it.
 
 card.yaml holds what the engine is (summary, contributor, license, source pin, requirements,
-downloads, checkpoints), what it measured (results, each with the five headline stats, more
+downloads, checkpoints), what it measured (results, each with the six headline stats, more
 figures and its evidence), and the README's prose as markdown block scalars under `readme`.
 card.lock.json holds what tools write: the exact checkpoint files and how the engine was built.
 
@@ -31,10 +31,10 @@ SECTIONS = [
 ]
 REQUIRED_SECTIONS = {"intro", "model", "design", "measured", "checks", "limits", "build_and_chat", "credits"}
 
-# The five headline stats, in the order every page shows them.
-STATS = ("decode_tok_s", "prefill_tok_s", "context_tokens", "ppl", "kld_mean")
+# The six headline stats, in the order every page shows them.
+STATS = ("decode_tok_s", "prefill_tok_s", "ttft_ms", "ppl", "kld_mean", "context_tokens")
 # Further figures a result may give, shown after the stats.
-MORE = ("ttft_ms", "long_context_decode_tok_s", "heldout_decode_tok_s", "host_ram_gib", "quality_budget_pct")
+MORE = ("long_context_decode_tok_s", "heldout_decode_tok_s", "host_ram_gib", "quality_budget_pct")
 
 HEADER = "<!-- Rendered by tools/card.py from card.yaml: edit card.yaml, then run python -B tools/card.py on this folder. -->"
 PLATFORMS = {"linux": "Linux", "wsl2": "WSL2", "windows": "Windows", "macos": "macOS"}
@@ -135,25 +135,31 @@ def ppl_cell(ppl):
     return f"{ppl['absolute']:g}", "Perplexity (absolute)"
 
 
+def ttft(value):
+    """A time to first token in ms, or in s from one second on: 150 ms, 1.61 s."""
+    if value is None:
+        return "–"
+    high = value[1] if isinstance(value, list) else value
+    if high < 1000:
+        return figure(value, " ms")
+    return figure([round(v / 1000, 3) for v in value] if isinstance(value, list) else round(value / 1000, 3), " s")
+
+
 def stat_cells(stats):
-    """The five headline stats as (value, label), in the order every page shows them."""
+    """The six headline stats as (value, label), in the order every page shows them."""
     ppl, ppl_label = ppl_cell(stats.get("ppl"))
     return [
         (figure(stats.get("decode_tok_s"), " tok/s"), "Decode"),
         (figure(stats.get("prefill_tok_s"), " tok/s"), "Prefill"),
-        (figure(stats.get("context_tokens"), " tok"), "Context"),
+        (ttft(stats.get("ttft_ms")), "TTFT"),
         (ppl, ppl_label),
         (figure(stats.get("kld_mean")), "Mean KL divergence"),
+        (figure(stats.get("context_tokens"), " tok"), "Context"),
     ]
 
 
 def more_text(more):
     parts = []
-    if more.get("ttft_ms") is not None:
-        value = more["ttft_ms"]
-        high = value[1] if isinstance(value, list) else value
-        parts.append(f"first token {figure(value, ' ms')}" if high < 1000 else
-                     f"first token {figure([v / 1000 for v in value] if isinstance(value, list) else value / 1000, ' s')}")
     if more.get("long_context_decode_tok_s") is not None:
         parts.append(f"long-context decode {figure(more['long_context_decode_tok_s'], ' tok/s')}")
     if more.get("heldout_decode_tok_s") is not None:
@@ -165,16 +171,13 @@ def more_text(more):
     return " · ".join(parts)
 
 
-def tiles(cells):
-    width = f"{100 // len(cells)}%"
-    rows = "\n".join(f"""    <td align="center" width="{width}">
-      <strong>
-
-{value}</strong>
-
-{label}
-    </td>""" for value, label in cells)
-    return f'<div align="center">\n<table>\n  <tr>\n{rows}\n  </tr>\n</table>\n</div>'
+def stats_table(cells):
+    """The stats as one markdown table: labels, then values in bold."""
+    return "\n".join([
+        "| " + " | ".join(label for _, label in cells) + " |",
+        "|" + "|".join(" :---: " for _ in cells) + "|",
+        "| " + " | ".join(f"**{value}**" for value, _ in cells) + " |",
+    ])
 
 
 def crit_eval(measured_with):
@@ -182,16 +185,18 @@ def crit_eval(measured_with):
 
 
 def result_block(result):
+    """One result: its stats table, and right under it one caption line saying what was measured,
+    how, when, from which evidence, and any further figures."""
     how = (f"crit Eval ({result['measured_with']})" if crit_eval(result.get("measured_with"))
            else f"self-reported ({result['measured_with']})")
-    when = f", measured {result['measured_on']}" if result.get("measured_on") else ""
-    evidence = " · ".join(f"[{Path(e['file']).name}]({e['file']})" for e in result.get("evidence") or [])
-    caption = f"**{result['gpu']} · `{result['model']}`** · {how}{when}" + (f" · {evidence}" if evidence else "")
-    lines = [caption, "", tiles(stat_cells(result.get("stats") or {}))]
+    parts = [f"{result['gpu']} · `{result['model']}`", how]
+    if result.get("measured_on"):
+        parts.append(f"measured {result['measured_on']}")
+    parts += [f"[{Path(e['file']).name}]({e['file']})" for e in result.get("evidence") or []]
     more = more_text(result.get("more") or {})
     if more:
-        lines += ["", f"<p align=\"center\">{more}</p>"]
-    return "\n".join(lines)
+        parts.append(more)
+    return stats_table(stat_cells(result.get("stats") or {})) + "\n\n<sub>" + " · ".join(parts) + "</sub>"
 
 
 def short(revision):

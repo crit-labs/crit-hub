@@ -29,9 +29,9 @@ so you can find one built for your hardware and target LLM.**
 > there is no Hugging Face for inference engines. crit-hub collects them in one place: each
 > engine lives once in [`engines/<owner>/<engine>/`](engines/), the single source of truth: a
 > `card.yaml` its README is rendered from. Each engine pins its source and the exact checkpoint it
-> was built on, opens with the same five stats as every other (decode, prefill, context,
-> perplexity and KL divergence against the reference), and states its evidence, known limits and a
-> link to the repository of whoever contributed it.
+> was built on, opens with the same six stats as every other (decode, prefill, time to first
+> token, perplexity and KL divergence against the reference, context), and states its evidence,
+> known limits and a link to the repository of whoever contributed it.
 > Engines come from any toolkit, and every one links its source at a pinned commit. Those built
 > with [crit](https://github.com/crit-labs/crit) keep their sealed source in
 > [crit-engines](https://github.com/crit-labs/crit-engines); external engines link the contributor's repository and are
@@ -45,7 +45,7 @@ so you can find one built for your hardware and target LLM.**
 
 ## Quick start
 
-Look through [engines/](engines/): each engine's README opens with its five stats for every GPU
+Look through [engines/](engines/): each engine's README opens with its six stats for every GPU
 and model it was measured on, then what it requires, the exact Hugging Face checkpoint it runs and
 its pinned source, and explains how to build it and open chat. It says whether it was built with
 crit or is an external engine, whose source you should read before you build it; its `card.yaml`
@@ -72,7 +72,7 @@ Find what already exists. Stop rebuilding it.
 
 **A registry, not a scoreboard 📇**
 > Engines are listed by what they target, not ranked against each other. Each one states
-> the same five stats with their evidence, its own workload, checks and limits, so you can
+> the same six stats with their evidence, its own workload, checks and limits, so you can
 > choose the design that fits your use rather than the one with the biggest number.
 
 **A jump-off point for developers 🛠️**
@@ -91,7 +91,7 @@ with one hand-written file, `card.yaml`; [CONTRIBUTING.md](CONTRIBUTING.md) walk
 
 - **A crit engine:** `tools/export_engine.py` exports a sealed candidate's source into
   [crit-engines](https://github.com/crit-labs/crit-engines), then writes its card, pinned to that
-  commit, with its five stats filled from its sealed crit Eval result.
+  commit, with its six stats filled from its sealed crit Eval result.
 - **An external engine:** copy [`engines/_template/`](engines/_template/), fill in its commented
   card, pin your source at a commit and add your evidence. `crit eval run --url` gives any engine
   behind an OpenAI-compatible API crit Eval figures.

@@ -8,8 +8,8 @@ Each engine lives in engines/<owner>/<name>/, where <owner> is its contributor:
                    behind the contributor's own
   README.md        rendered from card.yaml by tools/card.py, never edited by hand
 
-Every result states the five headline stats (decode, prefill, context, perplexity, mean KL
-divergence; null when not measured). A result measured with crit Eval ("crit-eval-v6") lists its
+Every result states the six headline stats (decode, prefill, time to first token, perplexity,
+mean KL divergence, context; null when not measured). A result measured with crit Eval ("crit-eval-v6") lists its
 result files with their SHA-256, and every stat and further figure must be what those files hold;
 any other result is the contributor's own report, and when evidence/self-reported.json is given
 every figure it states must be one that file records. A crit engine's source is in
@@ -252,6 +252,8 @@ def check_stats(name, stats, more):
         problems.append(f"{name}: stats.decode_tok_s is a positive number or [low, high]")
     if stats["prefill_tok_s"] is not None and numbers(stats["prefill_tok_s"]) is None:
         problems.append(f"{name}: stats.prefill_tok_s is a positive number, [low, high] or null")
+    if stats["ttft_ms"] is not None and numbers(stats["ttft_ms"]) is None:
+        problems.append(f"{name}: stats.ttft_ms is the time to first token in ms, [low, high] or null")
     tokens = stats["context_tokens"]
     if tokens is not None and not (isinstance(tokens, int) and not isinstance(tokens, bool) and tokens > 0):
         problems.append(f"{name}: stats.context_tokens is the maximum context in tokens, or null")
@@ -263,7 +265,7 @@ def check_stats(name, stats, more):
         problems.append(f"{name}: stats.kld_mean is the mean KL divergence against the reference, or null")
     if not isinstance(more, dict) or set(more) - set(cardlib.MORE):
         return problems + [f"{name}: more holds any of {', '.join(cardlib.MORE)}"]
-    for key in ("ttft_ms", "long_context_decode_tok_s", "heldout_decode_tok_s"):
+    for key in ("long_context_decode_tok_s", "heldout_decode_tok_s"):
         if key in more and numbers(more[key]) is None:
             problems.append(f"{name}: more.{key} is a positive number or [low, high]")
     if "host_ram_gib" in more and not (isinstance(more["host_ram_gib"], int) and more["host_ram_gib"] > 0):

@@ -9,51 +9,11 @@
 > **Contributed by** giveen · [giveen/ninfer-ext](https://github.com/giveen/ninfer-ext) · source at
 > [`7b586bde`](https://github.com/giveen/ninfer-ext/tree/7b586bde50747eac26d198530aa04d83216947a9)
 
-**rtx5090 · `qwen3.8-flash-next@NVFP4`** · self-reported (LocalMaxxing) · [self-reported.json](evidence/self-reported.json)
+| Decode | Prefill | TTFT | Perplexity (absolute) | Mean KL divergence | Context |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| **140.9 tok/s** | **–** | **–** | **3.518** | **–** | **262,144 tok** |
 
-<div align="center">
-<table>
-  <tr>
-    <td align="center" width="20%">
-      <strong>
-
-140.9 tok/s</strong>
-
-Decode
-    </td>
-    <td align="center" width="20%">
-      <strong>
-
-–</strong>
-
-Prefill
-    </td>
-    <td align="center" width="20%">
-      <strong>
-
-262,144 tok</strong>
-
-Context
-    </td>
-    <td align="center" width="20%">
-      <strong>
-
-3.518</strong>
-
-Perplexity (absolute)
-    </td>
-    <td align="center" width="20%">
-      <strong>
-
-–</strong>
-
-Mean KL divergence
-    </td>
-  </tr>
-</table>
-</div>
-
-<p align="center">65 GiB host RAM</p>
+<sub>rtx5090 · `qwen3.8-flash-next@NVFP4` · self-reported (LocalMaxxing) · [self-reported.json](evidence/self-reported.json) · 65 GiB host RAM</sub>
 
 - **Requires:** Linux · sm_120a · 32 GB GPU memory · CUDA 13.3
 - **Checkpoint** (`qwen3.8-flash-next@NVFP4`): [`nvidia/Qwen3.8-Flash-Next-NVFP4`](https://huggingface.co/nvidia/Qwen3.8-Flash-Next-NVFP4/tree/fc694b54fb0174e0913e6adf86691ef85a4ead47) at `fc694b54`

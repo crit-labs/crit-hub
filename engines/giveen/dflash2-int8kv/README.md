@@ -9,49 +9,11 @@
 > **Contributed by** giveen · [giveen/ninfer-ext](https://github.com/giveen/ninfer-ext) · source at
 > [`7b586bde`](https://github.com/giveen/ninfer-ext/tree/7b586bde50747eac26d198530aa04d83216947a9)
 
-**rtx5090 · `qwen3.8-27b@NVFP4`** · self-reported (LocalMaxxing) · [self-reported.json](evidence/self-reported.json)
+| Decode | Prefill | TTFT | Perplexity (absolute) | Mean KL divergence | Context |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| **510.7 tok/s** | **–** | **–** | **4.28116** | **–** | **196,032 tok** |
 
-<div align="center">
-<table>
-  <tr>
-    <td align="center" width="20%">
-      <strong>
-
-510.7 tok/s</strong>
-
-Decode
-    </td>
-    <td align="center" width="20%">
-      <strong>
-
-–</strong>
-
-Prefill
-    </td>
-    <td align="center" width="20%">
-      <strong>
-
-196,032 tok</strong>
-
-Context
-    </td>
-    <td align="center" width="20%">
-      <strong>
-
-4.28116</strong>
-
-Perplexity (absolute)
-    </td>
-    <td align="center" width="20%">
-      <strong>
-
-–</strong>
-
-Mean KL divergence
-    </td>
-  </tr>
-</table>
-</div>
+<sub>rtx5090 · `qwen3.8-27b@NVFP4` · self-reported (LocalMaxxing) · [self-reported.json](evidence/self-reported.json)</sub>
 
 - **Requires:** Linux · sm_120a · 32 GB GPU memory · CUDA 13.3
 - **Checkpoint** (`qwen3.8-27b@NVFP4`): [`QUASAR-QAT/Qwen3.8-27B-QUASAR-NVFP4`](https://huggingface.co/QUASAR-QAT/Qwen3.8-27B-QUASAR-NVFP4/tree/4a22293aa6d1026844bc93a8727f1837e48acd89) at `4a22293a`

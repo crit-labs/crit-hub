@@ -7,51 +7,11 @@
 >
 > Built with [crit](https://github.com/crit-labs/crit): a sealed crit candidate, exported with `tools/export_engine.py`.
 
-**rtx5090 · `qwen3.8-27b@NVFP4`** · crit Eval (crit-eval-v6), measured 2026-10-23 · [crit-eval.json](evidence/crit-eval.json)
+| Decode | Prefill | TTFT | Perplexity vs reference | Mean KL divergence | Context |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| **252.4 tok/s** | **7,425 tok/s** | **150 ms** | **+0.1%** | **0.0028** | **262,144 tok** |
 
-<div align="center">
-<table>
-  <tr>
-    <td align="center" width="20%">
-      <strong>
-
-252.4 tok/s</strong>
-
-Decode
-    </td>
-    <td align="center" width="20%">
-      <strong>
-
-7,425 tok/s</strong>
-
-Prefill
-    </td>
-    <td align="center" width="20%">
-      <strong>
-
-262,144 tok</strong>
-
-Context
-    </td>
-    <td align="center" width="20%">
-      <strong>
-
-+0.1%</strong>
-
-Perplexity vs reference
-    </td>
-    <td align="center" width="20%">
-      <strong>
-
-0.0028</strong>
-
-Mean KL divergence
-    </td>
-  </tr>
-</table>
-</div>
-
-<p align="center">first token 150 ms · long-context decode 315.2 tok/s · held-out decode 163.3 tok/s · 5.8% of the quality budget</p>
+<sub>rtx5090 · `qwen3.8-27b@NVFP4` · crit Eval (crit-eval-v6) · measured 2026-10-23 · [crit-eval.json](evidence/crit-eval.json) · long-context decode 315.2 tok/s · held-out decode 163.3 tok/s · 5.8% of the quality budget</sub>
 
 - **Requires:** WSL2 · sm_120a · 32 GB GPU memory · CUDA 13.1 · crit Core 0.5.0
 - **Checkpoint** (`qwen3.8-27b@NVFP4`): [`unsloth/Qwen3.8-27B-NVFP4`](https://huggingface.co/unsloth/Qwen3.8-27B-NVFP4/tree/f0b7c9e722f5565102fff8481c99e4d86ae099c7) at `f0b7c9e7`

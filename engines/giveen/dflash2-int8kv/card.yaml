@@ -43,10 +43,11 @@ results:
   stats:
     decode_tok_s: 510.7
     prefill_tok_s: null
-    context_tokens: 196032
+    ttft_ms: null
     ppl:
       absolute: 4.28116
     kld_mean: null
+    context_tokens: 196032
   evidence:
   - file: evidence/self-reported.json
     sha256: 04b01f366cadc57d13ac578ed0aff9abb0cc8bee95e6af907c7e24eb4030783c

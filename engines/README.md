@@ -37,9 +37,9 @@ measured on with `python -B tools/verify_model.py <engine folder> <model folder>
 
 <a id="stats"></a>
 
-## The five stats
+## The six stats
 
-Every result states the same five headline stats, in this order, and every page that shows an engine
+Every result states the same six headline stats, in this order, and every page that shows an engine
 shows them the same way: its README opens with them, the website's engine pages and tables use
 them, and crit's case studies use them.
 
@@ -47,13 +47,16 @@ them, and crit's case studies use them.
 | --- | --- | --- |
 | Decode | `decode_tok_s` | `252.4 tok/s` |
 | Prefill | `prefill_tok_s` | `7,425 tok/s` |
-| Context | `context_tokens`: the maximum context it was measured at | `262,144 tok` |
+| TTFT | `ttft_ms`: time to first token | `150 ms`, or `1.61 s` from one second on |
 | Perplexity vs reference | `ppl: {vs_reference: 1.001}`, or `ppl: {absolute: 4.28}` when no reference was measured | `+0.1%`, or `4.28` |
 | Mean KL divergence | `kld_mean`: against the reference | `0.0028` |
+| Context | `context_tokens`: the maximum context it was measured at | `262,144 tok` |
 
-A stat nobody measured is `null` and shows as `–`; decode is required. Decode, prefill and the
-first token may be `[low, high]` across runs. Further figures go under `more`: `ttft_ms`,
-`long_context_decode_tok_s`, `heldout_decode_tok_s`, `host_ram_gib` and `quality_budget_pct`.
+A stat nobody measured is `null` and shows as `–`; decode is required. Decode, prefill and TTFT
+may be `[low, high]` across runs. The README shows the six as one table, with a caption under it
+saying what was measured, how, when and from which evidence. Further figures go under `more`:
+`long_context_decode_tok_s`, `heldout_decode_tok_s`, `host_ram_gib` and `quality_budget_pct`; the
+caption lists them too.
 
 <a id="provenance"></a>
 
@@ -104,7 +107,7 @@ people read. [`_template/card.yaml`](_template/card.yaml) documents every key; i
   and SHA-256. The website reads the checkpoint's base model, lab and quantization from Hugging Face,
   so a checkpoint whose model card names its `base_model` lands under the right model by itself.
 - **`supports`** (optional): further pairs it runs that nobody has measured yet.
-- **`results`**: for each GPU and model it was measured on, `measured_with`, `measured_on`, the five
+- **`results`**: for each GPU and model it was measured on, `measured_with`, `measured_on`, the six
   `stats`, optional `more` and its `evidence`.
 - **`readme`**: the README's prose as markdown blocks, rendered in this order: `intro`, `model`,
   `design`, `measured`, `checks`, `limits`, `build_and_chat`, the optional `benchmark` and

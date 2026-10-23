@@ -80,18 +80,19 @@ results:
   # Anything else (a leaderboard, your own benchmark) is shown as your own report.
   measured_with: crit-eval-v6
   measured_on: "2026-10-23"        # the day it was measured; null when unknown (never for crit Eval)
-  # The five headline stats, in this order, on every page that shows the engine. null when not measured.
+  # The six headline stats, in this order, on every page that shows the engine. null when not measured.
   stats:
     decode_tok_s: 100.0            # tokens per second; [low, high] for a range across runs
     prefill_tok_s: 1000            # prompt tokens per second
-    context_tokens: 262144         # maximum context the engine was measured at
+    ttft_ms: 150                   # time to first token, in ms
     ppl:                           # perplexity against the reference model,
       vs_reference: 1.001          #   as a ratio (1.001 shows as +0.1%), or absolute: <perplexity>
     kld_mean: 0.003                # mean KL divergence against the reference
+    context_tokens: 262144         # maximum context the engine was measured at
   # Optional further figures.
   more:
-    ttft_ms: 150                   # time to first token
-    # long_context_decode_tok_s: 300.0
+    long_context_decode_tok_s: 300.0
+    # heldout_decode_tok_s: 160.0
     # heldout_decode_tok_s: 160.0
     # host_ram_gib: 64             # when the engine keeps weights in host memory
     # quality_budget_pct: 5.8      # share of crit Eval's quality budget the worst path uses

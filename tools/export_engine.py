@@ -9,7 +9,7 @@ card.yaml with the supplied README's sections as its prose, card.lock.json with 
 and the sealed run's provenance, and README.md rendered from the card. The supplied README writes the
 commit as <crit-engines commit>, which entry fills in. --eval names the candidate's sealed crit Eval
 attempts (attempt-0003): entry copies each result into evidence/ as crit-eval.json (then
-crit-eval-2.json and on) and fills the result's five stats and further figures from them; without
+crit-eval-2.json and on) and fills the result's six stats and further figures from them; without
 --eval, fill them in as your own report. Then fill in the summary, license, features and
 requirements in card.yaml and render the README with tools/card.py before tools/check_engines.py
 passes. Both steps verify the complete seal, and both destinations must be new.
@@ -167,7 +167,7 @@ def committed(engines, name):
 
 
 def measured(args, seal, candidate, target):
-    """The result for --gpu and --model: its five stats and further figures from the candidate's
+    """The result for --gpu and --model: its six stats and further figures from the candidate's
     sealed crit Eval attempts, copied into evidence/, or left for the contributor to fill in.
     Creates the destination."""
     sealed_files = {entry["path"] for entry in seal["files"]}
@@ -205,11 +205,12 @@ def measured(args, seal, candidate, target):
     stats = {
         "decode_tok_s": figure([r["speed"]["decode_score"] for r in results], 1),
         "prefill_tok_s": figure([r["speed"]["prefill_score"] for r in results], 0),
-        "context_tokens": next(iter(tokens)) if len(tokens) == 1 and isinstance(next(iter(tokens)), int) else None,
+        "ttft_ms": figure([r["speed"]["ttft_score_ms"] for r in results], 0),
         "ppl": {"vs_reference": round(ppl, 3)} if ppl is not None else None,
         "kld_mean": float(f"{kld:.2g}") if kld is not None else None,
+        "context_tokens": next(iter(tokens)) if len(tokens) == 1 and isinstance(next(iter(tokens)), int) else None,
     }
-    more = {"ttft_ms": figure([r["speed"]["ttft_score_ms"] for r in results], 0)}
+    more = {}
     context = (((results[0].get("status") or {}).get("kpis") or {}).get("context") or {}).get("decode", {}).get("score")
     if isinstance(context, (int, float)):
         more["long_context_decode_tok_s"] = round(context, 1)

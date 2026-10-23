@@ -40,10 +40,11 @@ results:
   stats:
     decode_tok_s: 140.9
     prefill_tok_s: null
-    context_tokens: 262144
+    ttft_ms: null
     ppl:
       absolute: 3.518
     kld_mean: null
+    context_tokens: 262144
   more:
     host_ram_gib: 65
   evidence:
