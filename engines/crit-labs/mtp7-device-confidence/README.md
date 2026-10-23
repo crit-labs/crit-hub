@@ -11,7 +11,7 @@
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | **252.4 tok/s** | **7,425 tok/s** | **150 ms** | **+0.1%** | **0.0028** | **262,144 tok** |
 
-<sub>rtx5090 · `qwen3.8-27b@NVFP4` · crit Eval (crit-eval-v6) · measured 2026-10-23 · [crit-eval.json](evidence/crit-eval.json) · long-context decode 315.2 tok/s · held-out decode 163.3 tok/s · 5.8% of the quality budget</sub>
+<sub>rtx5090 · `qwen3.8-27b@NVFP4` · crit Eval (crit-eval-v6, greedy decode) · measured 2026-10-23 · [crit-eval.json](evidence/crit-eval.json) · long-context decode 315.2 tok/s · held-out decode 163.3 tok/s · 5.8% of the quality budget</sub>
 
 - **Requires:** WSL2 · sm_120a · 32 GB GPU memory · CUDA 13.1 · crit Core 0.5.0
 - **Checkpoint** (`qwen3.8-27b@NVFP4`): [`unsloth/Qwen3.8-27B-NVFP4`](https://huggingface.co/unsloth/Qwen3.8-27B-NVFP4/tree/f0b7c9e722f5565102fff8481c99e4d86ae099c7) at `f0b7c9e7`
@@ -76,6 +76,12 @@ verify pass reads 19.26 GB (about 11.3 ms at the card's read rate; measured abou
 draft step adds about 0.8 ms, so decode speed is set by how many drafts get accepted: 2.9 tokens per
 round on chat up to 7.8 on the agent case. Prefill runs at about half its compute ceiling.
 
+**Decode is greedy.** crit Eval v6 measures every decode figure above at temperature 0, and this engine
+drafts only on greedy requests. A sampled request decodes one token per verify pass: on the same six
+cases it decodes at 59–60 tok/s at every setting tried (temperature 0.6 with top-p 0.95 and top-k 20;
+the run's default 0.7 with top-p 0.8 and top-k 20; temperature 1.0), measured on the sealed candidate
+outside crit Eval on 2026-10-23, against 241 tok/s greedy in the same session.
+
 ## Checks
 
 - **Arithmetic:** operator checks in every build (`q27_kernel_tests`) against FP64 or plain decoding:
@@ -91,6 +97,9 @@ round on chat up to 7.8 on the agent case. Prefill runs at about half its comput
 
 ## Limits
 
+- Speculation is greedy-only: sampled requests (temperature above 0 or penalties, including the default
+  sampling `crit serve` applies when a request names none: temperature 0.7, top-p 0.8, top-k 20) decode
+  one token per pass at about 60 tok/s. Send `temperature: 0` for the measured speed.
 - Needs the whole 32 GB GPU: under 0.5 GB stays free at the full context.
 - One sequence at a time; concurrency above one is not verified.
 - Text only: the vision tower is not loaded. Structured output is not declared.
