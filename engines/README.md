@@ -57,9 +57,10 @@ people read.
   "license": "Apache-2.0",
   "features": ["openai-api", "tool-calls", "speculative"],
   "results": [
-    {"gpu": "rtx5090", "model": "qwen3.8-27b@NVFP4", "measured_with": "crit-eval-v5",
+    {"gpu": "rtx5090", "model": "qwen3.8-27b@NVFP4", "measured_with": "crit-eval-v6",
      "decode_tok_s": 215.7, "prefill_tok_s": 8917, "ttft_ms": 120, "context_tokens": 262144,
-     "quality": {"metric": "budget_pct", "value": 18.8}}
+     "quality": {"metric": "budget_pct", "value": 18.8},
+     "eval": [{"file": "eval/rtx5090--qwen3.8-27b@NVFP4.json", "sha256": "<sha256>"}]}
   ],
   "supports": [{"gpus": ["rtx4090"], "models": ["qwen3.8-27b@NVFP4"]}],
   "requirements": {"platforms": ["wsl2"], "gpu_arch": ["sm_120a"], "gpu_memory_gb": 32, "cuda": "13.1",
@@ -84,8 +85,8 @@ people read.
   `prefill_tok_s`, `ttft_ms`, `context_tokens` and, when the engine keeps weights in host memory,
   `host_ram_gib`. A figure is a number, or `[low, high]` across runs, and must appear in the
   README as written there, for example `8,917` or `1.61 s`. **`measured_with`** names the
-  method: figures under the same major version of the crit Eval protocol, such as `crit-eval-v5`
-  and `crit-eval-v5.1`, are comparable across engines; anything else is the contributor's own
+  method: figures under the same major version of the crit Eval protocol, such as `crit-eval-v6`
+  and `crit-eval-v6.1`, are comparable across engines; anything else is the contributor's own
   report. A crit Eval result lists its result files under **`eval`**,
   `[{"file": "eval/<gpu>--<model>.json", "sha256": "<sha256>"}]`, one per run, two or more for a
   `[low, high]` range ([provenance](#provenance)). **`quality`** (optional) is one quality figure, as the README writes it: `budget_pct`,

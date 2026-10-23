@@ -126,7 +126,7 @@ def check_results(folder, engine, text):
             problems.append(f"engine.json measures {pair} twice")
         seen.add((result["gpu"], result["model"]))
         if not isinstance(result.get("measured_with"), str) or not result["measured_with"].strip():
-            problems.append(f'engine.json result {pair} needs measured_with: "crit-eval-v5" or how else it was measured')
+            problems.append(f'engine.json result {pair} needs measured_with: "crit-eval-v6" or how else it was measured')
         if "decode_tok_s" not in result:
             problems.append(f"engine.json result {pair} needs decode_tok_s")
         for key in ("decode_tok_s", "prefill_tok_s", "ttft_ms"):
