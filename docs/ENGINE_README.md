@@ -50,7 +50,8 @@ At most one short paragraph on how decoding and prompts run.
 
 One short paragraph: measurement conditions (crit Eval version, repetitions, greedy or sampled,
 free memory) and what sets the speed. crit Eval figures come with their result file,
-`eval/crit-eval.json`, which engine.json lists.
+`eval/crit-eval.json`, which engine.json lists; the evidence behind your own figures can go in
+`eval/self-reported.json`.
 
 ## Checks
 

@@ -133,8 +133,9 @@ crit-hub records where it is, what it targets and what it measured.
 
 1. Place it under the [folder layout](engines/README.md#engine-folder-layout),
    `engines/<your account>/<name>/`, with a name that describes its design. The folder holds
-   `README.md`, `engine.json` and, for crit Eval figures, their result in `eval/crit-eval.json`. No source,
-   binaries, test data, scripts or license texts; those stay with your source.
+   `README.md`, `engine.json` and, in `eval/`, the result behind crit Eval figures
+   (`crit-eval.json`) or the evidence behind your own (`self-reported.json`). No source, binaries,
+   test data, scripts or license texts; those stay with your source.
 2. Pin your source to a full 40-character commit SHA, the commit you built and measured.
 3. Write the README from the [engine README template](docs/ENGINE_README.md), opening with the
    external-engine notice. Build and chat start from a clone of the pinned commit.
@@ -146,7 +147,8 @@ crit-hub records where it is, what it targets and what it measured.
    with every other engine's on the same protocol, provided the result file `crit eval run` wrote
    sits unchanged in the folder as `eval/crit-eval.json` and the result lists it
    ([provenance](engines/README.md#provenance)); anything else, such as your own benchmark or a
-   leaderboard run, is shown as your own report. An engine behind any OpenAI-compatible chat API
+   leaderboard run, is shown as your own report, with its method, link and settings in
+   `eval/self-reported.json` if you add it. An engine behind any OpenAI-compatible chat API
    gets crit Eval figures without changes:
    [`crit eval run --url`](https://github.com/crit-labs/crit/blob/main/docs/eval/README.md#engines-behind-a-server)
    sends every prompt to `/chat/completions` and scores quality on the engine's own replies, as it

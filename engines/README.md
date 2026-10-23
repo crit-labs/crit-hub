@@ -21,7 +21,9 @@ engines/<owner>/<name>/
   README.md          contributor repository, target, measured results, limits, build and chat;
                      an external engine's opens with the external-engine notice
   engine.json        what the engine is and runs, its pinned source, provenance and exact checkpoints
-  eval/              crit-eval.json: the crit Eval result its crit Eval figures come from, unchanged
+  eval/
+    crit-eval.json     the crit Eval result its crit Eval figures come from, unchanged
+    self-reported.json optional: the evidence behind its own figures (method, link, settings)
 
 crit-engines: <name>/          origin: crit, at the pinned commit
   engine/            source, configuration and required runtime data
@@ -40,8 +42,20 @@ lists the result file `crit eval run` wrote, unchanged, as `eval/crit-eval.json`
 (`crit-eval-2.json` and on for further runs or GPU/model pairs);
 `tools/check_engines.py` reads them and requires the protocol, the GPU, a complete speed run with no
 failed gate, and the figures engine.json states: decode, prefill, first token, context and quality.
-Any other `measured_with`, such as a leaderboard or your own benchmark, needs no files and is shown
-as your own report.
+Any other `measured_with`, such as a leaderboard or your own benchmark, is shown as your own report.
+Its evidence can go in `eval/self-reported.json` (optional): for each GPU and model, the
+measurements behind its figures, each with its `method`, a `link` to the run, leaderboard or card,
+the `settings` measured, and the `figures` as measured. engine.json keeps the headline figures,
+and each one it states must be one the file records:
+
+```json
+{"results": [{"gpu": "rtx5090", "model": "qwen3.8-27b@NVFP4", "measurements": [
+  {"method": "LocalMaxxing leaderboard run", "link": "https://www.localmaxxing.com/en/runs/...",
+   "settings": "--max-concurrency 1, INT8 KV, 9 draft tokens", "figures": {"decode_tok_s": 510.7}}]}]}
+```
+
+`eval/` holds only these files: `crit-eval.json` (`crit-eval-2.json` and on) and
+`self-reported.json`.
 
 <a id="engine-json"></a>
 

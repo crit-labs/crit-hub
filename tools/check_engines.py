@@ -9,7 +9,8 @@ Every engine holds only README.md, engine.json and, in eval/, the crit Eval resu
 come from, and pins its source to a full commit SHA in a repository, optionally a folder in it,
 which its README links. A result measured with crit Eval ("measured_with": "crit-eval-v6") lists its
 result files with their SHA-256, and its figures must be the ones those files hold; any other
-result is the contributor's own report. A crit engine's source is in
+result is the contributor's own report, whose evidence eval/self-reported.json may give: then every
+figure engine.json states must be one the file records. A crit engine's source is in
 crit-labs/crit-engines; it needs its sealed-run provenance and the built-with-crit line under its
 credit. An external engine opens its README with the external-engine notice.
 """
@@ -35,6 +36,8 @@ CRIT_EVAL = re.compile(r"crit-eval-v[0-9]+(\.[0-9]+)?")
 # An engine's crit Eval results: eval/crit-eval.json, then crit-eval-2.json and on for more runs or GPU/model pairs.
 EVAL_FILE = re.compile(r"eval/crit-eval(-[2-9]|-[1-9][0-9]+)?\.json")
 EVAL_BYTES = 16 * 1024 * 1024
+SELF_REPORTED = "eval/self-reported.json"
+FIGURE_FIELDS = ("decode_tok_s", "prefill_tok_s", "ttft_ms", "context_tokens", "host_ram_gib", "quality")
 # engine.json figure -> where its crit Eval result keeps it
 SCORES = {"decode_tok_s": ("speed", "decode_score"), "prefill_tok_s": ("speed", "prefill_score"), "ttft_ms": ("speed", "ttft_score_ms")}
 QUALITY_METRICS = {"budget_pct", "kld_mean", "perplexity"}
@@ -279,6 +282,74 @@ def check_supports(engine):
     return problems
 
 
+def same_figure(key, stated, recorded):
+    """A self-reported figure as engine.json states it; a quality figure by its metric and value."""
+    if key == "quality":
+        return isinstance(stated, dict) and isinstance(recorded, dict) and \
+            (stated.get("metric"), stated.get("value")) == (recorded.get("metric"), recorded.get("value"))
+    return stated == recorded
+
+
+def check_self_reported(folder, engine):
+    """eval/self-reported.json, when present: the evidence behind self-reported results. For each GPU and
+    model, the measurements behind its figures: how each was taken (method), where it is published
+    (link), the settings, and the figures as measured. Every figure engine.json states for that result
+    must be one of them."""
+    path = folder / SELF_REPORTED
+    if not path.is_file():
+        return []
+    name = SELF_REPORTED
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError) as e:
+        return [f"{name} is not JSON: {e}"]
+    entries = data.get("results") if isinstance(data, dict) and set(data) == {"results"} else None
+    if not isinstance(entries, list) or not entries:
+        return [f'{name} is {{"results": [{{"gpu", "model", "measurements": [{{"method", "link", "settings", "figures"}}]}}]}}']
+    results = {(r.get("gpu"), r.get("model")): r for r in engine.get("results") or [] if isinstance(r, dict)}
+    problems, seen = [], set()
+    for entry in entries:
+        if not (isinstance(entry, dict) and set(entry) == {"gpu", "model", "measurements"}):
+            problems.append(f"{name}: each result is {{gpu, model, measurements}}")
+            continue
+        pair = (entry["gpu"], entry["model"])
+        label = f"{name} {entry['gpu']} · {entry['model']}"
+        result = results.get(pair)
+        if result is None:
+            problems.append(f"{label}: engine.json has no result for this GPU and model")
+            continue
+        if CRIT_EVAL.fullmatch(str(result.get("measured_with"))):
+            problems.append(f"{label}: the result is crit Eval, whose evidence is its eval/crit-eval.json")
+            continue
+        if pair in seen:
+            problems.append(f"{label}: listed twice")
+        seen.add(pair)
+        measurements = entry["measurements"]
+        if not isinstance(measurements, list) or not measurements:
+            problems.append(f"{label}: measurements lists at least one measurement")
+            continue
+        for number, m in enumerate(measurements, 1):
+            where = f"{label} measurement {number}"
+            if not isinstance(m, dict) or set(m) - {"method", "link", "settings", "figures"}:
+                problems.append(f"{where} holds method, link, settings and figures")
+                continue
+            if not (isinstance(m.get("method"), str) and m["method"].strip()):
+                problems.append(f"{where} needs method: how it was measured")
+            if "link" in m and not REPOSITORY.fullmatch(str(m["link"])):
+                problems.append(f"{where}: link is the https URL of the run, leaderboard or card")
+            if "settings" in m and not (isinstance(m["settings"], str) and m["settings"].strip()):
+                problems.append(f"{where}: settings describe the configuration measured")
+            figures = m.get("figures")
+            if not isinstance(figures, dict) or not figures or set(figures) - set(FIGURE_FIELDS):
+                problems.append(f"{where}: figures records any of {', '.join(FIGURE_FIELDS)} as measured")
+        recorded = [m["figures"] for m in measurements if isinstance(m, dict) and isinstance(m.get("figures"), dict)]
+        for key in FIGURE_FIELDS:
+            if key in result and not any(key in f and same_figure(key, result[key], f[key]) for f in recorded):
+                shown = result[key].get("value") if key == "quality" and isinstance(result[key], dict) else result[key]
+                problems.append(f"engine.json result {entry['gpu']} · {entry['model']}: {key} {shown} is not a figure {name} records")
+    return problems
+
+
 def check_requirements(engine):
     """What the engine needs to run: the platforms it was built and run on, the GPU architectures it
     is compiled for, the GPU memory it needs, the CUDA toolkit and, optionally, the runtime it links."""
@@ -364,10 +435,11 @@ def check_source(folder, engine, provenance, text):
     problems = []
     files = {p.relative_to(folder).as_posix() for p in folder.rglob("*") if p.is_file()}
     listed = {str(f.get("file")) for r in engine.get("results") or [] if isinstance(r, dict)
-              for f in (r.get("eval") if isinstance(r.get("eval"), list) else []) if isinstance(f, dict)}
+              for f in (r.get("eval") if isinstance(r.get("eval"), list) else []) if isinstance(f, dict)} | {SELF_REPORTED}
     extra = sorted(files - ENGINE_FILES - listed)
     if extra:
-        problems.append(f"an engine folder holds only README.md, engine.json and the eval/ result files its results list; "
+        problems.append(f"an engine folder holds only README.md, engine.json, the eval/ crit Eval results its results list "
+                        f"and eval/self-reported.json; "
                         f"also found {len(extra)} other file(s), e.g. {extra[0]}")
     source = provenance.get("source") or {}
     if not REPOSITORY.fullmatch(str(source.get("repository"))):
@@ -421,7 +493,7 @@ def check(folder):
         return ["README.md must open with a '# ' title"]
     head = lines[1:12]
     problems = (check_card(folder, engine) + check_results(folder, engine, text) + check_supports(engine) + check_requirements(engine)
-                + check_downloads(engine) + check_checkpoints(engine))
+                + check_downloads(engine) + check_checkpoints(engine) + check_self_reported(folder, engine))
     provenance = engine.get("provenance") if isinstance(engine.get("provenance"), dict) else {}
     problems += check_source(folder, engine, provenance, text)
     origin = engine.get("origin")
