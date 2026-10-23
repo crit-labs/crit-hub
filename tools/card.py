@@ -34,7 +34,7 @@ REQUIRED_SECTIONS = {"intro", "model", "design", "measured", "checks", "limits",
 # The six headline stats, in the order every page shows them.
 STATS = ("decode_tok_s", "prefill_tok_s", "ttft_ms", "ppl", "kld_mean", "context_tokens")
 # Further figures a result may give, shown after the stats.
-MORE = ("long_context_decode_tok_s", "heldout_decode_tok_s", "host_ram_gib", "quality_budget_pct")
+MORE = ("greedy_decode_tok_s", "long_context_decode_tok_s", "heldout_decode_tok_s", "host_ram_gib", "quality_budget_pct")
 
 HEADER = "<!-- Rendered by tools/card.py from card.yaml: edit card.yaml, then run python -B tools/card.py on this folder. -->"
 PLATFORMS = {"linux": "Linux", "wsl2": "WSL2", "windows": "Windows", "macos": "macOS"}
@@ -145,11 +145,18 @@ def ttft(value):
     return figure([round(v / 1000, 3) for v in value] if isinstance(value, list) else round(value / 1000, 3), " s")
 
 
-def stat_cells(stats):
+def decode_label(measured_with):
+    """What a result's decode measures: crit Eval through v6 decodes greedily, from v7 at the model's own sampling."""
+    if not crit_eval(measured_with):
+        return "Decode"
+    return "Decode (greedy)" if eval_major(measured_with) <= 6 else "Decode (sampled)"
+
+
+def stat_cells(stats, measured_with=None):
     """The six headline stats as (value, label), in the order every page shows them."""
     ppl, ppl_label = ppl_cell(stats.get("ppl"))
     return [
-        (figure(stats.get("decode_tok_s"), " tok/s"), "Decode"),
+        (figure(stats.get("decode_tok_s"), " tok/s"), decode_label(measured_with)),
         (figure(stats.get("prefill_tok_s"), " tok/s"), "Prefill"),
         (ttft(stats.get("ttft_ms")), "TTFT"),
         (ppl, ppl_label),
@@ -160,6 +167,8 @@ def stat_cells(stats):
 
 def more_text(more):
     parts = []
+    if more.get("greedy_decode_tok_s") is not None:
+        parts.append(f"greedy decode {figure(more['greedy_decode_tok_s'], ' tok/s')}")
     if more.get("long_context_decode_tok_s") is not None:
         parts.append(f"long-context decode {figure(more['long_context_decode_tok_s'], ' tok/s')}")
     if more.get("heldout_decode_tok_s") is not None:
@@ -192,7 +201,8 @@ def crit_eval(measured_with):
 def result_block(result):
     """One result: its stats table, and right under it one caption line saying what was measured,
     how, when, from which evidence, and any further figures."""
-    how = (f"crit Eval ({result['measured_with']}{', greedy decode' if eval_major(result['measured_with']) <= 6 else ''})"
+    how = (f"crit Eval ({result['measured_with']}, "
+           + ("greedy decode" if eval_major(result["measured_with"]) <= 6 else "decode sampled at the model's defaults") + ")"
            if crit_eval(result.get("measured_with")) else f"self-reported ({result['measured_with']})")
     parts = [f"{result['gpu']} · `{result['model']}`", how]
     if result.get("measured_on"):
@@ -201,7 +211,7 @@ def result_block(result):
     more = more_text(result.get("more") or {})
     if more:
         parts.append(more)
-    return stats_table(stat_cells(result.get("stats") or {})) + "\n\n<sub>" + " · ".join(parts) + "</sub>"
+    return stats_table(stat_cells(result.get("stats") or {}, result.get("measured_with"))) + "\n\n<sub>" + " · ".join(parts) + "</sub>"
 
 
 def short(revision):

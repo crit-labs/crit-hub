@@ -7,7 +7,7 @@
 >
 > Built with [crit](https://github.com/crit-labs/crit): a sealed crit candidate, exported with `tools/export_engine.py`.
 
-| Decode | Prefill | TTFT | Perplexity vs reference | Mean KL divergence | Context |
+| Decode (greedy) | Prefill | TTFT | Perplexity vs reference | Mean KL divergence | Context |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | **252.4 tok/s** | **7,425 tok/s** | **150 ms** | **+0.1%** | **0.0028** | **262,144 tok** |
 

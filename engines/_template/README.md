@@ -9,11 +9,11 @@
 > **Contributed by** <your account> · [<your account>/<your repository>](https://github.com/<your account>/<your repository>) · source at
 > [`<40-char`](https://github.com/<your account>/<your repository>/tree/<40-character commit>)
 
-| Decode | Prefill | TTFT | Perplexity vs reference | Mean KL divergence | Context |
+| Decode (sampled) | Prefill | TTFT | Perplexity vs reference | Mean KL divergence | Context |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | **100.0 tok/s** | **1,000 tok/s** | **150 ms** | **+0.1%** | **0.003** | **262,144 tok** |
 
-<sub>rtx5090 · `<model>@<encoding>` · crit Eval (crit-eval-v6, greedy decode) · measured 2026-10-23 · [crit-eval.json](evidence/crit-eval.json) · long-context decode 300.0 tok/s</sub>
+<sub>rtx5090 · `<model>@<encoding>` · crit Eval (crit-eval-v7, decode sampled at the model's defaults) · measured 2026-10-23 · [crit-eval.json](evidence/crit-eval.json) · greedy decode 240.0 tok/s · long-context decode 300.0 tok/s</sub>
 
 - **Requires:** Linux · sm_120a · 32 GB GPU memory · CUDA 13.1
 - **Checkpoint** (`<model>@<encoding>`): [`<owner>/<name>`](https://huggingface.co/<owner>/<name>/tree/<40-character commit>) at `<40-char`

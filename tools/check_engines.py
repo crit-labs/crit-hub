@@ -9,7 +9,7 @@ Each engine lives in engines/<owner>/<name>/, where <owner> is its contributor:
   README.md        rendered from card.yaml by tools/card.py, never edited by hand
 
 Every result states the six headline stats (decode, prefill, time to first token, perplexity,
-mean KL divergence, context; null when not measured). A result measured with crit Eval ("crit-eval-v6") lists its
+mean KL divergence, context; null when not measured). A result measured with crit Eval ("crit-eval-v7") lists its
 result files with their SHA-256, and every stat and further figure must be what those files hold;
 any other result is the contributor's own report, and when evidence/self-reported.json is given
 every figure it states must be one that file records. A crit engine's source is in
@@ -57,6 +57,8 @@ FIGURES = cardlib.STATS + cardlib.MORE
 # Figures a crit Eval result gives directly, and where (ranges across result files allowed).
 SCORES = {"decode_tok_s": ("speed", "decode_score"), "prefill_tok_s": ("speed", "prefill_score"),
           "ttft_ms": ("speed", "ttft_score_ms"), "heldout_decode_tok_s": ("heldout", "decode_score")}
+# From crit-eval-v7 the headline decode is the sampled suite's and the greedy decode is a further figure.
+SCORES_V7 = {**SCORES, "decode_tok_s": ("sampled_speed", "decode_score"), "greedy_decode_tok_s": ("speed", "decode_score")}
 
 
 def positive(value):
@@ -316,6 +318,8 @@ def check_crit_eval(name, result, loaded):
             problems.append(f"{name}: {file} ran under {data.get('protocol')}, not {result['measured_with']}")
         if data.get("aborted") or not (data.get("speed") or {}).get("complete"):
             problems.append(f"{name}: {file} is not a complete speed run")
+        if cardlib.eval_major(result["measured_with"]) >= 7 and not (data.get("sampled_speed") or {}).get("complete"):
+            problems.append(f"{name}: {file} is not a complete sampled speed run")
         failed = [g.get("name") for g in (data.get("status") or {}).get("gates", []) if isinstance(g, dict) and g.get("state") == "fail"]
         if failed:
             problems.append(f"{name}: {file} failed gate(s) {', '.join(map(str, failed))}")
@@ -323,7 +327,7 @@ def check_crit_eval(name, result, loaded):
             problems.append(f"{name}: {file} ran on {(data.get('device') or {}).get('device')}, not {result['gpu']}")
     stats, more = result["stats"], result.get("more") or {}
     figures = {**stats, **more}
-    for key, (section, field) in SCORES.items():
+    for key, (section, field) in (SCORES_V7 if cardlib.eval_major(result["measured_with"]) >= 7 else SCORES).items():
         value, scores = figures.get(key), [(data.get(section) or {}).get(field) for _, data in loaded]
         if value is None:
             continue
@@ -350,6 +354,8 @@ def check_crit_eval(name, result, loaded):
             problems.append(f"{name}: {key} {value} is not its result files' worst served {field}")
     if stats["ppl"] and "absolute" in stats["ppl"]:
         problems.append(f"{name}: a crit Eval result gives perplexity against the reference, ppl: {{vs_reference: ...}}")
+    if "greedy_decode_tok_s" in more and cardlib.eval_major(result["measured_with"]) < 7:
+        problems.append(f"{name}: greedy_decode_tok_s is for crit-eval-v7 results; through v6 decode itself is greedy")
     if "long_context_decode_tok_s" in more:
         scores = [(((data.get("status") or {}).get("kpis") or {}).get("context") or {}).get("decode", {}).get("score") for _, data in loaded]
         if not any(matches(more["long_context_decode_tok_s"], s) for s in scores if s is not None):
@@ -413,7 +419,7 @@ def check_results(folder, card):
             problems.append(f"card.yaml measures {result['gpu']} · {result['model']} twice")
         seen.add((result["gpu"], result["model"]))
         if not (isinstance(result.get("measured_with"), str) and result["measured_with"].strip()):
-            problems.append(f'{name} needs measured_with: crit-eval-v6, or how else it was measured')
+            problems.append(f'{name} needs measured_with: crit-eval-v7, or how else it was measured')
             continue
         if isinstance(result.get("measured_on"), datetime.date):
             result["measured_on"] = result["measured_on"].isoformat()

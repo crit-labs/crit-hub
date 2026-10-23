@@ -102,7 +102,7 @@
       "properties": {
         "gpu": {"$ref": "#/$defs/gpu"},
         "model": {"$ref": "#/$defs/model"},
-        "measured_with": {"type": "string", "description": "A crit Eval protocol (crit-eval-v6) or how else it was measured (LocalMaxxing, your own benchmark)."},
+        "measured_with": {"type": "string", "description": "A crit Eval protocol (crit-eval-v7) or how else it was measured (LocalMaxxing, your own benchmark)."},
         "measured_on": {"description": "The day it was measured, YYYY-MM-DD (quoted); null when unknown, never for crit Eval.",
                         "oneOf": [{"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"}, {"type": "null"}]},
         "stats": {
@@ -124,6 +124,7 @@
         "more": {
           "type": "object", "additionalProperties": false, "description": "Further figures, shown after the stats.",
           "properties": {
+            "greedy_decode_tok_s": {"$ref": "#/$defs/figure", "description": "crit-eval-v7: the greedy suite's decode; stats.decode_tok_s is the sampled decode."},
             "long_context_decode_tok_s": {"$ref": "#/$defs/figure"},
             "heldout_decode_tok_s": {"$ref": "#/$defs/figure"},
             "host_ram_gib": {"type": "integer", "exclusiveMinimum": 0},

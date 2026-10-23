@@ -202,15 +202,17 @@ def measured(args, seal, candidate, target):
 
     tokens = {(r.get("context") or {}).get("tokens") for r in results}
     ppl, kld, budget = worst("ppl_ratio"), worst("kld_mean"), worst("budget_used")
+    # From crit-eval-v7 the headline decode is the sampled suite's, the greedy one a further figure.
+    sampled = cardlib.eval_major(results[0]["protocol"]) >= 7
     stats = {
-        "decode_tok_s": figure([r["speed"]["decode_score"] for r in results], 1),
+        "decode_tok_s": figure([r["sampled_speed" if sampled else "speed"]["decode_score"] for r in results], 1),
         "prefill_tok_s": figure([r["speed"]["prefill_score"] for r in results], 0),
         "ttft_ms": figure([r["speed"]["ttft_score_ms"] for r in results], 0),
         "ppl": {"vs_reference": round(ppl, 3)} if ppl is not None else None,
         "kld_mean": float(f"{kld:.2g}") if kld is not None else None,
         "context_tokens": next(iter(tokens)) if len(tokens) == 1 and isinstance(next(iter(tokens)), int) else None,
     }
-    more = {}
+    more = {"greedy_decode_tok_s": figure([r["speed"]["decode_score"] for r in results], 1)} if sampled else {}
     context = (((results[0].get("status") or {}).get("kpis") or {}).get("context") or {}).get("decode", {}).get("score")
     if isinstance(context, (int, float)):
         more["long_context_decode_tok_s"] = round(context, 1)

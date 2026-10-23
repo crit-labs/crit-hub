@@ -45,7 +45,7 @@ them, and crit's case studies use them.
 
 | Stat | card.yaml | Shown as |
 | --- | --- | --- |
-| Decode | `decode_tok_s` | `252.4 tok/s` |
+| Decode | `decode_tok_s`: from crit-eval-v7 at the model's own sampling, through v6 greedy | `252.4 tok/s` |
 | Prefill | `prefill_tok_s` | `7,425 tok/s` |
 | TTFT | `ttft_ms`: time to first token | `150 ms`, or `1.61 s` from one second on |
 | Perplexity vs reference | `ppl: {vs_reference: 1.001}`, or `ppl: {absolute: 4.28}` when no reference was measured | `+0.1%`, or `4.28` |
@@ -55,8 +55,15 @@ them, and crit's case studies use them.
 A stat nobody measured is `null` and shows as `–`; decode is required. Decode, prefill and TTFT
 may be `[low, high]` across runs. The README shows the six as one table, with a caption under it
 saying what was measured, how, when and from which evidence. Further figures go under `more`:
-`long_context_decode_tok_s`, `heldout_decode_tok_s`, `host_ram_gib` and `quality_budget_pct`; the
+`greedy_decode_tok_s`, `long_context_decode_tok_s`, `heldout_decode_tok_s`, `host_ram_gib` and `quality_budget_pct`; the
 caption lists them too.
+
+Real requests sample, so from crit-eval-v7 decode is the sampled decode, measured on the speed cases
+at the model's `generation_config.json` sampling (`sampled_speed.decode_score` in the evidence), and
+the greedy decode goes under `more` as `greedy_decode_tok_s` (`speed.decode_score`). A crit-eval-v6
+result's decode is greedy and has no `greedy_decode_tok_s`. The README and the website label the
+column Decode (sampled) or Decode (greedy) from `measured_with`; a self-reported result says in its
+prose which it is.
 
 <a id="provenance"></a>
 
@@ -65,14 +72,14 @@ caption lists them too.
 A figure is either **crit Eval with its evidence** or **the contributor's own report**, whoever
 contributed the engine.
 
-- A result whose `measured_with` is a crit Eval protocol (`crit-eval-v6`) lists the result file
+- A result whose `measured_with` is a crit Eval protocol (`crit-eval-v7`) lists the result file
   `crit eval run` wrote, unchanged, as `evidence/crit-eval.json` with its SHA-256 (`crit-eval-2.json`
   and on for further runs or GPU/model pairs), and gives `measured_on`, the day it ran.
   `tools/check_engines.py` reads it and requires the protocol, the GPU, a complete speed run with no
   failed gate, and every stat and figure the card states: decode, prefill, first token and held-out
   decode from the speed scores, context from the measured context, perplexity and KL divergence from
   the worst served path of the quality section, the quality budget share and long-context decode.
-  Figures under the same major version of the protocol, such as `crit-eval-v6` and `crit-eval-v6.1`,
+  Figures under the same major version of the protocol, such as `crit-eval-v7` and `crit-eval-v7.1`,
   are comparable across engines.
 - Any other `measured_with`, such as a leaderboard or your own benchmark, is shown as your own
   report. Its evidence can go in `evidence/self-reported.json` (optional): for each GPU and model,

@@ -75,14 +75,15 @@ checkpoints:
 results:
 - gpu: rtx5090                     # the card in lowercase
   model: <model>@<encoding>
-  # crit-eval-v6 when measured with crit Eval (crit eval run --url measures any OpenAI-compatible
+  # crit-eval-v7 when measured with crit Eval (crit eval run --url measures any OpenAI-compatible
   # server): then evidence/crit-eval.json is required and every figure must be what it holds.
   # Anything else (a leaderboard, your own benchmark) is shown as your own report.
-  measured_with: crit-eval-v6
+  measured_with: crit-eval-v7
   measured_on: "2026-10-23"        # the day it was measured; null when unknown (never for crit Eval)
   # The six headline stats, in this order, on every page that shows the engine. null when not measured.
   stats:
-    decode_tok_s: 100.0            # tokens per second; [low, high] for a range across runs
+    decode_tok_s: 100.0            # tokens per second; [low, high] for a range across runs. From crit-eval-v7
+                                   #   the decode at the model's own sampling; through v6 (and greedy) greedy
     prefill_tok_s: 1000            # prompt tokens per second
     ttft_ms: 150                   # time to first token, in ms
     ppl:                           # perplexity against the reference model,
@@ -91,8 +92,8 @@ results:
     context_tokens: 262144         # maximum context the engine was measured at
   # Optional further figures.
   more:
+    greedy_decode_tok_s: 240.0     # crit-eval-v7: the greedy suite's decode, next to the sampled one
     long_context_decode_tok_s: 300.0
-    # heldout_decode_tok_s: 160.0
     # heldout_decode_tok_s: 160.0
     # host_ram_gib: 64             # when the engine keeps weights in host memory
     # quality_budget_pct: 5.8      # share of crit Eval's quality budget the worst path uses
