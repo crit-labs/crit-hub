@@ -256,7 +256,7 @@ def export_entry(args):
         "configuration_sha256": manifest["configuration_sha256"],
         "model_manifest_sha256": hashlib.sha256(json.dumps(read(run / "inputs.json")["model_manifest"], sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()).hexdigest(),
         "toolchain": manifest["build"]["toolchain"],
-        "runtime_prerequisites": manifest.get("extensions", {}).get("runtime_prerequisites", []),
+        "runtime_prerequisites": (manifest.get("extensions") or {}).get("runtime_prerequisites", []),
     }
     if LOCAL_PATH.search(json.dumps(provenance)) or run.parent.as_posix() in json.dumps(provenance):
         raise ValueError("Local path in the candidate's toolchain record; describe the toolchain without it")
