@@ -8,7 +8,8 @@ the crit-engines commit that holds the source: the checkout's HEAD, which must c
 uncommitted changes. The supplied README writes that commit as <crit-engines commit>, which entry
 fills in. engine.json carries the provenance and the exact checkpoint, and names the GPU and model the
 candidate was measured on; fill in the summary, features, measured_with and the README's measured
-figures, and the SPDX license of the engine source, before tools/check_engines.py passes. Both steps
+figures, the requirements, any downloads, and the SPDX license of the engine source, before
+tools/check_engines.py passes. Both steps
 verify the complete seal, and both destinations must be new.
 """
 import argparse
@@ -223,6 +224,7 @@ def export_entry(args):
         "license": None,
         "features": [],
         "results": [{"gpu": args.gpu, "model": args.model, "measured_with": None, "decode_tok_s": None}],
+        "requirements": {"platforms": [], "gpu_arch": [], "gpu_memory_gb": None, "cuda": None},
         "provenance": provenance,
         "checkpoints": {args.model: checkpoint(args.model_repo, args.model_revision, read(run / "inputs.json")["model_manifest"])},
     }

@@ -18,7 +18,33 @@
       "measured_with": "LocalMaxxing",
       "decode_tok_s": 140.9,
       "context_tokens": 262144,
-      "host_ram_gib": 65
+      "host_ram_gib": 65,
+      "quality": {
+        "metric": "perplexity",
+        "value": 3.518,
+        "method": "causal perplexity on ninfer-ppl-1m-v1, quick, FP8 KV, from the artifact card"
+      }
+    }
+  ],
+  "requirements": {
+    "platforms": [
+      "linux"
+    ],
+    "gpu_arch": [
+      "sm_120a"
+    ],
+    "gpu_memory_gb": 32,
+    "cuda": "13.3"
+  },
+  "downloads": [
+    {
+      "kind": "artifact",
+      "repository": "jabbatheduck/ninfer-ext-models",
+      "path": "qwen3.8-flash-next",
+      "file": "qwen3_8_flash_next_nvfp4.ninfer",
+      "sha256": "bed67cf5343dfc697b8ddd3f29052e5f8bda1a22eac9985f5c4c0ac58e064d0f",
+      "size_gb": 119,
+      "note": "the converted artifact, published as parts with SHA256SUMS; download it instead of converting the checkpoint"
     }
   ],
   "provenance": {
@@ -35,8 +61,6 @@
         "vision",
         "mtp"
       ],
-      "repository": "https://huggingface.co/jabbatheduck/ninfer-ext-models/tree/main/qwen3.8-flash-next",
-      "sha256": "bed67cf5343dfc697b8ddd3f29052e5f8bda1a22eac9985f5c4c0ac58e064d0f",
       "not_redistributed": "the artifact is published as parts with SHA256SUMS; it is not part of this submission"
     },
     "leaderboard": {

@@ -104,8 +104,10 @@ Every working engine you add saves the next person from building it again.
 3. Document the measured workload, results, check coverage and known limits.
 4. Fill in [engine.json](engines/README.md#engine-json): the summary, features, the source's license
    and, for every GPU and model, the measured figures with `measured_with` naming the crit Eval
-   protocol, for example `crit-eval-v5`, and the Hugging Face checkpoint of every model it runs
-   under `checkpoints`. Hugging Face tells crit-hub the rest: base model, lab, quantization.
+   protocol, for example `crit-eval-v5`, and its quality figure; the `requirements` to run it
+   (platforms, GPU architecture and memory, CUDA, runtime) and any `downloads` besides the
+   checkpoint, such as a drafter; and the Hugging Face checkpoint of every model it runs under
+   `checkpoints`. Hugging Face tells the website the rest: base model, lab, quantization.
 5. [Credit your repository](#credit) directly under the README's title.
 6. Retain dependency credits and applicable license texts and notices next to the source.
 7. Open one pull request to [crit-engines](https://github.com/crit-labs/crit-engines) with the source and, once it is merged, one to
@@ -138,15 +140,16 @@ crit-hub records where it is, what it targets and what it measured.
    external-engine notice. Build and chat start from a clone of the pinned commit.
 4. In **Measured**, state the hardware, OS, toolchain, workload and protocol behind each number.
 5. Fill in [engine.json](engines/README.md#engine-json): `"origin": "external"`, the pinned source
-   under `provenance.source`, the exact checkpoint of every measured model, and the measured
-   figures with `measured_with`. Figures measured with crit Eval (`"crit-eval-v5"`) are compared
+   under `provenance.source`, the exact checkpoint of every measured model, the `requirements` to
+   run it and any `downloads`, such as a converted artifact, and the measured figures with
+   `measured_with`. Figures measured with crit Eval (`"crit-eval-v5"`) are compared
    with every other engine's on the same protocol; anything else, such as your own benchmark or a
    leaderboard run, is shown as your own report. An engine behind any OpenAI-compatible chat API
    gets crit Eval figures without changes:
    [`crit eval run --url`](https://github.com/crit-labs/crit/blob/main/docs/eval/README.md#engines-behind-a-server)
    sends every prompt to `/chat/completions` and scores quality on the engine's own replies, as it
    does for crit's own engines behind `crit serve`. Pin the Hugging Face checkpoint of every model it
-   runs under `checkpoints`; Hugging Face tells crit-hub the rest: base model, lab, quantization.
+   runs under `checkpoints`; Hugging Face tells the website the rest: base model, lab, quantization.
 6. Name your source's license in the README's **Credits** section and in `engine.json`.
 7. `python -B tools/check_engines.py` passes for your folder.
 

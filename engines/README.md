@@ -47,9 +47,13 @@ people read.
   "features": ["openai-api", "tool-calls", "speculative"],
   "results": [
     {"gpu": "rtx5090", "model": "qwen3.8-27b@NVFP4", "measured_with": "crit-eval-v5",
-     "decode_tok_s": 215.7, "prefill_tok_s": 8917, "ttft_ms": 120, "context_tokens": 262144}
+     "decode_tok_s": 215.7, "prefill_tok_s": 8917, "ttft_ms": 120, "context_tokens": 262144,
+     "quality": {"metric": "budget_pct", "value": 18.8}}
   ],
   "supports": [{"gpus": ["rtx4090"], "models": ["qwen3.8-27b@NVFP4"]}],
+  "requirements": {"platforms": ["wsl2"], "gpu_arch": ["sm_120a"], "gpu_memory_gb": 32, "cuda": "13.1",
+                   "runtime": "crit Core 0.1.0"},
+  "downloads": [{"kind": "drafter", "repository": "<owner>/<name>", "revision": "<commit>"}],
   "provenance": {"source": {"repository": "https://github.com/crit-labs/crit-engines", "revision": "<commit>",
                             "path": "mtp7-fp8attn"},
                  "run_id": "...", "candidate_id": "...", "source_manifest_sha256": "...",
@@ -71,9 +75,19 @@ people read.
   README as written there, for example `8,917` or `1.61 s`. **`measured_with`** names the
   method: figures under the same major version of the crit Eval protocol, such as `crit-eval-v5`
   and `crit-eval-v5.1`, are comparable across engines; anything else is the contributor's own
-  report.
+  report. **`quality`** (optional) is one quality figure, as the README writes it: `budget_pct`,
+  the share of crit Eval's quality budget the worst path uses; `kld_mean`, a KL divergence mean,
+  with its `budget`; or `perplexity`, with the `method` that measured it.
 - **`supports`** (optional) names further pairs the engine runs but nobody has measured yet. Each
   group pairs every GPU in `gpus` with every model in `models`.
+- **`requirements`** (required) is what the engine needs to run: the `platforms` it was built and
+  run on (`linux`, `wsl2`, `windows`, `macos`), the `gpu_arch` it is compiled for (`sm_120a`), the
+  `gpu_memory_gb` it needs, the `cuda` toolkit version it builds with and, optionally, the
+  `runtime` it links, such as `crit Core 0.2.1`.
+- **`downloads`** (optional) lists what to fetch besides the pinned checkpoint, such as a
+  `drafter` model or a converted `artifact`: its Hugging Face `repository`, pinned by `revision` or
+  by the `sha256` of its `file`, with an optional `path` in the repository, `size_gb` and a
+  one-line `note`.
 - **`provenance`**: `source`, the `repository` and 40-character commit `revision` that hold the
   engine's source, which the README links, and optionally `path`, its folder there; then for a crit
   engine the sealed run, candidate, hashes and toolchain the exporter records, so the seal can be

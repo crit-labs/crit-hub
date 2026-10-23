@@ -19,7 +19,30 @@
       "decode_tok_s": 260.9,
       "prefill_tok_s": 8326,
       "ttft_ms": 116,
-      "context_tokens": 262144
+      "context_tokens": 262144,
+      "quality": {
+        "metric": "budget_pct",
+        "value": 91.4
+      }
+    }
+  ],
+  "requirements": {
+    "platforms": [
+      "wsl2"
+    ],
+    "gpu_arch": [
+      "sm_120a"
+    ],
+    "gpu_memory_gb": 32,
+    "cuda": "13.1",
+    "runtime": "crit Core 0.2.1, with crit changes after v0.2.1"
+  },
+  "downloads": [
+    {
+      "kind": "drafter",
+      "repository": "google/gemma-4-31B-it-assistant",
+      "revision": "627c5ec1458b9086b841a91e0512fd31fd2fbbf1",
+      "note": "the stock drafter; set draft_model in engine/configuration.json to its folder"
     }
   ],
   "provenance": {

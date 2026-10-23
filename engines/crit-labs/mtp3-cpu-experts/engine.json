@@ -29,9 +29,25 @@
         1830
       ],
       "context_tokens": 262144,
-      "host_ram_gib": 82
+      "host_ram_gib": 82,
+      "quality": {
+        "metric": "kld_mean",
+        "value": 0.0051,
+        "budget": 0.05
+      }
     }
   ],
+  "requirements": {
+    "platforms": [
+      "wsl2"
+    ],
+    "gpu_arch": [
+      "sm_120a"
+    ],
+    "gpu_memory_gb": 32,
+    "cuda": "13.1",
+    "runtime": "crit Core 0.2.1"
+  },
   "provenance": {
     "source": {
       "repository": "https://github.com/crit-labs/crit-engines",

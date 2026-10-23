@@ -16,7 +16,39 @@
       "model": "qwen3.8-27b@NVFP4",
       "measured_with": "LocalMaxxing",
       "decode_tok_s": 510.7,
-      "context_tokens": 196032
+      "context_tokens": 196032,
+      "quality": {
+        "metric": "perplexity",
+        "value": 4.28116,
+        "method": "ninfer-perplexity on ninfer-ppl-1m-v1, --quick, 16,384-token context, INT8 KV"
+      }
+    }
+  ],
+  "requirements": {
+    "platforms": [
+      "linux"
+    ],
+    "gpu_arch": [
+      "sm_120a"
+    ],
+    "gpu_memory_gb": 32,
+    "cuda": "13.3"
+  },
+  "downloads": [
+    {
+      "kind": "artifact",
+      "repository": "jabbatheduck/ninfer-ext-models",
+      "path": "qwen3.8-27b-quasar-nvfp4",
+      "file": "qwen3_8_27b_quasar_nvfp4.ninfer",
+      "sha256": "bfd7f9e100fc26399096f920c937a168f51b4a2af1ba1d2cd7df57242456787a",
+      "size_gb": 19.6,
+      "note": "the converted artifact, with SHA256SUMS; download it instead of converting the checkpoint"
+    },
+    {
+      "kind": "drafter",
+      "repository": "incoai/Qwen3.8-27B-DFlash2",
+      "revision": "015e795645c74b1a0eeef3b570031fb62e769bc5",
+      "note": "only to convert the checkpoint yourself; the published artifact already holds it"
     }
   ],
   "provenance": {
@@ -34,8 +66,6 @@
         "mtp",
         "dflash2"
       ],
-      "sha256": "bfd7f9e100fc26399096f920c937a168f51b4a2af1ba1d2cd7df57242456787a",
-      "repository": "https://huggingface.co/jabbatheduck/ninfer-ext-models/tree/main/qwen3.8-27b-quasar-nvfp4",
       "not_redistributed": "the converted .ninfer artifact (about 19.6 GB) is published with SHA256SUMS and is not part of this submission"
     },
     "toolchain": {
