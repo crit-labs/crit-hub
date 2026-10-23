@@ -21,7 +21,7 @@ engines/<owner>/<name>/
   README.md          contributor repository, target, measured results, limits, build and chat;
                      an external engine's opens with the external-engine notice
   engine.json        what the engine is and runs, its pinned source, provenance and exact checkpoints
-  eval/              the crit Eval result files its crit Eval figures come from, unchanged
+  eval/              crit-eval.json: the crit Eval result its crit Eval figures come from, unchanged
 
 crit-engines: <name>/          origin: crit, at the pinned commit
   engine/            source, configuration and required runtime data
@@ -36,7 +36,8 @@ Check a model download against the checkpoint an engine was measured on with
 
 A figure is either **crit Eval with its provenance** or **the contributor's own report**, whoever
 contributed the engine. A result whose `measured_with` is a crit Eval protocol (`crit-eval-v6`)
-lists the `result.json` files `crit eval run` wrote, unchanged in `eval/`, with their SHA-256;
+lists the result file `crit eval run` wrote, unchanged, as `eval/crit-eval.json` with its SHA-256
+(`crit-eval-2.json` and on for further runs or GPU/model pairs);
 `tools/check_engines.py` reads them and requires the protocol, the GPU, a complete speed run with no
 failed gate, and the figures engine.json states: decode, prefill, first token, context and quality.
 Any other `measured_with`, such as a leaderboard or your own benchmark, needs no files and is shown
@@ -60,7 +61,7 @@ people read.
     {"gpu": "rtx5090", "model": "qwen3.8-27b@NVFP4", "measured_with": "crit-eval-v6",
      "decode_tok_s": 252.4, "prefill_tok_s": 7425, "ttft_ms": 150, "context_tokens": 262144,
      "quality": {"metric": "budget_pct", "value": 5.8},
-     "eval": [{"file": "eval/rtx5090--qwen3.8-27b@NVFP4.json", "sha256": "<sha256>"}]}
+     "eval": [{"file": "eval/crit-eval.json", "sha256": "<sha256>"}]}
   ],
   "supports": [{"gpus": ["rtx4090"], "models": ["qwen3.8-27b@NVFP4"]}],
   "requirements": {"platforms": ["wsl2"], "gpu_arch": ["sm_120a"], "gpu_memory_gb": 32, "cuda": "13.1",
@@ -88,7 +89,7 @@ people read.
   method: figures under the same major version of the crit Eval protocol, such as `crit-eval-v6`
   and `crit-eval-v6.1`, are comparable across engines; anything else is the contributor's own
   report. A crit Eval result lists its result files under **`eval`**,
-  `[{"file": "eval/<gpu>--<model>.json", "sha256": "<sha256>"}]`, one per run, two or more for a
+  `[{"file": "eval/crit-eval.json", "sha256": "<sha256>"}]`, one per run, two or more for a
   `[low, high]` range ([provenance](#provenance)). **`quality`** (optional) is one quality figure, as the README writes it: `budget_pct`,
   the share of crit Eval's quality budget the worst path uses; `kld_mean`, a KL divergence mean,
   with its `budget`; or `perplexity`, with the `method` that measured it.

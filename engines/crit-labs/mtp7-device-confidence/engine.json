@@ -26,7 +26,7 @@
       },
       "eval": [
         {
-          "file": "eval/rtx5090--qwen3.8-27b@NVFP4.json",
+          "file": "eval/crit-eval.json",
           "sha256": "e91fb772272f268d05649cd9450c8a67d9532fc4a7533f7ae01236c38360be07"
         }
       ]

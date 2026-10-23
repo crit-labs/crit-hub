@@ -8,7 +8,8 @@ the crit-engines commit that holds the source: the checkout's HEAD, which must c
 uncommitted changes. The supplied README writes that commit as <crit-engines commit>, which entry
 fills in. engine.json carries the provenance and the exact checkpoint, and names the GPU and model the
 candidate was measured on. --eval names the candidate's sealed crit Eval attempts (attempt-0003):
-entry copies each result into eval/ and takes the result's figures from them, measured_with, decode,
+entry copies each result into eval/ as crit-eval.json (then crit-eval-2.json and on) and takes the
+result's figures from them, measured_with, decode,
 prefill, first token, context and the quality budget its worst path uses; without --eval, fill them
 in as your own report. Fill in the summary, features, the README's measured figures, the
 requirements, any downloads, and the SPDX license of the engine source, before
@@ -196,7 +197,7 @@ def measured(args, seal, candidate, target):
         return {"gpu": args.gpu, "model": args.model, "measured_with": None, "decode_tok_s": None}
     files = []
     for number, path in enumerate(attempts, 1):
-        name = f"eval/{args.gpu}--{args.model}" + (f"--{number}" if len(attempts) > 1 else "") + ".json"
+        name = "eval/crit-eval.json" if number == 1 else f"eval/crit-eval-{number}.json"
         copy(path, target / name)
         files.append({"file": name, "sha256": digest(target / name)})
 

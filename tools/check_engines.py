@@ -32,7 +32,8 @@ FIELDS = {"summary", "origin", "contributor", "license", "features", "results", 
 RESULT_FIELDS = {"gpu", "model", "measured_with", "decode_tok_s", "prefill_tok_s", "ttft_ms", "context_tokens", "host_ram_gib",
                  "quality", "eval"}
 CRIT_EVAL = re.compile(r"crit-eval-v[0-9]+(\.[0-9]+)?")
-EVAL_FILE = re.compile(r"eval/[A-Za-z0-9_.@+-]+\.json")
+# An engine's crit Eval results: eval/crit-eval.json, then crit-eval-2.json and on for more runs or GPU/model pairs.
+EVAL_FILE = re.compile(r"eval/crit-eval(-[2-9]|-[1-9][0-9]+)?\.json")
 EVAL_BYTES = 16 * 1024 * 1024
 # engine.json figure -> where its crit Eval result keeps it
 SCORES = {"decode_tok_s": ("speed", "decode_score"), "prefill_tok_s": ("speed", "prefill_score"), "ttft_ms": ("speed", "ttft_score_ms")}
@@ -172,14 +173,14 @@ def check_eval(folder, pair, result):
         return [f"engine.json result {pair}: eval files belong to a crit Eval result (measured_with crit-eval-vN)"] if files else []
     name = f"engine.json result {pair}"
     if not (isinstance(files, list) and files and all(isinstance(f, dict) and set(f) == {"file", "sha256"} for f in files)):
-        return [f'{name} is measured with {measured_with}: list its result files, "eval": [{{"file": "eval/<name>.json", "sha256": "<sha256>"}}], '
+        return [f'{name} is measured with {measured_with}: list its result files, "eval": [{{"file": "eval/crit-eval.json", "sha256": "<sha256>"}}], '
                 "or name how else it was measured"]
     problems, loaded = [], []
     for entry in files:
         file = str(entry["file"])
         path = folder / file
         if not EVAL_FILE.fullmatch(file) or not path.is_file():
-            problems.append(f"{name}: no result file {file} in eval/")
+            problems.append(f"{name}: no result file {file}; crit Eval results are eval/crit-eval.json, then crit-eval-2.json and on")
             continue
         data = path.read_bytes()
         if len(data) > EVAL_BYTES:
