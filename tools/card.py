@@ -246,8 +246,37 @@ def facts(card):
     at = f"/{s['path']}" if s.get("path") else ""
     shown = s["repository"].split("://", 1)[1].split("/", 1)[1].rstrip("/")
     lines.append(f"- **Source:** [{shown}{at} @ `{short(s['revision'])}`]({s['repository'].rstrip('/')}/tree/{s['revision']}{at})")
+    derived = card.get("derived_from")
+    if derived:
+        origin = derived["source"]
+        origin_at = f"/{origin['path']}" if origin.get("path") else ""
+        lines.append(f"- **Derived from:** [{derived['engine']}](../../{derived['engine']}/README.md), source "
+                     f"[`{short(origin['revision'])}`]({origin['repository'].rstrip('/')}/tree/{origin['revision']}{origin_at})")
+    built = card.get("built")
+    if built:
+        parts = []
+        if built.get("hours") is not None:
+            parts.append(f"{built['hours']:g} h")
+        if built.get("candidates") is not None:
+            parts.append(f"{built['candidates']} candidates")
+        if built.get("agent_tokens") is not None:
+            parts.append(f"{tokens(built['agent_tokens'])} agent tokens")
+        if built.get("api_usd") is not None:
+            parts.append(f"${built['api_usd']:,.2f} API-equivalent")
+        if built.get("agent"):
+            parts.append(f"by {built['agent']}")
+        lines.append("- **Built:** " + " · ".join(parts))
     lines.append(f"- **License:** {card['license']}")
     return "\n".join(lines)
+
+
+def tokens(count):
+    """155,700,000 as 155.7M, 42,900 as 42.9K."""
+    if count >= 1_000_000:
+        return f"{count / 1_000_000:.1f}M"
+    if count >= 1_000:
+        return f"{count / 1_000:.1f}K"
+    return str(count)
 
 
 def credit(card):

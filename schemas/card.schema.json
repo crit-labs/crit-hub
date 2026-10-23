@@ -72,6 +72,29 @@
         }
       }
     },
+    "derived_from": {
+      "type": "object", "additionalProperties": false, "required": ["engine", "source"],
+      "description": "The crit-hub engine the run that built this one started from (crit run create --from-engine); written by tools/export_engine.py.",
+      "properties": {
+        "engine": {"type": "string", "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$", "description": "<owner>/<name> in crit-hub."},
+        "source": {
+          "type": "object", "additionalProperties": false, "required": ["repository", "revision"],
+          "properties": {
+            "repository": {"$ref": "#/$defs/https"}, "revision": {"$ref": "#/$defs/commit"},
+            "path": {"type": "string", "pattern": "^[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)*$"}
+          }
+        }
+      }
+    },
+    "built": {
+      "type": "object", "additionalProperties": false,
+      "description": "What the run that built the engine took, from its cost.json (crit run cost): wall hours, candidates, the agent's tokens, their API-equivalent price in USD and the agent; written by tools/export_engine.py.",
+      "properties": {
+        "hours": {"type": "number", "minimum": 0}, "candidates": {"type": "integer", "minimum": 0},
+        "agent_tokens": {"type": "integer", "minimum": 0}, "api_usd": {"type": "number", "minimum": 0},
+        "agent": {"type": "string", "minLength": 1}
+      }
+    },
     "results": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/result"}},
     "readme": {
       "type": "object", "additionalProperties": false, "description": "The README's prose, markdown in block scalars (|), rendered in this order.",

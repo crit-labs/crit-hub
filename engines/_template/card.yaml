@@ -71,6 +71,16 @@ checkpoints:
 # - gpus: [rtx4090]
 #   models: [<model>@<encoding>]
 
+# Optional, written by tools/export_engine.py: the crit-hub engine the run started from
+# (crit run create --from-engine), with its source pinned as the run recorded it.
+# derived_from:
+#   engine: <owner>/<name>
+#   source: {repository: https://github.com/crit-labs/crit-engines, revision: <40-character commit>, path: <name>}
+
+# Optional, written by tools/export_engine.py from the run's cost.json (crit run cost): what building
+# the engine took, as wall hours, candidates, the agent's tokens, their API-equivalent price and the agent.
+# built: {hours: 4.25, candidates: 7, agent_tokens: 155700000, api_usd: 42.3, agent: Claude Opus 5.5 in Claude Code}
+
 # What it measured: one entry per GPU and model.
 results:
 - gpu: rtx5090                     # the card in lowercase

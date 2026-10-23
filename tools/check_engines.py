@@ -42,7 +42,9 @@ MODEL = re.compile(r"[a-z0-9][a-z0-9.-]*@[A-Za-z0-9.+-]+")
 HF_REPOSITORY = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
 FEATURES = {"openai-api", "tool-calls", "vision", "speculative"}
 CARD_FIELDS = {"title", "summary", "origin", "contributor", "license", "features", "source", "requirements", "downloads",
-               "checkpoints", "supports", "results", "readme"}
+               "checkpoints", "supports", "derived_from", "built", "results", "readme"}
+ENGINE_ID = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
+BUILT_FIELDS = {"hours", "agent_tokens", "api_usd", "agent", "candidates"}
 RESULT_FIELDS = {"gpu", "model", "measured_with", "measured_on", "sampling", "stats", "more", "evidence"}
 PLATFORMS = {"linux", "wsl2", "windows", "macos"}
 GPU_ARCH = re.compile(r"sm_[0-9]{2,3}[a-z]?")
@@ -120,6 +122,36 @@ def check_identity(folder, card):
         problems.append("card.yaml source.revision is a full 40-character commit SHA")
     if "path" in source and not (isinstance(source["path"], str) and safe_path(source["path"])):
         problems.append("card.yaml source.path is a folder in the source repository, like mtp7-device-confidence")
+    return problems
+
+
+def check_lineage(card):
+    """derived_from (the crit-hub engine the run started from) and built (what the run took), both written by
+    tools/export_engine.py from the run's records."""
+    problems = []
+    derived = card.get("derived_from")
+    if derived is not None:
+        if not isinstance(derived, dict) or set(derived) != {"engine", "source"} or not ENGINE_ID.fullmatch(str(derived.get("engine"))):
+            problems.append("card.yaml derived_from is {engine: <owner>/<name>, source: {repository, revision, path}}: the crit-hub "
+                            "engine the run started from")
+        else:
+            source = derived["source"]
+            if (not isinstance(source, dict) or set(source) - {"repository", "revision", "path"}
+                    or not REPOSITORY.fullmatch(str(source.get("repository"))) or not COMMIT.fullmatch(str(source.get("revision")))):
+                problems.append("card.yaml derived_from.source needs the https repository and full commit revision of the origin's source")
+    built = card.get("built")
+    if built is not None:
+        if not isinstance(built, dict) or not built or set(built) - BUILT_FIELDS:
+            problems.append(f"card.yaml built holds any of {', '.join(sorted(BUILT_FIELDS))}, from the run's cost.json (crit run cost)")
+        else:
+            for key in ("hours", "api_usd"):
+                if key in built and (type(built[key]) not in (int, float) or built[key] < 0):
+                    problems.append(f"card.yaml built.{key} is a non-negative number")
+            for key in ("agent_tokens", "candidates"):
+                if key in built and (type(built[key]) is not int or built[key] < 0):
+                    problems.append(f"card.yaml built.{key} is a non-negative integer")
+            if "agent" in built and not (isinstance(built["agent"], str) and built["agent"].strip()):
+                problems.append("card.yaml built.agent names the agent and model that built the engine")
     return problems
 
 
@@ -511,7 +543,8 @@ def check(folder):
         lock = cardlib.load_lock(folder)
     except json.JSONDecodeError as e:
         return [f"card.lock.json is not JSON: {e}"]
-    problems = check_schema(card) + check_identity(folder, card) + check_requirements(card) + check_downloads(card) + check_supports(card)
+    problems = (check_schema(card) + check_identity(folder, card) + check_requirements(card) + check_downloads(card)
+                + check_supports(card) + check_lineage(card))
     result_problems, listed = check_results(folder, card)
     problems += result_problems + check_checkpoints(card, lock) + check_lock(card, lock)
     files = {p.relative_to(folder).as_posix() for p in folder.rglob("*") if p.is_file()}

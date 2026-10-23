@@ -10,9 +10,11 @@ and the sealed run's provenance, and README.md rendered from the card. The suppl
 commit as <crit-engines commit>, which entry fills in. --eval names the candidate's sealed crit Eval
 attempts (attempt-0003): entry copies each result into evidence/ as crit-eval.json (then
 crit-eval-2.json and on) and fills the result's six stats and further figures from them; without
---eval, fill them in as your own report. Then fill in the summary, license, features and
-requirements in card.yaml and render the README with tools/card.py before tools/check_engines.py
-passes. Both steps verify the complete seal, and both destinations must be new.
+--eval, fill them in as your own report. A run started from a crit-hub engine (crit run create
+--from-engine) gives the card derived_from, and a run with cost.json (crit run cost) gives it built.
+Then fill in the summary, license, features and requirements in card.yaml and render the README with
+tools/card.py before tools/check_engines.py passes. Both steps verify the complete seal, and both
+destinations must be new.
 """
 import argparse
 import hashlib
@@ -272,6 +274,20 @@ def export_entry(args):
     if LOCAL_PATH.search(json.dumps(provenance)) or run.parent.as_posix() in json.dumps(provenance):
         raise ValueError("Local path in the candidate's toolchain record; describe the toolchain without it")
     locked = checkpoint(args.model_repo, args.model_revision, read(run / "inputs.json")["model_manifest"])
+    lineage = {}
+    # A run started from a crit-hub engine (crit run create --from-engine) names it; the new engine derives from it.
+    origin = read(run / "run.json")["spec"].get("origin_engine")
+    if origin:
+        lineage["derived_from"] = {"engine": origin["engine"],
+                                   "source": {k: v for k, v in origin["source"].items() if v is not None}}
+    # What the run took (crit run cost): hours, the agent's tokens, their API-equivalent price, the agent.
+    if (run / "cost.json").is_file():
+        cost = read(run / "cost.json")
+        if cost.get("record_kind") != "run_cost" or cost.get("run_id") != seal["run_id"]:
+            raise ValueError("cost.json is not this run's run_cost record")
+        built = {"hours": cost["run"]["hours"], "agent_tokens": cost["run"]["tokens"]["total"], "api_usd": cost["run"]["usd"],
+                 "agent": cost.get("agent"), "candidates": len(cost["candidates"])}
+        lineage["built"] = {k: v for k, v in built.items() if v is not None}
     # The summary, license, features and requirements are the contributor's to fill in.
     card = {
         "title": title,
@@ -283,6 +299,7 @@ def export_entry(args):
         "source": {"repository": args.source_repo, "revision": revision, "path": args.name},
         "requirements": {"platforms": [], "gpu_arch": [], "gpu_memory_gb": None, "cuda": None},
         "checkpoints": {args.model: {"repository": locked["repository"], "revision": locked["revision"]}},
+        **lineage,
         "results": [measured(args, seal, package.parent, target)],
         "readme": sections,
     }

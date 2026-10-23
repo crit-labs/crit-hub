@@ -117,6 +117,11 @@ people read. [`_template/card.yaml`](_template/card.yaml) documents every key; i
   and SHA-256. The website reads the checkpoint's base model, lab and quantization from Hugging Face,
   so a checkpoint whose model card names its `base_model` lands under the right model by itself.
 - **`supports`** (optional): further pairs it runs that nobody has measured yet.
+- **`derived_from`** (optional, written by the exporter): the crit-hub engine the run started from
+  (`crit run create --from-engine`), as `engine` (`<owner>/<name>`) and the `source` it pinned, so an
+  improved, ported or adapted engine says where it came from.
+- **`built`** (optional, written by the exporter from the run's `cost.json`): what building the engine
+  took, as `hours`, `candidates`, `agent_tokens`, `api_usd` and the `agent`.
 - **`results`**: for each GPU and model it was measured on, `measured_with`, `measured_on`, the six
   `stats`, optional `more` and its `evidence`.
 - **`readme`**: the README's prose as markdown blocks, rendered in this order: `intro`, `model`,
