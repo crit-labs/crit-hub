@@ -51,23 +51,23 @@ people read.
 
 ```json
 {
-  "summary": "Qwen3.8-27B with up to 7 MTP drafts per round and FP8 attention",
+  "summary": "Qwen3.8-27B with up to 7 MTP drafts per round, stopped on draft confidence on the GPU in one CUDA graph",
   "origin": "crit",
   "contributor": {"name": "crit-labs", "repository": "https://github.com/crit-labs/crit"},
   "license": "Apache-2.0",
   "features": ["openai-api", "tool-calls", "speculative"],
   "results": [
     {"gpu": "rtx5090", "model": "qwen3.8-27b@NVFP4", "measured_with": "crit-eval-v6",
-     "decode_tok_s": 215.7, "prefill_tok_s": 8917, "ttft_ms": 120, "context_tokens": 262144,
-     "quality": {"metric": "budget_pct", "value": 18.8},
+     "decode_tok_s": 252.4, "prefill_tok_s": 7425, "ttft_ms": 150, "context_tokens": 262144,
+     "quality": {"metric": "budget_pct", "value": 5.8},
      "eval": [{"file": "eval/rtx5090--qwen3.8-27b@NVFP4.json", "sha256": "<sha256>"}]}
   ],
   "supports": [{"gpus": ["rtx4090"], "models": ["qwen3.8-27b@NVFP4"]}],
   "requirements": {"platforms": ["wsl2"], "gpu_arch": ["sm_120a"], "gpu_memory_gb": 32, "cuda": "13.1",
-                   "runtime": "crit Core 0.1.0"},
+                   "runtime": "crit Core 0.5.0"},
   "downloads": [{"kind": "drafter", "repository": "<owner>/<name>", "revision": "<commit>"}],
   "provenance": {"source": {"repository": "https://github.com/crit-labs/crit-engines", "revision": "<commit>",
-                            "path": "mtp7-fp8attn"},
+                            "path": "mtp7-device-confidence"},
                  "run_id": "...", "candidate_id": "...", "source_manifest_sha256": "...",
                  "toolchain": {"os": "...", "cuda": "..."}},
   "checkpoints": {

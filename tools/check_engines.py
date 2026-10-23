@@ -378,7 +378,7 @@ def check_source(folder, engine, provenance, text):
         problems.append("README.md must link the pinned source commit")
     if "path" in source and not (isinstance(source["path"], str) and source["path"]
                                  and all(NAME.fullmatch(part) and part not in (".", "..") for part in source["path"].split("/"))):
-        problems.append("engine.json provenance source.path is a folder in the source repository, like mtp7-fp8attn")
+        problems.append("engine.json provenance source.path is a folder in the source repository, like mtp7-device-confidence")
     return problems
 
 

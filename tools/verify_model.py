@@ -37,7 +37,7 @@ def verify(engine, folder, model_id=None):
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("engine", help="the engine's folder, e.g. engines/crit-labs/mtp7-fp8attn")
+    p.add_argument("engine", help="the engine's folder, e.g. engines/crit-labs/mtp7-device-confidence")
     p.add_argument("folder", help="local model folder, e.g. from huggingface-cli download REPO --revision REV")
     p.add_argument("--model", help="the model id, when the engine pins several checkpoints")
     a = p.parse_args()

@@ -95,10 +95,10 @@ Every working engine you add saves the next person from building it again.
 
 1. [Export the sealed candidate](#export): its runnable source into `<name>/` of a
    [crit-engines](https://github.com/crit-labs/crit-engines) checkout, then, once that is committed, its entry into the
-   [folder layout](engines/README.md#engine-folder-layout), `engines/<your account>/<name>/`, which
-   holds only `README.md` and `engine.json` pinned to that commit. Name it after its design, for
-   example `mtp7-fp8attn`. Several designs can share a GPU and model/encoding, whether they were
-   built with crit or not.
+   [folder layout](engines/README.md#engine-folder-layout), `engines/<your account>/<name>/`: a
+   `README.md`, an `engine.json` pinned to that commit and its crit Eval results in `eval/`. Name it
+   after its design, for example `mtp7-device-confidence`. Several designs can share a GPU and
+   model/encoding, whether they were built with crit or not.
 2. Write a README that follows the [engine README template](docs/ENGINE_README.md): model, design,
    measured results, checks, limits, build and chat from the pinned crit-engines commit.
 3. Document the measured workload, results, check coverage and known limits.
@@ -176,7 +176,7 @@ upstream work, report issues and find related engines. The link appears in two p
   the folder sees:
 
   ```markdown
-  # Qwen3.8-27B @ NVFP4 · RTX 5090 · mtp7-fp8attn
+  # Qwen3.8-27B @ NVFP4 · RTX 5090 · mtp7-device-confidence
 
   > [!NOTE]
   > **Contributed by** your-name · [your-name/your-engine](https://github.com/your-name/your-engine)
