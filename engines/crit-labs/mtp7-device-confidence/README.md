@@ -24,6 +24,8 @@ once the drafter's probability for its latest draft falls below 0.5; the GPU mak
 inside one CUDA graph per round, so the host never waits mid-round. Output equals plain greedy
 decoding.
 
+---
+
 ## Design
 
 | Part | How |
@@ -37,6 +39,8 @@ decoding.
 
 The drafting threshold was tuned on a corpus written for the run, not on Eval: thresholds 0.3 to
 0.85 were not better than 0.5, and a history-based draft width gained at most 1.4%, within noise.
+
+---
 
 ## Measured
 
@@ -64,6 +68,8 @@ setting tried (temperature 0.6 with top-p 0.95 and top-k 20; 0.7 with top-p 0.8 
 temperature 1.0), measured on the sealed candidate outside crit Eval on 2026-10-23, against 241 tok/s
 greedy in the same session.
 
+---
+
 ## Checks
 
 - **Arithmetic:** operator checks in every build (`q27_kernel_tests`) against FP64 or plain decoding:
@@ -77,6 +83,8 @@ greedy in the same session.
   a sampled request and Ctrl+C shutdown.
 - **Resources:** at the full context at least 493 MB of VRAM and 83.6 GB of host RAM stayed free.
 
+---
+
 ## Limits
 
 - Speculation is greedy-only: sampled requests (temperature above 0 or penalties, including the default
@@ -89,6 +97,8 @@ greedy in the same session.
   layer plus serving overhead); the token-by-token DeltaNet scan is about 17% of a long prompt.
 - Tested only on WSL2 Ubuntu 24.04; `build.sh` expects the toolkit at
   `/usr/local/cuda-13.1`.
+
+---
 
 ## Build and chat
 
@@ -113,6 +123,8 @@ it with [`crit serve`](https://github.com/crit-labs/crit/blob/v0.5.0/docs/SERVIN
 OpenAI-compatible chat requests at `http://127.0.0.1:8000/v1`.
 [engine/configuration.json](https://github.com/crit-labs/crit-engines/blob/234d6af32bc549a8b77f7b273bd9109efb7d2c1a/mtp7-device-confidence/engine/configuration.json)
 has the applied settings, with thinking off by default (`enable_thinking: false`); the original run keeps the full records.
+
+---
 
 ## Credits
 

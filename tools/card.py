@@ -351,7 +351,8 @@ def render(card):
         if not readme.get(key):
             continue
         if heading:
-            parts += [f"## {heading}", ""]
+            # A rule between sections, as crit-hub's own README has: GitHub's headings alone leave little room.
+            parts += ["---", "", f"## {heading}", ""]
         parts += [readme[key].rstrip("\n"), ""]
     return "\n".join(parts).rstrip("\n") + "\n"
 

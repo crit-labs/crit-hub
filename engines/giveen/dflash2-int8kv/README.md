@@ -26,6 +26,8 @@ NInfer, a from-scratch C++23/CUDA inference engine (an extended fork of upstream
 QAT checkpoint converted to NInfer's v3 `.ninfer` artifact, with DFlash2 block drafting and an INT8
 KV cache, which is what lets a 196,032-token context fit next to the draft companion.
 
+---
+
 ## Design
 
 | Part | How |
@@ -37,6 +39,8 @@ KV cache, which is what lets a 196,032-token context fit next to the draft compa
 | KV cache | INT8 group-64 (FP16 group scale) in 64-token pages; `--kv-dtype fp8`, `nvfp4`, `k8v4` and `bf16` are the other selectable representations, and `--kv-capacity auto` resolves the page count from `--max-context` and free device memory |
 | Serving | OpenAI-compatible and Anthropic-compatible HTTP APIs, SSE streaming, grammar-constrained output (xgrammar), chat templates (llama-jinja) |
 | Arithmetic contract | Each numerical op is qualified against a naive FP32/FP64 oracle at registered shapes; the contract is in `docs/maintainer/op-development.md` upstream |
+
+---
 
 ## Measured
 
@@ -86,6 +90,8 @@ device memory when a server starts moves the ceiling by up to about 0.7 GB.
 The differences are within run-to-run variation at this window size; only nvfp4 and k8v4 show a
 consistent cost. No KLD-budget campaign was run for this checkpoint.
 
+---
+
 ## Checks
 
 - **Capacity and memory:** the table above is the engine's own startup resolution
@@ -99,6 +105,8 @@ consistent cost. No KLD-budget campaign was run for this checkpoint.
 - **Arithmetic:** the op oracles that qualify every numerical route live upstream
   (`tests/ops/`, `docs/maintainer/op-development.md`) and are not re-run by this entry.
 
+---
+
 ## Limits
 
 - Text only; the artifact carries the vision tower but this entry does not exercise it.
@@ -110,6 +118,8 @@ consistent cost. No KLD-budget campaign was run for this checkpoint.
   amount of history the KV cache holds.
 - The measured ceiling depends on free device memory at load; the startup check is strict, so a
   desktop holding memory can reject a capacity that started earlier.
+
+---
 
 ## Build and chat
 
@@ -163,6 +173,8 @@ The server listens on `http://127.0.0.1:8080` with the OpenAI-compatible
   --kv-capacity auto --kv-dtype int8 --spec dflash2 --draft-tokens 9 --lm-head-draft \
   --max-new 256 --greedy --no-thinking
 ```
+
+---
 
 ## Credits
 

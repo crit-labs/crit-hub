@@ -28,6 +28,8 @@ engine keeps the routed experts NVFP4 in pinned Host memory and fetches misses i
 expert cache inside the decode CUDA Graph; the n-gram table stays off the device, mapped through the
 page cache or streamed from NVMe. MTP drafts three tokens per round.
 
+---
+
 ## Design
 
 | Part | How |
@@ -41,6 +43,8 @@ page cache or streamed from NVMe. MTP drafts three tokens per round.
 | Speculation | MTP, 3 draft tokens per round, adaptive length, full proposal head; `--lm-head-draft` selects the optimized head |
 | KV cache | Qwen Sparse Attention with `bf16`, `int8`, `fp8`, `nvfp4` and `k8v4` profiles; `--kv-capacity` explicit at full context avoids reserving more than one request needs |
 | Serving | OpenAI- and Anthropic-compatible HTTP APIs, SSE streaming, grammar constraints, tool calls |
+
+---
 
 ## Measured
 
@@ -84,12 +88,16 @@ two runs: no speculation 98.5 / 141.6 / 180.6 / 185.3 at C=1 / 2 / 4 / 8; `--spe
 165.0 / 182.1. A 241,003-token prompt was answered correctly with FP8 KV and an explicit
 262,144-token capacity (3 min 59 s to first token; prefill about 1,000 tok/s averaged).
 
+---
+
 ## Checks
 
 - **Arithmetic:** the Qwen4Exp mathematics and state semantics are checked against FP64 oracles in
   `tests/models/qwen4_exp/` upstream; this entry does not re-run them.
 - **Artifact identity:** the published artifact carries `SHA256SUMS`; `card.lock.json` pins the source
   checkpoint files by revision and SHA-256.
+
+---
 
 ## Limits
 
@@ -103,6 +111,8 @@ two runs: no speculation 98.5 / 141.6 / 180.6 / 185.3 at C=1 / 2 / 4 / 8; `--spe
 - `--kv-capacity auto` reserves more KV than one full-length request needs and takes it from the
   expert cache; use an explicit capacity for concurrency.
 - Vision is part of the artifact but not covered by the numbers above.
+
+---
 
 ## Build and chat
 
@@ -145,6 +155,8 @@ Serve:
 The server listens on `http://127.0.0.1:8080` with the OpenAI-compatible
 `/v1/chat/completions` and Anthropic-compatible `/v1/messages` APIs. One-shot terminal chat is the
 same `ninfer` command as any other NInfer artifact.
+
+---
 
 ## Credits
 

@@ -25,6 +25,8 @@ One short paragraph: what the engine is (written from scratch or adapted; crit C
 the toolkit or runtime of an external engine) and what makes it different. The platform, GPU,
 CUDA and context are already in the header.
 
+---
+
 ## Design
 
 | Part | How |
@@ -33,6 +35,8 @@ CUDA and context are already in the header.
 | ... | ... |
 
 At most one short paragraph on how decoding and prompts run.
+
+---
 
 ## Measured
 
@@ -45,15 +49,21 @@ At most one short paragraph on how decoding and prompts run.
 One short paragraph: measurement conditions (crit Eval version, repetitions, greedy or sampled,
 free memory) and what sets the speed.
 
+---
+
 ## Checks
 
 - **Arithmetic:** ...
 - **Functional:** ...
 - **Resources:** ...
 
+---
+
 ## Limits
 
 - Known issues first, then platform, memory and feature limits.
+
+---
 
 ## Build and chat
 
@@ -64,6 +74,8 @@ engine ships one, its standalone chat command:
 ```sh
 git clone https://github.com/<your account>/<your repository> && git -C <your repository> checkout <40-character commit>
 ```
+
+---
 
 ## Credits
 
