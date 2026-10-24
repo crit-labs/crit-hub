@@ -1,18 +1,19 @@
 <!-- Rendered by tools/card.py from card.yaml: edit card.yaml, then run python -B tools/card.py on this folder. -->
 
-# Qwen3.8-Flash-Next @ NVFP4 · RTX 5090 · mtp3-host-experts
+# mtp3-host-experts
 
 > [!WARNING]
 > **Contributed by** giveen · [giveen/ninfer-ext](https://github.com/giveen/ninfer-ext)
 >
 > External engine: crit-hub has not reviewed its source. Read it before you build or run it.
 
-| Decode | Prefill | TTFT | Perplexity (absolute) | Mean KL divergence | Context |
-| :---: | :---: | :---: | :---: | :---: | :---: |
-| **140.9 tok/s** | **–** | **–** | **3.518** | **–** | **262,144 tok** |
+| GPU · model | Decode (sampled) | Decode (greedy) | Prefill | TTFT | Perplexity | Mean KL divergence | Context |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| rtx5090 · `qwen3.8-flash-next@NVFP4` | – | **140.9 tok/s** | – | – | **3.518 (absolute)** | – | **262,144 tok** |
 
-<sub>rtx5090 · `qwen3.8-flash-next@NVFP4` · self-reported (LocalMaxxing) · [self-reported.json](evidence/self-reported.json) · 65 GiB host RAM</sub>
-
+- **Measured with:** self-reported (LocalMaxxing) · [self-reported.json](evidence/self-reported.json)
+- **Hardware:** Ubuntu; RTX 5090 32 GB
+- **Further figures:** 65 GiB host RAM
 - **Requires:** Linux · sm_120a · 32 GB GPU memory · CUDA 13.3
 - **Checkpoint** (`qwen3.8-flash-next@NVFP4`): [`nvidia/Qwen3.8-Flash-Next-NVFP4`](https://huggingface.co/nvidia/Qwen3.8-Flash-Next-NVFP4/tree/fc694b54fb0174e0913e6adf86691ef85a4ead47) at `fc694b54`
 - **Download** (artifact): [`jabbatheduck/ninfer-ext-models/qwen3.8-flash-next`](https://huggingface.co/jabbatheduck/ninfer-ext-models/tree/main/qwen3.8-flash-next), about 119 GB: the converted artifact, published as parts with SHA256SUMS; download it instead of converting the checkpoint

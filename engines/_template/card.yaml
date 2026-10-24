@@ -10,9 +10,8 @@
 # card from `python -B tools/export_engine.py entry` (see CONTRIBUTING.md); fill in the rest.
 # Strings that look like numbers or dates ("13.1", "2026-10-23") need quotes.
 
-# The README's title. One GPU and one model: <Model> @ <encoding> · <GPU> · <engine name>.
-# An engine that runs several: just <engine name>.
-title: <Model> @ <encoding> · <GPU> · <engine name>
+# The README's title: the engine's name, as its folder is named.
+title: <engine name>
 
 # One line, at most 120 characters, on what the engine does.
 summary: <Model> with <what makes this engine different>
@@ -90,6 +89,9 @@ results:
   # Anything else (a leaderboard, your own benchmark) is shown as your own report.
   measured_with: crit-eval-v7
   measured_on: "2026-10-23"        # the day it was measured; null when unknown (never for crit Eval)
+  # The machine it ran on, in one line. crit Eval: exactly what the result file's host records, as
+  # tools/export_engine.py writes it (left out for a result file that records none); otherwise your own.
+  hardware: <OS>; <CPU> (<physical>/<logical> cores); <RAM> GiB RAM; <GPU> <VRAM> GiB, PCIe <generation>.0 x<width>
   # crit-eval-v7, only when the decode was not sampled at the model's generation_config.json: as the result
   # file's sampled_speed records it (a user's crit eval prepare --sampling override, or the protocol default).
   # sampling: {source: override, settings: {temperature: 0.6, top_p: 0.95, top_k: 20}}

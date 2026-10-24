@@ -53,20 +53,21 @@ them, and crit's case studies use them.
 | Context | `context_tokens`: the maximum context it was measured at | `262,144 tok` |
 
 A stat nobody measured is `null` and shows as `–`; decode is required. Decode, prefill and TTFT
-may be `[low, high]` across runs. The README shows the six as one table, with a caption under it
-saying what was measured, how, when and from which evidence. Further figures go under `more`:
-`greedy_decode_tok_s`, `long_context_decode_tok_s`, `heldout_decode_tok_s`, `host_ram_gib` and `quality_budget_pct`; the
-caption lists them too.
+may be `[low, high]` across runs. The README shows them as one table, one row per GPU and model,
+with decode as two columns, sampled and greedy. Under it, the facts say how each result was measured
+and from which evidence, the `hardware` it ran on, and its further figures. Further figures go under
+`more`: `greedy_decode_tok_s` (shown in the table), `long_context_decode_tok_s`,
+`heldout_decode_tok_s`, `host_ram_gib` and `quality_budget_pct`.
 
 Real requests sample, so from crit-eval-v7 decode is the sampled decode, measured on the speed cases
 at the model's `generation_config.json` sampling (`sampled_speed.decode_score` in the evidence), and
 the greedy decode goes under `more` as `greedy_decode_tok_s` (`speed.decode_score`). A crit-eval-v6
-result's decode is greedy and has no `greedy_decode_tok_s`. The README and the website label the
-column Decode (sampled) or Decode (greedy) from `measured_with`; a self-reported result says in its
-prose which it is. A v7 decode sampled at other settings than the model's own (a user's
+result's decode is greedy and has no `greedy_decode_tok_s`. The README and the website place it in the
+Decode (sampled) or Decode (greedy) column from `measured_with`; a self-reported decode shows as
+greedy, and its prose says how it was measured. A v7 decode sampled at other settings than the model's own (a user's
 `crit eval prepare --sampling` override, or the protocol default for a model that does not sample)
 states them under the result's `sampling: {source, settings}`, as its result file records them, and
-the caption names them.
+the README names them.
 
 <a id="provenance"></a>
 
@@ -103,7 +104,7 @@ contributed the engine.
 The website and coding agents read every engine from its card; the rendered README is the page
 people read. [`_template/card.yaml`](_template/card.yaml) documents every key; in short:
 
-- **`title`**, **`summary`** (one line, at most 120 characters), **`origin`**, **`contributor`**
+- **`title`** (the engine's name, as its folder is named), **`summary`** (one line, at most 120 characters), **`origin`**, **`contributor`**
   (`name`, which names the folder, and `repository`), **`license`** (SPDX id) and **`features`**
   (any of `openai-api`, `tool-calls`, `vision`, `speculative`).
 - **`source`**: the `repository` and 40-character commit `revision` that hold the engine's source,
@@ -122,12 +123,13 @@ people read. [`_template/card.yaml`](_template/card.yaml) documents every key; i
   improved, ported or adapted engine says where it came from.
 - **`built`** (optional, written by the exporter from the run's `cost.json`): what building the engine
   took, as `hours`, `candidates`, `agent_tokens`, `api_usd` and the `agent`.
-- **`results`**: for each GPU and model it was measured on, `measured_with`, `measured_on`, the six
-  `stats`, optional `more` and its `evidence`.
+- **`results`**: for each GPU and model it was measured on, `measured_with`, `measured_on`, the
+  `hardware` it ran on, the six `stats`, optional `more` and its `evidence`.
 - **`readme`**: the README's prose as markdown blocks, rendered in this order: `intro`,
   `design`, `measured`, `checks`, `limits`, `build_and_chat`, the optional `benchmark` and
   `credits`. The renderer adds the title, the credit (a note for a crit engine, a warning for an
-  external one), one stats row per result and the facts: requirements, checkpoints, downloads, source and license.
+  external one), the stats table and the facts: how each result was measured, its hardware and further figures,
+  then requirements, checkpoints, downloads, source and license.
 
 A GPU id is the card in lowercase, such as `rtx5090`; a model id is the model in lowercase and its
 encoding, such as `qwen3.8-27b@NVFP4`. Reuse the ids other engines here already use so an engine

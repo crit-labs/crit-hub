@@ -1,18 +1,19 @@
 <!-- Rendered by tools/card.py from card.yaml: edit card.yaml, then run python -B tools/card.py on your engine's folder. -->
 
-# <Model> @ <encoding> · <GPU> · <engine name>
+# <engine name>
 
 > [!WARNING]
 > **Contributed by** <your account> · [<your account>/<your repository>](https://github.com/<your account>/<your repository>)
 >
 > External engine: crit-hub has not reviewed its source. Read it before you build or run it.
 
-| Decode (sampled) | Prefill | TTFT | Perplexity vs reference | Mean KL divergence | Context |
-| :---: | :---: | :---: | :---: | :---: | :---: |
-| **100.0 tok/s** | **1,000 tok/s** | **150 ms** | **+0.1%** | **0.003** | **262,144 tok** |
+| GPU · model | Decode (sampled) | Decode (greedy) | Prefill | TTFT | Perplexity | Mean KL divergence | Context |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| rtx5090 · `<model>@<encoding>` | **100.0 tok/s** | **240.0 tok/s** | **1,000 tok/s** | **150 ms** | **+0.1% vs reference** | **0.003** | **262,144 tok** |
 
-<sub>rtx5090 · `<model>@<encoding>` · crit Eval (crit-eval-v7, decode sampled at the model's defaults) · measured 2026-10-23 · [crit-eval.json](evidence/crit-eval.json) · greedy decode 240.0 tok/s · long-context decode 300.0 tok/s</sub>
-
+- **Measured with:** crit Eval (crit-eval-v7, decode sampled at the model's defaults) · [crit-eval.json](evidence/crit-eval.json)
+- **Hardware:** <OS>; <CPU> (<physical>/<logical> cores); <RAM> GiB RAM; <GPU> <VRAM> GiB, PCIe <generation>.0 x<width>
+- **Further figures:** long-context decode 300.0 tok/s
 - **Requires:** Linux · sm_120a · 32 GB GPU memory · CUDA 13.1
 - **Checkpoint** (`<model>@<encoding>`): [`<owner>/<name>`](https://huggingface.co/<owner>/<name>/tree/<40-character commit>) at `<40-char`
 - **Source:** [<your account>/<your repository> @ `<40-char`](https://github.com/<your account>/<your repository>/tree/<40-character commit>)

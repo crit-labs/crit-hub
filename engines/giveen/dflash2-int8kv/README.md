@@ -1,18 +1,18 @@
 <!-- Rendered by tools/card.py from card.yaml: edit card.yaml, then run python -B tools/card.py on this folder. -->
 
-# Qwen3.8-27B @ NVFP4 · RTX 5090 · dflash2-int8kv
+# dflash2-int8kv
 
 > [!WARNING]
 > **Contributed by** giveen · [giveen/ninfer-ext](https://github.com/giveen/ninfer-ext)
 >
 > External engine: crit-hub has not reviewed its source. Read it before you build or run it.
 
-| Decode | Prefill | TTFT | Perplexity (absolute) | Mean KL divergence | Context |
-| :---: | :---: | :---: | :---: | :---: | :---: |
-| **510.7 tok/s** | **–** | **–** | **4.28116** | **–** | **196,032 tok** |
+| GPU · model | Decode (sampled) | Decode (greedy) | Prefill | TTFT | Perplexity | Mean KL divergence | Context |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| rtx5090 · `qwen3.8-27b@NVFP4` | – | **510.7 tok/s** | – | – | **4.28116 (absolute)** | – | **196,032 tok** |
 
-<sub>rtx5090 · `qwen3.8-27b@NVFP4` · self-reported (LocalMaxxing) · [self-reported.json](evidence/self-reported.json)</sub>
-
+- **Measured with:** self-reported (LocalMaxxing) · [self-reported.json](evidence/self-reported.json)
+- **Hardware:** Ubuntu 26.10; RTX 5090 32 GB
 - **Requires:** Linux · sm_120a · 32 GB GPU memory · CUDA 13.3
 - **Checkpoint** (`qwen3.8-27b@NVFP4`): [`QUASAR-QAT/Qwen3.8-27B-QUASAR-NVFP4`](https://huggingface.co/QUASAR-QAT/Qwen3.8-27B-QUASAR-NVFP4/tree/4a22293aa6d1026844bc93a8727f1837e48acd89) at `4a22293a`
 - **Download** (artifact): [`jabbatheduck/ninfer-ext-models/qwen3.8-27b-quasar-nvfp4`](https://huggingface.co/jabbatheduck/ninfer-ext-models/tree/main/qwen3.8-27b-quasar-nvfp4), about 19.6 GB: the converted artifact, with SHA256SUMS; download it instead of converting the checkpoint

@@ -128,6 +128,7 @@
         "measured_with": {"type": "string", "description": "A crit Eval protocol (crit-eval-v7) or how else it was measured (LocalMaxxing, your own benchmark)."},
         "measured_on": {"description": "The day it was measured, YYYY-MM-DD (quoted); null when unknown, never for crit Eval.",
                         "oneOf": [{"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"}, {"type": "null"}]},
+        "hardware": {"type": "string", "minLength": 1, "description": "One line naming the machine it ran on. crit Eval: what the result file's host records (left out when it records none); otherwise your own statement."},
         "sampling": {
           "type": "object", "additionalProperties": false, "required": ["source", "settings"],
           "description": "crit-eval-v7, only when the sampled decode was not measured at the model's generation_config.json: the result file's sampled_speed sampling_source and sampling.",

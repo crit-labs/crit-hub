@@ -1,16 +1,16 @@
 <!-- Rendered by tools/card.py from card.yaml: edit card.yaml, then run python -B tools/card.py on this folder. -->
 
-# Qwen3.8-27B @ NVFP4 · RTX 5090 · mtp7-device-confidence
+# mtp7-device-confidence
 
 > [!NOTE]
 > **Contributed by** crit-labs · [crit-labs/crit](https://github.com/crit-labs/crit)
 
-| Decode (greedy) | Prefill | TTFT | Perplexity vs reference | Mean KL divergence | Context |
-| :---: | :---: | :---: | :---: | :---: | :---: |
-| **252.4 tok/s** | **7,425 tok/s** | **150 ms** | **+0.1%** | **0.0028** | **262,144 tok** |
+| GPU · model | Decode (sampled) | Decode (greedy) | Prefill | TTFT | Perplexity | Mean KL divergence | Context |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| rtx5090 · `qwen3.8-27b@NVFP4` | – | **252.4 tok/s** | **7,425 tok/s** | **150 ms** | **+0.1% vs reference** | **0.0028** | **262,144 tok** |
 
-<sub>rtx5090 · `qwen3.8-27b@NVFP4` · crit Eval (crit-eval-v6, greedy decode) · measured 2026-10-23 · [crit-eval.json](evidence/crit-eval.json) · long-context decode 315.2 tok/s · held-out decode 163.3 tok/s · 5.8% of the quality budget</sub>
-
+- **Measured with:** crit Eval (crit-eval-v6, greedy decode) · [crit-eval.json](evidence/crit-eval.json)
+- **Further figures:** long-context decode 315.2 tok/s · held-out decode 163.3 tok/s · 5.8% of the quality budget
 - **Requires:** WSL2 · sm_120a · 32 GB GPU memory · CUDA 13.1 · crit Core 0.5.0
 - **Checkpoint** (`qwen3.8-27b@NVFP4`): [`unsloth/Qwen3.8-27B-NVFP4`](https://huggingface.co/unsloth/Qwen3.8-27B-NVFP4/tree/f0b7c9e722f5565102fff8481c99e4d86ae099c7) at `f0b7c9e7`
 - **Source:** [crit-labs/crit-engines/mtp7-device-confidence @ `234d6af3`](https://github.com/crit-labs/crit-engines/tree/234d6af32bc549a8b77f7b273bd9109efb7d2c1a/mtp7-device-confidence)

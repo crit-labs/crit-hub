@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=../../../schemas/card.schema.json
-title: Qwen3.8-Flash-Next @ NVFP4 · RTX 5090 · mtp3-host-experts
+title: mtp3-host-experts
 summary: 'NInfer: Qwen3.8-Flash-Next with routed experts in host RAM behind an LRU device cache, and 3-token MTP'
 origin: external
 contributor:
@@ -37,6 +37,7 @@ results:
   model: qwen3.8-flash-next@NVFP4
   measured_with: LocalMaxxing
   measured_on: null
+  hardware: Ubuntu; RTX 5090 32 GB
   stats:
     decode_tok_s: 140.9
     prefill_tok_s: null

@@ -143,30 +143,38 @@ def ttft(value):
     return figure([round(v / 1000, 3) for v in value] if isinstance(value, list) else round(value / 1000, 3), " s")
 
 
-def decode_label(measured_with):
-    """What a result's decode measures: crit Eval through v6 decodes greedily, from v7 at the model's own sampling."""
-    if not crit_eval(measured_with):
-        return "Decode"
-    return "Decode (greedy)" if eval_major(measured_with) <= 6 else "Decode (sampled)"
+def decodes(result):
+    """A result's (sampled, greedy) decode. crit Eval measures both from v7 and only greedy through v6; a
+    self-reported decode counts as greedy, as on the website."""
+    stats, more, how = result.get("stats") or {}, result.get("more") or {}, result.get("measured_with")
+    if crit_eval(how) and eval_major(how) >= 7:
+        return stats.get("decode_tok_s"), more.get("greedy_decode_tok_s")
+    return None, stats.get("decode_tok_s")
 
 
-def stat_cells(stats, measured_with=None):
-    """The six headline stats as (value, label), in the order every page shows them."""
+COLUMNS = ("GPU · model", "Decode (sampled)", "Decode (greedy)", "Prefill", "TTFT", "Perplexity", "Mean KL divergence", "Context")
+
+
+def stat_cells(result):
+    """One result's row of the stats table: its GPU and model, then the headline stats with both decodes."""
+    stats = result.get("stats") or {}
+    sampled, greedy = decodes(result)
     ppl, ppl_label = ppl_cell(stats.get("ppl"))
     return [
-        (figure(stats.get("decode_tok_s"), " tok/s"), decode_label(measured_with)),
-        (figure(stats.get("prefill_tok_s"), " tok/s"), "Prefill"),
-        (ttft(stats.get("ttft_ms")), "TTFT"),
-        (ppl, ppl_label),
-        (figure(stats.get("kld_mean")), "Mean KL divergence"),
-        (figure(stats.get("context_tokens"), " tok"), "Context"),
+        f"{result['gpu']} · `{result['model']}`",
+        figure(sampled, " tok/s"),
+        figure(greedy, " tok/s"),
+        figure(stats.get("prefill_tok_s"), " tok/s"),
+        ttft(stats.get("ttft_ms")),
+        ppl if ppl == "–" else f"{ppl} {'vs reference' if ppl_label.endswith('reference') else '(absolute)'}",
+        figure(stats.get("kld_mean")),
+        figure(stats.get("context_tokens"), " tok"),
     ]
 
 
 def more_text(more):
+    """The further figures, but the greedy decode: the stats table shows it."""
     parts = []
-    if more.get("greedy_decode_tok_s") is not None:
-        parts.append(f"greedy decode {figure(more['greedy_decode_tok_s'], ' tok/s')}")
     if more.get("long_context_decode_tok_s") is not None:
         parts.append(f"long-context decode {figure(more['long_context_decode_tok_s'], ' tok/s')}")
     if more.get("heldout_decode_tok_s") is not None:
@@ -178,12 +186,13 @@ def more_text(more):
     return " · ".join(parts)
 
 
-def stats_table(cells):
-    """The stats as one markdown table: labels, then values in bold."""
+def stats_table(results):
+    """The stats as one markdown table, one row per GPU and model, the stats in bold."""
+    rows = [stat_cells(r) for r in results]
     return "\n".join([
-        "| " + " | ".join(label for _, label in cells) + " |",
-        "|" + "|".join(" :---: " for _ in cells) + "|",
-        "| " + " | ".join(f"**{value}**" for value, _ in cells) + " |",
+        "| " + " | ".join(COLUMNS) + " |",
+        "| :--- |" + "|".join(" :---: " for _ in COLUMNS[1:]) + "|",
+        *("| " + " | ".join([row[0]] + [f"**{v}**" if v != "–" else v for v in row[1:]]) + " |" for row in rows),
     ])
 
 
@@ -205,20 +214,52 @@ def sampled_text(sampling):
     return f"decode sampled at {settings}: {why}"
 
 
-def result_block(result):
-    """One result: its stats table, and right under it one caption line saying what was measured,
-    how, when, from which evidence, and any further figures."""
-    how = (f"crit Eval ({result['measured_with']}, "
-           + ("greedy decode" if eval_major(result["measured_with"]) <= 6 else sampled_text(result.get("sampling"))) + ")"
-           if crit_eval(result.get("measured_with")) else f"self-reported ({result['measured_with']})")
-    parts = [f"{result['gpu']} · `{result['model']}`", how]
-    if result.get("measured_on"):
-        parts.append(f"measured {result['measured_on']}")
-    parts += [f"[{Path(e['file']).name}]({e['file']})" for e in result.get("evidence") or []]
-    more = more_text(result.get("more") or {})
-    if more:
-        parts.append(more)
-    return stats_table(stat_cells(result.get("stats") or {}, result.get("measured_with"))) + "\n\n<sub>" + " · ".join(parts) + "</sub>"
+def measured(results):
+    """The facts each result adds under the stats table: how it was measured and from which evidence, the
+    hardware it ran on, and its further figures. With several results, each names its GPU and model."""
+    lines = []
+    for result in results:
+        pair = f" ({result['gpu']} · `{result['model']}`)" if len(results) > 1 else ""
+        label = lambda name: f"- **{name}**{pair}: " if pair else f"- **{name}:** "
+        how = result["measured_with"]
+        how = (f"crit Eval ({how}, " + ("greedy decode" if eval_major(how) <= 6 else sampled_text(result.get("sampling"))) + ")"
+               if crit_eval(how) else f"self-reported ({how})")
+        files = [f"[{Path(e['file']).name}]({e['file']})" for e in result.get("evidence") or []]
+        lines.append(label("Measured with") + " · ".join([how] + files))
+        if result.get("hardware"):
+            lines.append(label("Hardware") + result["hardware"])
+        more = more_text(result.get("more") or {})
+        if more:
+            lines.append(label("Further figures") + more)
+    return lines
+
+
+def hardware(host):
+    """One line naming the machine a crit Eval result ran on, from its `host`, as crit Eval's own report
+    says it (crit_eval.host.summary); None when the result records no hardware (before crit Eval did)."""
+    if not isinstance(host, dict) or not (host.get("os") or host.get("cpu") or host.get("gpus")):
+        return None
+    gib = lambda n: f"{n / 1024 ** 3:.0f} GiB"
+    system = host.get("os") or {}
+    parts = [(system.get("distribution") or " ".join(filter(None, (system.get("system"), system.get("release")))))
+             + (" (WSL)" if system.get("wsl") else "") or host.get("platform") or "unknown host"]
+    processor = host.get("cpu") or {}
+    if processor.get("model"):
+        cores = "/".join(str(n) for n in (processor.get("physical_cores"), processor.get("logical_cores")) if n)
+        parts.append(processor["model"] + (f" ({cores} cores)" if cores else ""))
+    if host.get("memory_total_bytes"):
+        parts.append(gib(host["memory_total_bytes"]) + " RAM")
+    for gpu in host.get("gpus") or []:
+        link = gpu.get("pcie") or {}
+        text = gpu.get("name") or "GPU"
+        if gpu.get("memory_total_bytes"):
+            text += " " + gib(gpu["memory_total_bytes"])
+        if link.get("gen_max"):
+            text += f", PCIe {link['gen_max']}.0 x{link.get('width_max') or '?'}"
+            if link.get("gen_gpu_max") and link["gen_gpu_max"] > link["gen_max"]:
+                text += f" (GPU supports {link['gen_gpu_max']}.0)"
+        parts.append(text)
+    return "; ".join(parts)
 
 
 def short(revision):
@@ -226,7 +267,7 @@ def short(revision):
 
 
 def facts(card):
-    lines = []
+    lines = measured(card.get("results") or [])
     r = card.get("requirements") or {}
     if r:
         parts = [", ".join(PLATFORMS.get(p, p) for p in r.get("platforms", [])), ", ".join(r.get("gpu_arch", [])),
@@ -289,10 +330,10 @@ def credit(card):
 
 
 def render(card):
-    """README.md for a card: title, credit, one stats row per result, the facts, then the prose."""
+    """README.md for a card: the engine's name, the credit, the stats table, the facts, then the prose."""
     parts = [HEADER, "", f"# {card['title']}", "", credit(card), ""]
-    for result in card.get("results") or []:
-        parts += [result_block(result), ""]
+    if card.get("results"):
+        parts += [stats_table(card["results"]), ""]
     parts += [facts(card), ""]
     readme = card.get("readme") or {}
     for key, heading in SECTIONS:

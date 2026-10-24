@@ -46,7 +46,7 @@ CARD_FIELDS = {"title", "summary", "origin", "contributor", "license", "features
                "checkpoints", "supports", "derived_from", "built", "results", "readme"}
 ENGINE_ID = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
 BUILT_FIELDS = {"hours", "agent_tokens", "api_usd", "agent", "candidates"}
-RESULT_FIELDS = {"gpu", "model", "measured_with", "measured_on", "sampling", "stats", "more", "evidence"}
+RESULT_FIELDS = {"gpu", "model", "measured_with", "measured_on", "sampling", "hardware", "stats", "more", "evidence"}
 PLATFORMS = {"linux", "wsl2", "windows", "macos"}
 GPU_ARCH = re.compile(r"sm_[0-9]{2,3}[a-z]?")
 CUDA = re.compile(r"[0-9]+\.[0-9]+")
@@ -96,7 +96,9 @@ def safe_path(path):
 def check_identity(folder, card):
     problems = []
     if not (isinstance(card.get("title"), str) and card["title"].strip() and "\n" not in card["title"]):
-        problems.append("card.yaml needs title: the README's one-line title, like <Model> @ <encoding> · <GPU> · <name>")
+        problems.append("card.yaml needs title: the engine's name, as its folder is named")
+    elif card["title"] != Path(folder).name:
+        problems.append(f"card.yaml title is the engine's name, {Path(folder).name}")
     summary = card.get("summary")
     if not isinstance(summary, str) or not summary.strip() or len(summary) > 120 or "\n" in summary:
         problems.append("card.yaml needs summary: one line of at most 120 characters on what the engine does")
@@ -401,6 +403,13 @@ def check_crit_eval(name, result, loaded):
         scores = [(((data.get("status") or {}).get("kpis") or {}).get("context") or {}).get("decode", {}).get("score") for _, data in loaded]
         if not any(matches(more["long_context_decode_tok_s"], s) for s in scores if s is not None):
             problems.append(f"{name}: long_context_decode_tok_s {more['long_context_decode_tok_s']} is not its result files' context decode score")
+    machines = {cardlib.hardware(data.get("host")) for _, data in loaded}
+    if len(machines) > 1:
+        problems.append(f"{name}: its result files ran on different hardware")
+    elif result.get("hardware") != next(iter(machines), None):
+        found = next(iter(machines), None)
+        problems.append(f"{name}: hardware is " + (f"what its result file records, {found!r}" if found else
+                        "left out: its result file records none"))
     dates = {str(data.get("started_at", ""))[:10] for _, data in loaded}
     if str(result.get("measured_on")) not in dates:
         problems.append(f"{name}: measured_on is the day its result file was measured, {', '.join(sorted(dates))}")
@@ -470,6 +479,8 @@ def check_results(folder, card):
         if "sampling" in result and not (cardlib.crit_eval(result["measured_with"])
                                          and cardlib.eval_major(result["measured_with"]) >= 7):
             problems.append(f"{name}: sampling states a crit-eval-v7 result's non-default sampling")
+        if "hardware" in result and not (isinstance(result["hardware"], str) and result["hardware"].strip() and "\n" not in result["hardware"]):
+            problems.append(f"{name}: hardware is one line naming the machine it ran on")
         stat_problems = check_stats(name, result.get("stats"), result.get("more", {}))
         problems += stat_problems
         evidence = result.get("evidence", [])

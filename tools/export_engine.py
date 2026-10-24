@@ -225,6 +225,10 @@ def measured(args, seal, candidate, target):
         more["quality_budget_pct"] = round(budget * 100, 1)
     entry = {"gpu": args.gpu, "model": args.model, "measured_with": results[0]["protocol"],
              "measured_on": max(str(r.get("started_at", ""))[:10] for r in results)}
+    # The machine the result file records (crit Eval records hardware from v7 on).
+    machine = cardlib.hardware(results[0].get("host"))
+    if machine:
+        entry["hardware"] = machine
     # A sampled decode not at the model's generation_config.json says so on the card and in its caption.
     source = (results[0].get("sampled_speed") or {}).get("sampling_source") or "generation_config"
     if sampled and source != "generation_config":
@@ -260,7 +264,7 @@ def export_entry(args):
     text = readme.read_text(encoding="utf-8")
     if REVISION not in text:
         raise ValueError(f"The README's Build and chat checks out {REVISION} of crit-engines; entry fills in the commit")
-    title, sections = cardlib.split_readme(text.replace(REVISION, revision))
+    _, sections = cardlib.split_readme(text.replace(REVISION, revision))
     provenance = {
         "run_id": seal["run_id"],
         "candidate_id": args.candidate,
@@ -290,7 +294,7 @@ def export_entry(args):
         lineage["built"] = {k: v for k, v in built.items() if v is not None}
     # The summary, license, features and requirements are the contributor's to fill in.
     card = {
-        "title": title,
+        "title": args.name,
         "summary": None,
         "origin": "crit",
         "contributor": {"name": args.contributor.strip(), "repository": args.contributor_repo},
