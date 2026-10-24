@@ -44,6 +44,10 @@ The drafting threshold was tuned on a corpus written for the run, not on Eval: t
 
 ## Measured
 
+![Decode by context](charts/decode-by-context.svg)
+![Decode by workload](charts/decode-by-workload.svg)
+![Tokens per decode round](charts/tokens-per-round.svg)
+
 crit Eval of sealed candidate-0007, 6 speed cases at the full context:
 
 | Metric | Result |

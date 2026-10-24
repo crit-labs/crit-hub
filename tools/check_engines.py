@@ -523,7 +523,7 @@ def check_schema(card):
             for e in sorted(validator.iter_errors(card), key=lambda e: list(map(str, e.absolute_path)))]
 
 
-def check_readme(folder, card):
+def check_readme(folder, card, drawn):
     readme = card.get("readme")
     keys = [key for key, _ in cardlib.SECTIONS]
     if not isinstance(readme, dict) or set(readme) - set(keys) or not cardlib.REQUIRED_SECTIONS <= set(readme) \
@@ -532,11 +532,14 @@ def check_readme(folder, card):
                 f", and optionally benchmark"]
     path = folder / "README.md"
     try:
-        rendered = cardlib.render(card)
+        rendered = cardlib.render(card, list(drawn))
     except (KeyError, TypeError, AttributeError, IndexError) as e:
         return [f"README.md cannot be rendered from card.yaml: {e!r}"]
     if not path.is_file() or path.read_text(encoding="utf-8") != rendered:
         return [f"README.md is not the rendered card; run python -B tools/card.py {folder.as_posix()}"]
+    stale = cardlib.stale_charts(folder, drawn)
+    if stale:
+        return [f"charts out of date ({', '.join(stale)}); run python -B tools/card.py {folder.as_posix()}"]
     return []
 
 
@@ -560,12 +563,17 @@ def check(folder):
     result_problems, listed = check_results(folder, card)
     problems += result_problems + check_checkpoints(card, lock) + check_lock(card, lock)
     files = {p.relative_to(folder).as_posix() for p in folder.rglob("*") if p.is_file()}
-    extra = sorted(files - {"README.md", "card.yaml", "card.lock.json"} - listed)
+    try:
+        drawn = cardlib.charts(folder, card) if not result_problems else {}
+    except (KeyError, TypeError, AttributeError, ValueError) as e:
+        drawn = {}
+        problems.append(f"charts cannot be drawn from the evidence: {e!r}")
+    extra = sorted(files - {"README.md", "card.yaml", "card.lock.json"} - listed - set(drawn))
     if extra:
-        problems.append(f"an engine folder holds README.md, card.yaml, card.lock.json and the evidence/ files its results list; "
+        problems.append(f"an engine folder holds README.md, card.yaml, card.lock.json, the evidence/ files its results list and its charts/; "
                         f"also found {len(extra)} other file(s), e.g. {extra[0]}")
     if not problems:
-        problems += check_readme(folder, card)
+        problems += check_readme(folder, card, drawn)
     return problems
 
 

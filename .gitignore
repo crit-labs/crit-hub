@@ -18,6 +18,7 @@
 !/engines/*/*/card.yaml
 !/engines/*/*/card.lock.json
 !/engines/*/*/evidence/
+!/engines/*/*/charts/
 
 # Never tracked anywhere.
 build/

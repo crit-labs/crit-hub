@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 250" role="img" aria-label="Decode by context"><title>Decode by context</title><style>
+svg { font-family: -apple-system, 'Segoe UI', Inter, Helvetica, Arial, sans-serif; }
+.title { fill: #1f1b1c; font-size: 14px; font-weight: 600; }
+.subtitle, .tick { fill: #6b6466; font-size: 12px; }
+.cat { fill: #4a4446; font-size: 12.5px; }
+.value { fill: #1f1b1c; font-size: 12.5px; font-weight: 600; }
+.grid { stroke: #e6e1dc; stroke-width: 1; }
+.axis { stroke: #cfc8c2; stroke-width: 1; }
+.line { fill: none; stroke: #9a5d92; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.dot, .bar { fill: #9a5d92; }
+.dot { stroke: #ffffff; stroke-width: 2; }
+@media (prefers-color-scheme: dark) {
+  .title, .value { fill: #f5f1e8; } .subtitle, .tick { fill: #8a8385; } .cat { fill: #b9b2ae; }
+  .grid { stroke: #2a2a2a; } .axis { stroke: #3a3a3a; } .line { stroke: #c28abb; } .dot, .bar { fill: #c28abb; } .dot { stroke: #0d1117; }
+}
+</style><text x="0" y="16" class="title">Decode by context</text><text x="0" y="36" class="subtitle">tok/s, one request at each context length (crit Eval)</text><line x1="48" x2="624" y1="220.0" y2="220.0" class="axis"/><text x="38" y="224.0" class="tick" text-anchor="end">0</text><line x1="48" x2="624" y1="188.8" y2="188.8" class="grid"/><text x="38" y="192.8" class="tick" text-anchor="end">100</text><line x1="48" x2="624" y1="157.6" y2="157.6" class="grid"/><text x="38" y="161.6" class="tick" text-anchor="end">200</text><line x1="48" x2="624" y1="126.4" y2="126.4" class="grid"/><text x="38" y="130.4" class="tick" text-anchor="end">300</text><line x1="48" x2="624" y1="95.2" y2="95.2" class="grid"/><text x="38" y="99.2" class="tick" text-anchor="end">400</text><line x1="48" x2="624" y1="64.0" y2="64.0" class="grid"/><text x="38" y="68.0" class="tick" text-anchor="end">500</text><path d="M76.0 106.6 L249.3 110.6 L422.7 121.1 L596.0 143.9" class="line"/><circle cx="76.0" cy="106.6" r="4.5" class="dot"/><text x="76.0" y="94.6" class="value" text-anchor="middle">363.6</text><text x="76.0" y="242" class="tick" text-anchor="middle">32K</text><circle cx="249.3" cy="110.6" r="4.5" class="dot"/><text x="249.3" y="98.6" class="value" text-anchor="middle">350.7</text><text x="249.3" y="242" class="tick" text-anchor="middle">64K</text><circle cx="422.7" cy="121.1" r="4.5" class="dot"/><text x="422.7" y="109.1" class="value" text-anchor="middle">317.0</text><text x="422.7" y="242" class="tick" text-anchor="middle">128K</text><circle cx="596.0" cy="143.9" r="4.5" class="dot"/><text x="596.0" y="131.9" class="value" text-anchor="middle">244.1</text><text x="596.0" y="242" class="tick" text-anchor="middle">256K</text></svg>

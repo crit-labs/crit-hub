@@ -336,9 +336,145 @@ def credit(card):
     return "> [!WARNING]\n" + line + "\n>\n> External engine: crit-hub has not reviewed its source. Read it before you build or run it."
 
 
-def render(card):
+# ---------------------------------------------------------------------------------------------
+# Charts: SVGs drawn from a result's crit Eval file, written next to the README under charts/ and
+# shown at the top of its Measured section. The website shows the same files in its own colors.
+
+CHART_STYLE = """<style>
+svg { font-family: -apple-system, 'Segoe UI', Inter, Helvetica, Arial, sans-serif; }
+.title { fill: #1f1b1c; font-size: 14px; font-weight: 600; }
+.subtitle, .tick { fill: #6b6466; font-size: 12px; }
+.cat { fill: #4a4446; font-size: 12.5px; }
+.value { fill: #1f1b1c; font-size: 12.5px; font-weight: 600; }
+.grid { stroke: #e6e1dc; stroke-width: 1; }
+.axis { stroke: #cfc8c2; stroke-width: 1; }
+.line { fill: none; stroke: #9a5d92; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.dot, .bar { fill: #9a5d92; }
+.dot { stroke: #ffffff; stroke-width: 2; }
+@media (prefers-color-scheme: dark) {
+  .title, .value { fill: #f5f1e8; } .subtitle, .tick { fill: #8a8385; } .cat { fill: #b9b2ae; }
+  .grid { stroke: #2a2a2a; } .axis { stroke: #3a3a3a; } .line { stroke: #c28abb; } .dot, .bar { fill: #c28abb; } .dot { stroke: #0d1117; }
+}
+</style>"""
+CHART_W = 640
+
+
+def _esc(text):
+    return str(text).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+
+
+def _svg(title, subtitle, height, body):
+    """A chart: its title and subtitle on top, then the plot; theme-aware for GitHub, plain classes for the website."""
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {CHART_W} {height}" role="img" aria-label="{_esc(title)}">'
+            f"<title>{_esc(title)}</title>{CHART_STYLE}"
+            f'<text x="0" y="16" class="title">{_esc(title)}</text><text x="0" y="36" class="subtitle">{_esc(subtitle)}</text>'
+            f"{body}</svg>\n")
+
+
+def _step(top, ticks=5):
+    return next((s for s in (0.5, 1, 2, 2.5, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000) if top / s <= ticks), 5000)
+
+
+def _tick(value):
+    return f"{value:,.0f}" if value == int(value) else f"{value:g}"
+
+
+def bars_chart(title, subtitle, rows, unit_text):
+    """Horizontal bars from zero, one per (label, value), each with its value in text ink."""
+    left, right, top, row = 120, 140, 52, 30
+    plot = len(rows) * row
+    peak = max(v for _, v in rows) * 1.1
+    step = _step(peak)
+    hi = -(-peak // step) * step
+    x = lambda v: left + (CHART_W - left - right) * v / hi
+    body = []
+    v = 0.0
+    while v <= hi + 1e-9:
+        body.append(f'<line x1="{x(v):.1f}" x2="{x(v):.1f}" y1="{top - 4}" y2="{top + plot}" class="{"axis" if v == 0 else "grid"}"/>'
+                    f'<text x="{x(v):.1f}" y="{top + plot + 18}" class="tick" text-anchor="middle">{_tick(v)}</text>')
+        v += step
+    for i, (label, value) in enumerate(rows):
+        y = top + i * row + 6
+        body.append(f'<text x="{left - 10}" y="{y + 13}" class="cat" text-anchor="end">{_esc(label)}</text>'
+                    f'<rect x="{left}" y="{y}" width="{max(2.0, x(value) - left):.1f}" height="18" rx="4" class="bar"/>'
+                    f'<text x="{x(value) + 8:.1f}" y="{y + 13}" class="value">{unit_text(value)}</text>')
+    return _svg(title, subtitle, top + plot + 28, "".join(body))
+
+
+def line_chart(title, subtitle, points):
+    """A line over evenly spaced x labels (each context doubles the last), from zero, each point labelled."""
+    left, right, top, bottom, inset = 48, 16, 64, 30, 28
+    height = 250
+    peak = max(v for _, v in points) * 1.15
+    step = _step(peak)
+    hi = -(-peak // step) * step
+    x = lambda i: left + inset + i * (CHART_W - left - right - 2 * inset) / max(1, len(points) - 1)
+    y = lambda v: top + (height - top - bottom) * (1 - v / hi)
+    body = []
+    v = 0.0
+    while v <= hi + 1e-9:
+        body.append(f'<line x1="{left}" x2="{CHART_W - right}" y1="{y(v):.1f}" y2="{y(v):.1f}" class="{"axis" if v == 0 else "grid"}"/>'
+                    f'<text x="{left - 10}" y="{y(v) + 4:.1f}" class="tick" text-anchor="end">{_tick(v)}</text>')
+        v += step
+    body.append('<path d="' + " ".join(f"{'L' if i else 'M'}{x(i):.1f} {y(val):.1f}" for i, (_, val) in enumerate(points)) + '" class="line"/>')
+    for i, (label, val) in enumerate(points):
+        body.append(f'<circle cx="{x(i):.1f}" cy="{y(val):.1f}" r="4.5" class="dot"/>'
+                    f'<text x="{x(i):.1f}" y="{y(val) - 12:.1f}" class="value" text-anchor="middle">{val:.1f}</text>'
+                    f'<text x="{x(i):.1f}" y="{height - 8}" class="tick" text-anchor="middle">{_esc(label)}</text>')
+    return _svg(title, subtitle, height, "".join(body))
+
+
+def _context(tokens):
+    return f"{tokens // 1024}K" if tokens >= 1024 and tokens % 1024 == 0 else f"{tokens:,}"
+
+
+def result_charts(data):
+    """The charts one crit Eval result file gives, by file name: decode by context, decode by workload and,
+    for an engine that speculates, tokens per decode round."""
+    charts = {}
+    points = sorted((p["context"], p["decode_tps"]) for p in ((((data.get("status") or {}).get("kpis") or {}).get("context") or {})
+                    .get("points") or {}).values() if isinstance(p.get("context"), int) and isinstance(p.get("decode_tps"), (int, float)))
+    if len(points) >= 2:
+        charts["decode-by-context.svg"] = line_chart("Decode by context", "tok/s, one request at each context length (crit Eval)",
+                                                     [(_context(c), v) for c, v in points])
+    sampled = data.get("sampled_speed") or {}
+    kind, suite = ("sampled", sampled) if sampled.get("status") == "measured" and sampled.get("decode_score") else ("greedy", data.get("speed") or {})
+    cases = [(name, c) for name, c in (suite.get("cases") or {}).items() if isinstance(c, dict) and isinstance(c.get("decode_tps"), (int, float))]
+    if cases:
+        charts["decode-by-workload.svg"] = bars_chart("Decode by workload", f"tok/s per crit Eval speed case, {kind} decode",
+                                                      [(n, c["decode_tps"]) for n, c in cases], lambda v: f"{v:,.1f} tok/s")
+    rounds = [(n, c["tokens_per_round"]) for n, c in cases if isinstance(c.get("tokens_per_round"), (int, float))]
+    if rounds and max(v for _, v in rounds) > 1.05:
+        charts["tokens-per-round.svg"] = bars_chart("Tokens per decode round", "accepted drafts plus one, per speed case; 1 is plain decoding",
+                                                    rounds, lambda v: f"{v:.2f}")
+    return charts
+
+
+def charts(folder, card):
+    """Every chart an engine's README shows, as {path under the folder: SVG}: for each result measured with
+    crit Eval, from its first result file; under charts/<gpu>_<model>/ when the engine has several results."""
+    found = {}
+    results = card.get("results") or []
+    for result in results:
+        files = [e.get("file") for e in result.get("evidence") or [] if re.fullmatch(r"evidence/crit-eval[^/]*\.json", str(e.get("file")))]
+        if not crit_eval(result.get("measured_with")) or not files:
+            continue
+        path = Path(folder) / files[0]
+        if not path.is_file():
+            continue
+        prefix = "charts/" + (f"{result['gpu']}_{result['model']}/" if len(results) > 1 else "")
+        for name, svg in result_charts(json.loads(path.read_text(encoding="utf-8"))).items():
+            found[prefix + name] = svg
+    return found
+
+
+CHART_ALT = {"decode-by-context.svg": "Decode by context", "decode-by-workload.svg": "Decode by workload",
+             "tokens-per-round.svg": "Tokens per decode round"}
+
+
+def render(card, figures=()):
     """README.md for a card: the engine's name, the GPUs and models it was measured on as a subheader, the
-    credit, the stats table, the facts, then the prose."""
+    credit, the stats table, the facts, then the prose, with its charts (paths) opening the Measured section."""
     parts = [HEADER, "", f"# {card['title']}", ""]
     if card.get("results"):
         parts += ["### " + ", ".join(pair(r) for r in card["results"]), ""]
@@ -353,6 +489,8 @@ def render(card):
         if heading:
             # A rule between sections, as crit-hub's own README has: GitHub's headings alone leave little room.
             parts += ["---", "", f"## {heading}", ""]
+        if key == "measured" and figures:
+            parts += [f"![{CHART_ALT.get(Path(f).name, Path(f).stem)}]({f})" for f in figures] + [""]
         parts += [readme[key].rstrip("\n"), ""]
     return "\n".join(parts).rstrip("\n") + "\n"
 
@@ -361,21 +499,45 @@ def engine_folders(hub):
     return sorted(p for p in (Path(hub) / "engines").glob("*/*") if p.is_dir() and (p / "card.yaml").is_file())
 
 
+def write_charts(folder, drawn):
+    """Writes an engine's charts and removes any other SVG under its charts/."""
+    folder = Path(folder)
+    for old in (folder / "charts").rglob("*.svg") if (folder / "charts").is_dir() else []:
+        if old.relative_to(folder).as_posix() not in drawn:
+            old.unlink()
+    for name, svg in drawn.items():
+        (folder / name).parent.mkdir(parents=True, exist_ok=True)
+        (folder / name).write_text(svg, encoding="utf-8", newline="\n")
+
+
+def stale_charts(folder, drawn):
+    """The chart files that differ from what the card's evidence draws, missing or left over."""
+    folder = Path(folder)
+    on_disk = {p.relative_to(folder).as_posix() for p in (folder / "charts").rglob("*")} if (folder / "charts").is_dir() else set()
+    on_disk = {p for p in on_disk if (folder / p).is_file()}
+    wrong = [n for n, svg in drawn.items() if not (folder / n).is_file() or (folder / n).read_text(encoding="utf-8") != svg]
+    return sorted(set(wrong) | (on_disk - set(drawn)))
+
+
 def main(folders, check):
     stale = []
     for folder in folders:
-        text = render(load(folder))
+        card = load(folder)
+        drawn = charts(folder, card)
+        text = render(card, list(drawn))
         path = Path(folder) / "README.md"
         if check:
             if not path.is_file() or path.read_text(encoding="utf-8") != text:
                 stale.append(path.as_posix())
+            stale += [(Path(folder) / n).as_posix() for n in stale_charts(folder, drawn)]
         else:
+            write_charts(folder, drawn)
             path.write_text(text, encoding="utf-8", newline="\n")
-            print(f"rendered {path.as_posix()}")
+            print(f"rendered {path.as_posix()}" + (f" and {len(drawn)} chart(s)" if drawn else ""))
     if stale:
-        raise SystemExit("README.md out of date; run python -B tools/card.py on its folder:\n  " + "\n  ".join(stale))
+        raise SystemExit("README.md or charts out of date; run python -B tools/card.py on its folder:\n  " + "\n  ".join(stale))
     if check:
-        print(f"{len(folders)} READMEs match their cards")
+        print(f"{len(folders)} READMEs and their charts match their cards")
 
 
 if __name__ == "__main__":

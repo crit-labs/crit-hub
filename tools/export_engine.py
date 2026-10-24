@@ -308,7 +308,9 @@ def export_entry(args):
         "readme": sections,
     }
     cardlib.write(target, card, {"checkpoints": {args.model: locked}, "provenance": provenance})
-    (target / "README.md").write_text(cardlib.render(card), encoding="utf-8", newline="\n")
+    drawn = cardlib.charts(target, card)
+    cardlib.write_charts(target, drawn)
+    (target / "README.md").write_text(cardlib.render(card, list(drawn)), encoding="utf-8", newline="\n")
     print(json.dumps({"export": str(target), "source": f"{args.source_repo}/tree/{revision}/{args.name}", "verified_seal_files": len(seal["files"]),
                       "next": "fill in summary, license, features and requirements in card.yaml, then python -B tools/card.py on the folder"}))
 
