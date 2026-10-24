@@ -53,8 +53,9 @@ them, and crit's case studies use them.
 | Context | `context_tokens`: the maximum context it was measured at | `262,144 tok` |
 
 A stat nobody measured is `null` and shows as `–`; decode is required. Decode, prefill and TTFT
-may be `[low, high]` across runs. The README shows them as one table, one row per GPU and model,
-with decode as two columns, sampled and greedy. Under it, the facts say how each result was measured
+may be `[low, high]` across runs. The README names the GPU and model under the engine's name and shows
+the stats as one table (a row per GPU and model when there are several), with decode as two columns,
+sampled and greedy. Under it, the facts say how each result was measured
 and from which evidence, the `hardware` it ran on, and its further figures. Further figures go under
 `more`: `greedy_decode_tok_s` (shown in the table), `long_context_decode_tok_s`,
 `heldout_decode_tok_s`, `host_ram_gib` and `quality_budget_pct`.

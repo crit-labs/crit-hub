@@ -2,14 +2,16 @@
 
 # <engine name>
 
+### rtx5090 · <model>@<encoding>
+
 > [!WARNING]
 > **Contributed by** <your account> · [<your account>/<your repository>](https://github.com/<your account>/<your repository>)
 >
 > External engine: crit-hub has not reviewed its source. Read it before you build or run it.
 
-| GPU · model | Decode (sampled) | Decode (greedy) | Prefill | TTFT | Perplexity | Mean KL divergence | Context |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| rtx5090 · `<model>@<encoding>` | **100.0 tok/s** | **240.0 tok/s** | **1,000 tok/s** | **150 ms** | **+0.1% vs reference** | **0.003** | **262,144 tok** |
+| Decode (sampled) | Decode (greedy) | Prefill | TTFT | Perplexity | Mean KL divergence | Context |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **100.0 tok/s** | **240.0 tok/s** | **1,000 tok/s** | **150 ms** | **+0.1% vs reference** | **0.003** | **262,144 tok** |
 
 - **Measured with:** crit Eval (crit-eval-v7, decode sampled at the model's defaults) · [crit-eval.json](evidence/crit-eval.json)
 - **Hardware:** <OS>; <CPU> (<physical>/<logical> cores); <RAM> GiB RAM; <GPU> <VRAM> GiB, PCIe <generation>.0 x<width>

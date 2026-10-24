@@ -2,14 +2,16 @@
 
 # mtp3-host-experts
 
+### rtx5090 · qwen3.8-flash-next@NVFP4
+
 > [!WARNING]
 > **Contributed by** giveen · [giveen/ninfer-ext](https://github.com/giveen/ninfer-ext)
 >
 > External engine: crit-hub has not reviewed its source. Read it before you build or run it.
 
-| GPU · model | Decode (sampled) | Decode (greedy) | Prefill | TTFT | Perplexity | Mean KL divergence | Context |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| rtx5090 · `qwen3.8-flash-next@NVFP4` | – | **140.9 tok/s** | – | – | **3.518 (absolute)** | – | **262,144 tok** |
+| Decode (sampled) | Decode (greedy) | Prefill | TTFT | Perplexity | Mean KL divergence | Context |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| – | **140.9 tok/s** | – | – | **3.518 (absolute)** | – | **262,144 tok** |
 
 - **Measured with:** self-reported (LocalMaxxing) · [self-reported.json](evidence/self-reported.json)
 - **Hardware:** Ubuntu; RTX 5090 32 GB

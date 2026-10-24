@@ -2,12 +2,14 @@
 
 # mtp7-device-confidence
 
+### rtx5090 · qwen3.8-27b@NVFP4
+
 > [!NOTE]
 > **Contributed by** crit-labs · [crit-labs/crit](https://github.com/crit-labs/crit)
 
-| GPU · model | Decode (sampled) | Decode (greedy) | Prefill | TTFT | Perplexity | Mean KL divergence | Context |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| rtx5090 · `qwen3.8-27b@NVFP4` | – | **252.4 tok/s** | **7,425 tok/s** | **150 ms** | **+0.1% vs reference** | **0.0028** | **262,144 tok** |
+| Decode (sampled) | Decode (greedy) | Prefill | TTFT | Perplexity | Mean KL divergence | Context |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| – | **252.4 tok/s** | **7,425 tok/s** | **150 ms** | **+0.1% vs reference** | **0.0028** | **262,144 tok** |
 
 - **Measured with:** crit Eval (crit-eval-v6, greedy decode) · [crit-eval.json](evidence/crit-eval.json)
 - **Further figures:** long-context decode 315.2 tok/s · held-out decode 163.3 tok/s · 5.8% of the quality budget

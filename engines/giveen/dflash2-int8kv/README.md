@@ -2,14 +2,16 @@
 
 # dflash2-int8kv
 
+### rtx5090 · qwen3.8-27b@NVFP4
+
 > [!WARNING]
 > **Contributed by** giveen · [giveen/ninfer-ext](https://github.com/giveen/ninfer-ext)
 >
 > External engine: crit-hub has not reviewed its source. Read it before you build or run it.
 
-| GPU · model | Decode (sampled) | Decode (greedy) | Prefill | TTFT | Perplexity | Mean KL divergence | Context |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| rtx5090 · `qwen3.8-27b@NVFP4` | – | **510.7 tok/s** | – | – | **4.28116 (absolute)** | – | **196,032 tok** |
+| Decode (sampled) | Decode (greedy) | Prefill | TTFT | Perplexity | Mean KL divergence | Context |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| – | **510.7 tok/s** | – | – | **4.28116 (absolute)** | – | **196,032 tok** |
 
 - **Measured with:** self-reported (LocalMaxxing) · [self-reported.json](evidence/self-reported.json)
 - **Hardware:** Ubuntu 26.10; RTX 5090 32 GB

@@ -155,13 +155,17 @@ def decodes(result):
 COLUMNS = ("GPU · model", "Decode (sampled)", "Decode (greedy)", "Prefill", "TTFT", "Perplexity", "Mean KL divergence", "Context")
 
 
+def pair(result):
+    return f"{result['gpu']} · {result['model']}"
+
+
 def stat_cells(result):
     """One result's row of the stats table: its GPU and model, then the headline stats with both decodes."""
     stats = result.get("stats") or {}
     sampled, greedy = decodes(result)
     ppl, ppl_label = ppl_cell(stats.get("ppl"))
     return [
-        f"{result['gpu']} · `{result['model']}`",
+        pair(result),
         figure(sampled, " tok/s"),
         figure(greedy, " tok/s"),
         figure(stats.get("prefill_tok_s"), " tok/s"),
@@ -187,12 +191,15 @@ def more_text(more):
 
 
 def stats_table(results):
-    """The stats as one markdown table, one row per GPU and model, the stats in bold."""
+    """The stats as one markdown table, the stats in bold. The subheader names the GPU and model, so only
+    an engine measured on several opens each row with its GPU and model."""
     rows = [stat_cells(r) for r in results]
+    first = 0 if len(rows) > 1 else 1
     return "\n".join([
-        "| " + " | ".join(COLUMNS) + " |",
-        "| :--- |" + "|".join(" :---: " for _ in COLUMNS[1:]) + "|",
-        *("| " + " | ".join([row[0]] + [f"**{v}**" if v != "–" else v for v in row[1:]]) + " |" for row in rows),
+        "| " + " | ".join(COLUMNS[first:]) + " |",
+        "|" + "|".join(" :--- " if i == 0 else " :---: " for i in range(len(COLUMNS)) if i >= first) + "|",
+        *("| " + " | ".join(([row[0]] if first == 0 else []) + [f"**{v}**" if v != "–" else v for v in row[1:]]) + " |"
+          for row in rows),
     ])
 
 
@@ -219,8 +226,8 @@ def measured(results):
     hardware it ran on, and its further figures. With several results, each names its GPU and model."""
     lines = []
     for result in results:
-        pair = f" ({result['gpu']} · `{result['model']}`)" if len(results) > 1 else ""
-        label = lambda name: f"- **{name}**{pair}: " if pair else f"- **{name}:** "
+        named = f" ({pair(result)})" if len(results) > 1 else ""
+        label = lambda name: f"- **{name}**{named}: " if named else f"- **{name}:** "
         how = result["measured_with"]
         how = (f"crit Eval ({how}, " + ("greedy decode" if eval_major(how) <= 6 else sampled_text(result.get("sampling"))) + ")"
                if crit_eval(how) else f"self-reported ({how})")
@@ -330,8 +337,12 @@ def credit(card):
 
 
 def render(card):
-    """README.md for a card: the engine's name, the credit, the stats table, the facts, then the prose."""
-    parts = [HEADER, "", f"# {card['title']}", "", credit(card), ""]
+    """README.md for a card: the engine's name, the GPUs and models it was measured on as a subheader, the
+    credit, the stats table, the facts, then the prose."""
+    parts = [HEADER, "", f"# {card['title']}", ""]
+    if card.get("results"):
+        parts += ["### " + ", ".join(pair(r) for r in card["results"]), ""]
+    parts += [credit(card), ""]
     if card.get("results"):
         parts += [stats_table(card["results"]), ""]
     parts += [facts(card), ""]
