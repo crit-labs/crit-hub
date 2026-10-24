@@ -124,10 +124,10 @@ people read. [`_template/card.yaml`](_template/card.yaml) documents every key; i
   took, as `hours`, `candidates`, `agent_tokens`, `api_usd` and the `agent`.
 - **`results`**: for each GPU and model it was measured on, `measured_with`, `measured_on`, the six
   `stats`, optional `more` and its `evidence`.
-- **`readme`**: the README's prose as markdown blocks, rendered in this order: `intro`, `model`,
+- **`readme`**: the README's prose as markdown blocks, rendered in this order: `intro`,
   `design`, `measured`, `checks`, `limits`, `build_and_chat`, the optional `benchmark` and
-  `credits`. The renderer adds the title, the credit (or the external-engine notice), one stats row
-  per result and the facts: requirements, checkpoints, downloads, source and license.
+  `credits`. The renderer adds the title, the credit (a note for a crit engine, a warning for an
+  external one), one stats row per result and the facts: requirements, checkpoints, downloads, source and license.
 
 A GPU id is the card in lowercase, such as `rtx5090`; a model id is the model in lowercase and its
 encoding, such as `qwen3.8-27b@NVFP4`. Reuse the ids other engines here already use so an engine

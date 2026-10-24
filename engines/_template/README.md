@@ -3,11 +3,9 @@
 # <Model> @ <encoding> · <GPU> · <engine name>
 
 > [!WARNING]
-> **External engine.** Not built with crit, and its source has not been reviewed by crit-hub. Read
-> it before you build or run it.
+> **Contributed by** <your account> · [<your account>/<your repository>](https://github.com/<your account>/<your repository>)
 >
-> **Contributed by** <your account> · [<your account>/<your repository>](https://github.com/<your account>/<your repository>) · source at
-> [`<40-char`](https://github.com/<your account>/<your repository>/tree/<40-character commit>)
+> External engine: crit-hub has not reviewed its source. Read it before you build or run it.
 
 | Decode (sampled) | Prefill | TTFT | Perplexity vs reference | Mean KL divergence | Context |
 | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -21,19 +19,14 @@
 - **License:** Apache-2.0
 
 One short paragraph: what the engine is (written from scratch or adapted; crit Core version, or
-the toolkit or runtime of an external engine), the tested platform (OS, CUDA, GPU and memory, host
-RAM when it matters) and the context length.
-
-## Model
-
-The checkpoint repository and revision, the architecture in one or two sentences, how the weights
-are used (as stored, or what is re-encoded and why), any drafter or extra download, and a pointer to
-card.lock.json and `tools/verify_model.py`.
+the toolkit or runtime of an external engine) and what makes it different. The platform, GPU,
+CUDA and context are already in the header.
 
 ## Design
 
 | Part | How |
 | --- | --- |
+| Weights | ... |
 | ... | ... |
 
 At most one short paragraph on how decoding and prompts run.

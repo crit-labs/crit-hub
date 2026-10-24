@@ -53,50 +53,27 @@ results:
     sha256: 04b01f366cadc57d13ac578ed0aff9abb0cc8bee95e6af907c7e24eb4030783c
 readme:
   intro: |
-    NInfer, a from-scratch C++23/CUDA inference engine (an extended fork of upstream NInfer), on one
-    RTX 5090 (32 GB) with Ubuntu 26.10, GCC 15.3 and CUDA 13.3. This entry runs the Qwen3.8-27B QUASAR
+    NInfer, a from-scratch C++23/CUDA inference engine (an extended fork of upstream NInfer). This entry runs the Qwen3.8-27B QUASAR
     QAT checkpoint converted to NInfer's v3 `.ninfer` artifact, with DFlash2 block drafting and an INT8
-    KV cache, which is what lets a 196,032-token context fit next to the draft companion. The source is
-    not in this folder; it is [giveen/ninfer-ext](https://github.com/giveen/ninfer-ext) at the pinned
-    commit above.
-  model: |
-    `QUASAR-QAT/Qwen3.8-27B-QUASAR-NVFP4` at revision
-    `4a22293aa6d1026844bc93a8727f1837e48acd89`: 64 layers (48 gated DeltaNet and 16 full-attention),
-    hidden 5,120, vocab 248,320, native context 262,144, with a bundled BF16 MTP layer and vision tower.
-    All 496 Text linears are stored NVFP4 and imported as stored; the token embedding and output head are
-    re-encoded to FP8 E4M3 per row; the GDN a/b projections are stored NVFP4 but have no NVFP4 route, so
-    the converter decodes them to their BF16 values. [card.lock.json](card.lock.json) lists every checkpoint file
-    with the size and SHA-256 the conversion recorded; `python -B tools/verify_model.py` from a crit-hub
-    checkout checks a download against it.
-
-    Drafter: `incoai/Qwen3.8-27B-DFlash2` at revision `015e795645c74b1a0eeef3b570031fb62e769bc5` (block
-    diffusion, block size 8, five target taps, selector rank 256/top-k 16), converted into the same
-    artifact and proposed through the target's output head (`--lm-head-draft`). Download it separately
-    and pass it as the `dflash2` source below.
-
-    The converted artifact is published at
-    [jabbatheduck/ninfer-ext-models/qwen3.8-27b-quasar-nvfp4](https://huggingface.co/jabbatheduck/ninfer-ext-models/tree/main/qwen3.8-27b-quasar-nvfp4)
-    with a `SHA256SUMS` next to it; `qwen3_8_27b_quasar_nvfp4.ninfer` is
-    `bfd7f9e100fc26399096f920c937a168f51b4a2af1ba1d2cd7df57242456787a`. It is not redistributed here.
+    KV cache, which is what lets a 196,032-token context fit next to the draft companion.
   design: |
     | Part | How |
     | --- | --- |
     | Execution | One Program per Engine on one GPU, one resident model, a compact decode batch per round, one CUDA graph per round; startup-fixed concurrency 1–8, FIFO ingress, no preemption |
-    | Weights | NVFP4 imported as stored (E4M3 scale-of-16 blocks plus a per-tensor FP32 scale); FP8 E4M3 row-max embedding and head; BF16 norms and GDN a/b operands |
+    | Weights | NVFP4 imported as stored (E4M3 scale-of-16 blocks plus a per-tensor FP32 scale); FP8 E4M3 row-max embedding and head; BF16 norms; the GDN a/b projections, which have no NVFP4 route, decoded to BF16 |
     | Decode | NVFP4 MMA (`mma.m16n8k32` block-scaled) and FP8 MMA through per-format routes; weights stay in the format they were converted to, nothing is repacked at load |
-    | Speculation | DFlash2 drafts 9 tokens per round; the verify pass runs as columns of the same decode batch, greedy acceptance (the CLI defaults to the request's sampler) |
+    | Speculation | DFlash2 (block diffusion, block size 8, five target taps, selector rank 256/top-k 16), converted into the artifact and proposed through the target's output head (`--lm-head-draft`), drafts 9 tokens per round; the verify pass runs as columns of the same decode batch, greedy acceptance (the CLI defaults to the request's sampler) |
     | KV cache | INT8 group-64 (FP16 group scale) in 64-token pages; `--kv-dtype fp8`, `nvfp4`, `k8v4` and `bf16` are the other selectable representations, and `--kv-capacity auto` resolves the page count from `--max-context` and free device memory |
     | Serving | OpenAI-compatible and Anthropic-compatible HTTP APIs, SSE streaming, grammar-constrained output (xgrammar), chat templates (llama-jinja) |
     | Arithmetic contract | Each numerical op is qualified against a naive FP32/FP64 oracle at registered shapes; the contract is in `docs/maintainer/op-development.md` upstream |
   measured: |
-    Machine: RTX 5090 32 GB, Ubuntu 26.10, GCC 15.3, CUDA 13.3, CMake 4.3, Ninja. All runs below are
+    Machine: Ubuntu 26.10, GCC 15.3, CMake 4.3, Ninja. All runs below are
     `--max-concurrency 1`, concise reasoning disabled, process pinned with `taskset`.
 
-    ### Leaderboard run
-
-    [LocalMaxxing](https://www.localmaxxing.com/en/runs/cmvfhjc4t0177rf0137adcri2/qwen3-8-27b-quasar-nvfp4-rtx-5090-510-7-tps)
-    records **510.7 tok/s output** for this engine and encoding on the same GPU. The run page carries
-    the exact test settings and depth.
+    The headline decode is LocalMaxxing's standardized
+    [run](https://www.localmaxxing.com/en/runs/cmvfhjc4t0177rf0137adcri2/qwen3-8-27b-quasar-nvfp4-rtx-5090-510-7-tps),
+    whose page carries the exact test settings and depth. The tables below are this entry's own
+    measurements with the commands under Build and chat.
 
     ### Context capacity and memory
 
@@ -135,13 +112,6 @@ readme:
 
     The differences are within run-to-run variation at this window size; only nvfp4 and k8v4 show a
     consistent cost. No KLD-budget campaign was run for this checkpoint.
-
-    ### Scope of these numbers
-
-    The leaderboard row is LocalMaxxing's standardized test. The capacity, memory and perplexity tables
-    are this entry's own measurements with the commands below. The commands also print `prefill speed`
-    and `decode speed`, and the server logs token counts every 5 s, so a local run can reproduce
-    throughput on a specific machine.
   checks: |
     - **Capacity and memory:** the table above is the engine's own startup resolution
       (`cudaMemGetInfo` after weights, page count, runtime reservation) printed on every start; values

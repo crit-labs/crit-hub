@@ -49,7 +49,7 @@ or the result carries no quality figures. Then copy `result.json` to `evidence/c
    license texts into `<name>/` of a [crit-engines](https://github.com/crit-labs/crit-engines)
    checkout. Commit it there.
 2. **Write the README text** as markdown with the sections of the
-   [template](engines/_template/card.yaml): an intro, then `## Model`, `## Design`, `## Measured`,
+   [template](engines/_template/card.yaml): an intro, then `## Design`, `## Measured`,
    `## Checks`, `## Limits`, `## Build and chat`, optionally `## Benchmark your machine`, and
    `## Credits`. Build and chat starts from
    `git clone https://github.com/crit-labs/crit-engines && git -C crit-engines checkout <crit-engines commit>`;

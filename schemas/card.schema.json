@@ -98,9 +98,9 @@
     "results": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/result"}},
     "readme": {
       "type": "object", "additionalProperties": false, "description": "The README's prose, markdown in block scalars (|), rendered in this order.",
-      "required": ["intro", "model", "design", "measured", "checks", "limits", "build_and_chat", "credits"],
+      "required": ["intro", "design", "measured", "checks", "limits", "build_and_chat", "credits"],
       "properties": {
-        "intro": {"type": "string"}, "model": {"type": "string"}, "design": {"type": "string"}, "measured": {"type": "string"},
+        "intro": {"type": "string"}, "design": {"type": "string"}, "measured": {"type": "string"},
         "checks": {"type": "string"}, "limits": {"type": "string"}, "build_and_chat": {"type": "string"},
         "benchmark": {"type": "string"}, "credits": {"type": "string"}
       }

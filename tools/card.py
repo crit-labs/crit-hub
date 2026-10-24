@@ -20,7 +20,6 @@ import yaml
 # The README's prose, in order: the card key and the heading it renders under (None: no heading).
 SECTIONS = [
     ("intro", None),
-    ("model", "Model"),
     ("design", "Design"),
     ("measured", "Measured"),
     ("checks", "Checks"),
@@ -29,7 +28,7 @@ SECTIONS = [
     ("benchmark", "Benchmark your machine"),
     ("credits", "Credits"),
 ]
-REQUIRED_SECTIONS = {"intro", "model", "design", "measured", "checks", "limits", "build_and_chat", "credits"}
+REQUIRED_SECTIONS = {"intro", "design", "measured", "checks", "limits", "build_and_chat", "credits"}
 
 # The six headline stats, in the order every page shows them.
 STATS = ("decode_tok_s", "prefill_tok_s", "ttft_ms", "ppl", "kld_mean", "context_tokens")
@@ -38,7 +37,6 @@ MORE = ("greedy_decode_tok_s", "long_context_decode_tok_s", "heldout_decode_tok_
 
 HEADER = "<!-- Rendered by tools/card.py from card.yaml: edit card.yaml, then run python -B tools/card.py on this folder. -->"
 PLATFORMS = {"linux": "Linux", "wsl2": "WSL2", "windows": "Windows", "macos": "macOS"}
-BUILT_WITH_CRIT = "Built with [crit](https://github.com/crit-labs/crit): a sealed crit candidate, exported with `tools/export_engine.py`."
 
 
 # ---------------------------------------------------------------------------------------------
@@ -280,15 +278,14 @@ def tokens(count):
 
 
 def credit(card):
+    """The box under the title, the same for every engine but its kind: a note for a crit engine, a
+    warning for an external one, whose source crit-hub has not reviewed. The source pin is in the facts."""
     c = card["contributor"]
     shown = c["repository"].split("://", 1)[1].split("/", 1)[1].rstrip("/")
+    line = f"> **Contributed by** {c['name']} · [{shown}]({c['repository']})"
     if card["origin"] == "crit":
-        return f"> [!NOTE]\n> **Contributed by** {c['name']} · [{shown}]({c['repository']})\n>\n> {BUILT_WITH_CRIT}"
-    s = card["source"]
-    return ("> [!WARNING]\n> **External engine.** Not built with crit, and its source has not been reviewed by crit-hub. Read\n"
-            "> it before you build or run it.\n>\n"
-            f"> **Contributed by** {c['name']} · [{shown}]({c['repository']}) · source at\n"
-            f"> [`{short(s['revision'])}`]({s['repository'].rstrip('/')}/tree/{s['revision']})")
+        return "> [!NOTE]\n" + line
+    return "> [!WARNING]\n" + line + "\n>\n> External engine: crit-hub has not reviewed its source. Read it before you build or run it."
 
 
 def render(card):

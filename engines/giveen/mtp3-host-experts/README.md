@@ -3,11 +3,9 @@
 # Qwen3.8-Flash-Next @ NVFP4 · RTX 5090 · mtp3-host-experts
 
 > [!WARNING]
-> **External engine.** Not built with crit, and its source has not been reviewed by crit-hub. Read
-> it before you build or run it.
+> **Contributed by** giveen · [giveen/ninfer-ext](https://github.com/giveen/ninfer-ext)
 >
-> **Contributed by** giveen · [giveen/ninfer-ext](https://github.com/giveen/ninfer-ext) · source at
-> [`7b586bde`](https://github.com/giveen/ninfer-ext/tree/7b586bde50747eac26d198530aa04d83216947a9)
+> External engine: crit-hub has not reviewed its source. Read it before you build or run it.
 
 | Decode | Prefill | TTFT | Perplexity (absolute) | Mean KL divergence | Context |
 | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -21,36 +19,18 @@
 - **Source:** [giveen/ninfer-ext @ `7b586bde`](https://github.com/giveen/ninfer-ext/tree/7b586bde50747eac26d198530aa04d83216947a9)
 - **License:** Apache-2.0
 
-NInfer, a from-scratch C++23/CUDA inference engine (an extended fork of upstream NInfer), on one
-RTX 5090 (32 GB) with Ubuntu 26.10, GCC 15.3 and CUDA 13.3. Qwen3.8-Flash-Next is a ~180B-parameter
+NInfer, a from-scratch C++23/CUDA inference engine (an extended fork of upstream NInfer). Qwen3.8-Flash-Next is a ~180B-parameter
 MoE whose 512 routed experts per layer and 51B n-gram embedding table cannot fit in 32 GB. This
 engine keeps the routed experts NVFP4 in pinned Host memory and fetches misses into an LRU device
 expert cache inside the decode CUDA Graph; the n-gram table stays off the device, mapped through the
-page cache or streamed from NVMe. MTP drafts three tokens per round. The source is not in this
-folder; it is [giveen/ninfer-ext](https://github.com/giveen/ninfer-ext) at the pinned commit above.
-
-## Model
-
-`nvidia/Qwen3.8-Flash-Next-NVFP4` at revision
-`fc694b54fb0174e0913e6adf86691ef85a4ead47` (`Qwen4ExpForCausalLM`: 48 layers, 36 gated DeltaNet and
-12 Qwen Sparse Attention, 4-stream hyper-connections, 512 NVFP4 experts top-10 plus a shared expert,
-a per-layer n-gram table, an MTP block, and a vision tower). Routed experts keep their stored NVFP4
-codes and scales (the MTP bank is re-encoded from block FP8); the n-gram table becomes one row-scaled
-FP8 matrix; attention, GDN, hyper-connection and PLE projections are Q8; token embedding Q8 and the
-output head Q6. [card.lock.json](card.lock.json) lists every checkpoint file with the size and SHA-256 the
-conversion recorded; `python -B tools/verify_model.py` from a crit-hub checkout checks a download
-against it.
-
-The converted artifact (about 119 GB, published as parts) and its `SHA256SUMS` are at
-[jabbatheduck/ninfer-ext-models/qwen3.8-flash-next](https://huggingface.co/jabbatheduck/ninfer-ext-models/tree/main/qwen3.8-flash-next);
-`qwen3_8_flash_next_nvfp4.ninfer` is
-`bed67cf5343dfc697b8ddd3f29052e5f8bda1a22eac9985f5c4c0ac58e064d0f`. It is not redistributed here.
+page cache or streamed from NVMe. MTP drafts three tokens per round.
 
 ## Design
 
 | Part | How |
 | --- | --- |
 | Execution | One Program per Engine on one GPU; one compact decode batch per round in one CUDA graph; concurrency 1–8 fixed at startup; no preemption |
+| Weights | Routed experts keep their stored NVFP4 codes and scales (the MTP bank is re-encoded from block FP8); the n-gram table becomes one row-scaled FP8 matrix; attention, GDN, hyper-connection and PLE projections are Q8; token embedding Q8 and the output head Q6 |
 | Routed experts | NVFP4 in pinned Host memory, resident per layer as one bank; each MoE layer resolves top-10 against an LRU device cache inside the graph and copies misses over PCIe; `--expert-cache auto` gives the cache the memory left after the KV floor |
 | Optional host split | `--host-experts N` computes `--host-expert-share` of a narrow call's misses on N host threads from the pinned bank while the rest cross PCIe (off by default; Q8_0 activations, so output then depends on cache contents) |
 | Prefill | Chunks of 103+ tokens stream a whole expert layer through double-buffered staging banks, copying cached experts device-to-device; staged experts run the W4A4 tensor-core route when the artifact stores NVFP4 input divisors (A16 branch otherwise); idle steps widen to 16,384 tokens using the cache's top slots |
@@ -61,25 +41,22 @@ The converted artifact (about 119 GB, published as parts) and its `SHA256SUMS` a
 
 ## Measured
 
-Hardware for every row: one RTX 5090 (32 GB, sm_120a), CUDA 13.3, Ubuntu, `--expert-cache auto`.
+Every row runs `--expert-cache auto` on the hardware above.
 
-### Leaderboard run
-
-[LocalMaxxing](https://www.localmaxxing.com/en/runs/cmvfjyuh70199rf011u8mvio2/qwen3-8-flash-next-nvfp4-rtx-5090-140-9-tps)
-records **140.9 tok/s output** for this engine and encoding on the same GPU. The run page carries
-the exact test settings and depth.
+The headline decode is LocalMaxxing's standardized
+[run](https://www.localmaxxing.com/en/runs/cmvfjyuh70199rf011u8mvio2/qwen3-8-flash-next-nvfp4-rtx-5090-140-9-tps),
+whose page carries the exact test settings and depth.
 
 ### Project measurements (published with this artifact)
 
-From the artifact card (FP8 KV, `--spec mtp` K=3, development RTX 5090):
+From the artifact card (FP8 KV, `--spec mtp` K=3; the headline perplexity and host RAM come from the
+same runs):
 
 | Metric | Value |
 | --- | --- |
-| Causal perplexity (`ninfer-ppl-1m-v1`, quick, FP8 KV) | 3.518 |
 | Decode, one request, MTP K=3 | 81 tok/s |
 | Prefill, 262,144-token budget, `--ngram-residency stream` | 1,090 / 3,666 / 3,498 / 2,908 / 2,218 tok/s at 1.5k / 8k / 64k / 128k / 256k tokens |
 | Prefill with the table mapped, 8k prompt | about 6,250 tok/s (about 1.7x the streamed figure) |
-| Peak host RSS with `--ngram-residency stream` | about 65 GiB |
 
 ### Decode saturation (reasoning load)
 
@@ -110,8 +87,6 @@ two runs: no speculation 98.5 / 141.6 / 180.6 / 185.3 at C=1 / 2 / 4 / 8; `--spe
   `tests/models/qwen4_exp/` upstream; this entry does not re-run them.
 - **Artifact identity:** the published artifact carries `SHA256SUMS`; `card.lock.json` pins the source
   checkpoint files by revision and SHA-256.
-- **Benchmarks:** the tables above are the project's published runs and the leaderboard run; each
-  row names its protocol and, where the fork's numbers come from an earlier commit, that commit.
 
 ## Limits
 

@@ -118,21 +118,22 @@ results:
   - file: evidence/crit-eval.json
     sha256: <64-character sha256>
 
-# The README's prose, rendered in this order under the header (title, credit, stats, facts).
+# The README's prose, rendered in this order under the header (title, credit, stats, facts). Say each
+# thing once: what the header already shows (contributor, source, requirements, checkpoint, the six
+# stats and further figures) is not repeated here.
 # Markdown in block scalars: everything indented under the key, no escaping.
 # Keep the whole README to about 100 lines; put long history or design notes next to the source.
 readme:
   intro: |
     One short paragraph: what the engine is (written from scratch or adapted; crit Core version, or
-    the toolkit or runtime of an external engine), the tested platform (OS, CUDA, GPU and memory, host
-    RAM when it matters) and the context length.
-  model: |
-    The checkpoint repository and revision, the architecture in one or two sentences, how the weights
-    are used (as stored, or what is re-encoded and why), any drafter or extra download, and a pointer to
-    card.lock.json and `tools/verify_model.py`.
+    the toolkit or runtime of an external engine) and what makes it different. The platform, GPU,
+    CUDA and context are already in the header.
+  # No model section: the checkpoint and downloads above link Hugging Face. How the engine uses the
+  # weights (as stored, or what is re-encoded and why) is the Weights row of the design table.
   design: |
     | Part | How |
     | --- | --- |
+    | Weights | ... |
     | ... | ... |
 
     At most one short paragraph on how decoding and prompts run.
