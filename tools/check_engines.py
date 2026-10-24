@@ -32,6 +32,7 @@ except ImportError:  # the checks below still run; CI installs it
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import card as cardlib  # noqa: E402
+import codeowners  # noqa: E402
 
 REPOSITORY = re.compile(r"https://[A-Za-z0-9.-]+(/[A-Za-z0-9_.~-]+)+/?")
 COMMIT = re.compile(r"[0-9a-f]{40}")
@@ -571,6 +572,7 @@ def main(hub):
     if failed:
         raise SystemExit(f"{failed} of {len(folders)} engine folders need changes")
     print(f"{len(folders)} engine folders match their cards")
+    codeowners.main(hub, check=True)
 
 
 if __name__ == "__main__":

@@ -9,6 +9,16 @@ Several designs can share a GPU and model, whether they were built with crit or 
 Keep model weights, builds, binaries, development scripts and full experiment records outside the
 repository; the [.gitignore](.gitignore) uses a whitelist for published files.
 
+## Who approves and merges
+
+Anyone may open a pull request, from a fork; only the crit-labs maintainers merge. Your engine
+folder is yours: `engines/<your account>/` is owned by your account in
+[.github/CODEOWNERS](.github/CODEOWNERS), which `tools/codeowners.py` renders from the cards, and a
+pull request that changes it, by anyone else, needs your approval of its latest commit before a
+maintainer merges it. The `owners` check on every pull request checks that. Everything shared (the
+engine index and template, schemas, tools, CI and `.github/`) is the maintainers'. Your account
+names your folder, so your first engine is a pull request you open, or one you approve.
+
 ## The numbers
 
 Every engine states the same [six stats](engines/README.md#stats): decode, prefill, time to first
@@ -51,7 +61,8 @@ or the result carries no quality figures. Then copy `result.json` to `evidence/c
    figures.
 4. **Fill in the card**: summary, license, features and requirements, and any downloads.
 5. **Render and check:** `python -B tools/card.py engines/<owner>/<name>` writes README.md;
-   `python -B tools/check_engines.py` must pass.
+   for your first engine, `python -B tools/codeowners.py` adds your account to
+   [.github/CODEOWNERS](.github/CODEOWNERS); `python -B tools/check_engines.py` must pass.
 6. Open one pull request to crit-engines with the source and, once it is merged, one to crit-hub
    with the entry pinned to the merged commit.
 
@@ -74,8 +85,8 @@ crit-hub records where it is, what it targets and what it measured.
    your toolchain and runtime prerequisites under `provenance`.
 5. Add your evidence: `evidence/crit-eval.json` for crit Eval figures, or
    `evidence/self-reported.json` for your own, and list it with its SHA-256 under the result.
-6. **Render and check:** `python -B tools/card.py engines/<owner>/<name>`, then
-   `python -B tools/check_engines.py`.
+6. **Render and check:** `python -B tools/card.py engines/<owner>/<name>`, for your first engine
+   `python -B tools/codeowners.py`, then `python -B tools/check_engines.py`.
 
 The folder holds no source, binaries, test data, scripts or license texts; those stay with your
 source. The rendered README opens with the external-engine notice: crit-hub has not reviewed the

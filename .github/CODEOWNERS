@@ -1,0 +1,10 @@
+# Rendered by tools/codeowners.py from the engine cards: never edit by hand. Run
+# python -B tools/codeowners.py after adding an engine under a new account.
+#
+# Anyone may open a pull request; only the crit-labs maintainers merge. A change to an engine folder
+# also needs the approval of the account that contributed it (tools/check_owners.py checks it).
+
+* @crit-labs/maintainers
+
+/engines/crit-labs/ @crit-labs/maintainers
+/engines/giveen/ @giveen

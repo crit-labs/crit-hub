@@ -97,7 +97,8 @@ with one hand-written file, `card.yaml`; [CONTRIBUTING.md](CONTRIBUTING.md) walk
   behind an OpenAI-compatible API crit Eval figures.
 
 Then `python -B tools/card.py` renders the README from the card, and `python -B tools/check_engines.py`
-checks the folder.
+checks the folder. Anyone may open a pull request and the crit-labs maintainers merge; your engine
+folder stays yours, and a change to it needs [your approval](CONTRIBUTING.md#who-approves-and-merges).
 
 ---
 
