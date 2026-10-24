@@ -1,0 +1,19 @@
+name: site
+
+# Rebuilds the website once a day, so its Hugging Face downloads and likes stay current, and on
+# demand. Pushes to main rebuild it from check.yml once the registry passes.
+on:
+  schedule:
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Rebuild the website
+        env:
+          HOOK: ${{ secrets.CF_DEPLOY_HOOK }}
+        run: if [ -n "$HOOK" ]; then curl -fsS -X POST "$HOOK" > /dev/null; fi
