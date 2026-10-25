@@ -56,8 +56,8 @@ A stat nobody measured is `null` and shows as `–`; decode is required. Decode,
 may be `[low, high]` across runs. The README names the GPU and model under the engine's name and shows
 the stats as one table (a row per GPU and model when there are several), with decode as two columns,
 sampled and greedy. For a crit Eval result, `tools/card.py` also draws charts from its result file into
-`charts/` (decode by context, decode by workload and, for an engine that speculates, tokens per
-round) and shows them at the top of Measured; never edit them by hand. Under the table, the facts say how each result was measured
+`charts/` and shows them in Measured: decode by context above its prose, decode by workload below it;
+never edit them by hand. Under the table, the facts say how each result was measured
 and from which evidence, the `hardware` it ran on, and its further figures. Further figures go under
 `more`: `greedy_decode_tok_s` (shown in the table), `long_context_decode_tok_s`,
 `heldout_decode_tok_s`, `host_ram_gib` and `quality_budget_pct`.

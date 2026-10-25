@@ -45,8 +45,6 @@ The drafting threshold was tuned on a corpus written for the run, not on Eval: t
 ## Measured
 
 ![Decode by context](charts/decode-by-context.svg)
-![Decode by workload](charts/decode-by-workload.svg)
-![Tokens per decode round](charts/tokens-per-round.svg)
 
 crit Eval of sealed candidate-0007, 6 speed cases at the full context:
 
@@ -71,6 +69,8 @@ Sampled requests decode one token per verify pass: 59–60 tok/s on the same six
 setting tried (temperature 0.6 with top-p 0.95 and top-k 20; 0.7 with top-p 0.8 and top-k 20;
 temperature 1.0), measured on the sealed candidate outside crit Eval on 2026-10-23, against 241 tok/s
 greedy in the same session.
+
+![Decode by workload](charts/decode-by-workload.svg)
 
 ---
 

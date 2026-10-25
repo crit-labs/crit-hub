@@ -338,7 +338,7 @@ def credit(card):
 
 # ---------------------------------------------------------------------------------------------
 # Charts: SVGs drawn from a result's crit Eval file, written next to the README under charts/ and
-# shown at the top of its Measured section. The website shows the same files in its own colors.
+# shown in its Measured section: decode by context above the prose, decode by workload below it. The website shows the same files in its own colors.
 
 CHART_STYLE = """<style>
 svg { font-family: -apple-system, 'Segoe UI', Inter, Helvetica, Arial, sans-serif; }
@@ -348,12 +348,12 @@ svg { font-family: -apple-system, 'Segoe UI', Inter, Helvetica, Arial, sans-seri
 .value { fill: #1f1b1c; font-size: 12.5px; font-weight: 600; }
 .grid { stroke: #e6e1dc; stroke-width: 1; }
 .axis { stroke: #cfc8c2; stroke-width: 1; }
-.line { fill: none; stroke: #9a5d92; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
-.dot, .bar { fill: #9a5d92; }
+.line { fill: none; stroke: #c4513e; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.dot, .bar { fill: #c4513e; }
 .dot { stroke: #ffffff; stroke-width: 2; }
 @media (prefers-color-scheme: dark) {
   .title, .value { fill: #f5f1e8; } .subtitle, .tick { fill: #8a8385; } .cat { fill: #b9b2ae; }
-  .grid { stroke: #2a2a2a; } .axis { stroke: #3a3a3a; } .line { stroke: #c28abb; } .dot, .bar { fill: #c28abb; } .dot { stroke: #0d1117; }
+  .grid { stroke: #2a2a2a; } .axis { stroke: #3a3a3a; } .line { stroke: #dc6652; } .dot, .bar { fill: #dc6652; } .dot { stroke: #0d1117; }
 }
 </style>"""
 CHART_W = 640
@@ -429,8 +429,7 @@ def _context(tokens):
 
 
 def result_charts(data):
-    """The charts one crit Eval result file gives, by file name: decode by context, decode by workload and,
-    for an engine that speculates, tokens per decode round."""
+    """The charts one crit Eval result file gives, by file name: decode by context and decode by workload."""
     charts = {}
     points = sorted((p["context"], p["decode_tps"]) for p in ((((data.get("status") or {}).get("kpis") or {}).get("context") or {})
                     .get("points") or {}).values() if isinstance(p.get("context"), int) and isinstance(p.get("decode_tps"), (int, float)))
@@ -443,10 +442,6 @@ def result_charts(data):
     if cases:
         charts["decode-by-workload.svg"] = bars_chart("Decode by workload", f"tok/s per crit Eval speed case, {kind} decode",
                                                       [(n, c["decode_tps"]) for n, c in cases], lambda v: f"{v:,.1f} tok/s")
-    rounds = [(n, c["tokens_per_round"]) for n, c in cases if isinstance(c.get("tokens_per_round"), (int, float))]
-    if rounds and max(v for _, v in rounds) > 1.05:
-        charts["tokens-per-round.svg"] = bars_chart("Tokens per decode round", "accepted drafts plus one, per speed case; 1 is plain decoding",
-                                                    rounds, lambda v: f"{v:.2f}")
     return charts
 
 
@@ -468,13 +463,14 @@ def charts(folder, card):
     return found
 
 
-CHART_ALT = {"decode-by-context.svg": "Decode by context", "decode-by-workload.svg": "Decode by workload",
-             "tokens-per-round.svg": "Tokens per decode round"}
+CHART_ALT = {"decode-by-context.svg": "Decode by context", "decode-by-workload.svg": "Decode by workload"}
+# The charts that close the Measured section, after its prose; the others open it.
+CHARTS_AFTER = {"decode-by-workload.svg"}
 
 
 def render(card, figures=()):
     """README.md for a card: the engine's name, the GPUs and models it was measured on as a subheader, the
-    credit, the stats table, the facts, then the prose, with its charts (paths) opening the Measured section."""
+    credit, the stats table, the facts, then the prose, with its charts (paths) in the Measured section."""
     parts = [HEADER, "", f"# {card['title']}", ""]
     if card.get("results"):
         parts += ["### " + ", ".join(pair(r) for r in card["results"]), ""]
@@ -489,9 +485,10 @@ def render(card, figures=()):
         if heading:
             # A rule between sections, as crit-hub's own README has: GitHub's headings alone leave little room.
             parts += ["---", "", f"## {heading}", ""]
-        if key == "measured" and figures:
-            parts += [f"![{CHART_ALT.get(Path(f).name, Path(f).stem)}]({f})" for f in figures] + [""]
-        parts += [readme[key].rstrip("\n"), ""]
+        images = [f"![{CHART_ALT.get(Path(f).name, Path(f).stem)}]({f})" for f in figures] if key == "measured" else []
+        before = [i for i, f in zip(images, figures) if Path(f).name not in CHARTS_AFTER]
+        after = [i for i, f in zip(images, figures) if Path(f).name in CHARTS_AFTER]
+        parts += (before + [""] if before else []) + [readme[key].rstrip("\n"), ""] + (after + [""] if after else [])
     return "\n".join(parts).rstrip("\n") + "\n"
 
 
