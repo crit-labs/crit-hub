@@ -1,0 +1,18 @@
+{
+  "results": [
+    {
+      "gpu": "rtx5090",
+      "model": "qwen3.8-flash-next@NVFP4-GPTQ",
+      "measurements": [
+        {
+          "method": "Models table (README): median of 3 runs of 4 greedy chats (up to 1,500 tokens each) and one 32,007-token prompt",
+          "link": "https://github.com/sergqwer/strata-nvfp4/blob/57293b8ec57203a741dc7b2abd69f24f077037ab/README.md",
+          "settings": "Strata NVFP4 0.1.42-nvfp4.1's engine with the arguments 0.1.42-nvfp4.2's setup writes; NVFP4 GPTQ model (setup's default), 69 GiB RAM in use; the 32K prompt reads in 3.9 s; 93.6% top-1 agreement with every expert in Q8_0",
+          "figures": {
+            "decode_tok_s": 177
+          }
+        }
+      ]
+    }
+  ]
+}
