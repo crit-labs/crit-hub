@@ -1,0 +1,22 @@
+{
+  "results": [
+    {
+      "gpu": "4x-rtxpro6000",
+      "model": "deepseek-v4.1-flash@MXFP4",
+      "measurements": [
+        {
+          "method": "Single-stream decode on the served image",
+          "link": "https://github.com/kacper-daftcode/vLLM-Moet/blob/213d5fa913190521c54e0169068d967526d1fb54/README.md",
+          "settings": "image vllm-moet-sm120:dsv41-nightly-49cb2bbf-r1 (vLLM nightly 49cb2bbf, FlashInfer 0.7.2), TP4, 512K context, DSpark speculation k=5, FP4 KV record and MXFP4 indexer; prose 190-224 tok/s, code 436-466 tok/s (88-90 steps/s)",
+          "figures": {
+            "decode_tok_s": [
+              190,
+              224
+            ],
+            "context_tokens": 524288
+          }
+        }
+      ]
+    }
+  ]
+}
