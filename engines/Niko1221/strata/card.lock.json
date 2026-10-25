@@ -1,0 +1,39 @@
+{
+  "checkpoints": {
+    "qwen3.8-flash-next@GSQ-Q2-0": {
+      "repository": "ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-GGUF",
+      "revision": "ed59f92082b1e93c0e96d60a8b11aab089b52f09",
+      "files": [
+        {
+          "path": "Q2_0/Qwen3.8-Flash-Next-GSQ-RCO-Q2_0-00001-of-00002.gguf",
+          "bytes": 37623740192,
+          "sha256": "69820c02ec7d0b45ef2ebb19d6620299db749fe2aded7f39f93c6b88b199b720"
+        },
+        {
+          "path": "Q2_0/Qwen3.8-Flash-Next-GSQ-RCO-Q2_0-00002-of-00002.gguf",
+          "bytes": 28800138432,
+          "sha256": "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113"
+        },
+        {
+          "path": "README.md",
+          "bytes": 15693,
+          "sha256": "71496aac3c9126085519dbe3aa82e46eb9f5749ee122b089a66182a94b0db6a3"
+        },
+        {
+          "path": "tensor-allocation/Qwen3.8-Flash-Next-GSQ-RCO-Q2_0-00001-of-00002.rco-allocation.txt",
+          "bytes": 39062,
+          "sha256": "81371f9d3e10b5ff2ea718346165ad64f523d5f2b6a5619424e2803133cda17d"
+        }
+      ]
+    }
+  },
+  "provenance": {
+    "listed_from": "crit's reference-engine collection; figures are the upstream README's, not re-measured by crit-hub",
+    "release": "Strata 0.2.1, engine 0.1.46",
+    "runtime_prerequisites": [
+      "at least 32 GB of RAM and VRAM together",
+      "NVIDIA RTX 20-50 (12 GB+), AMD RX 6800+, Intel Arc or Apple Silicon",
+      "about 80 GB of free disk"
+    ]
+  }
+}
