@@ -1,0 +1,36 @@
+{
+  "results": [
+    {
+      "gpu": "rtx5090",
+      "model": "qwen3.8-27b@EXL3-6.0bpw",
+      "measurements": [
+        {
+          "method": "Speed against NInfer, same RTX 5090, token-identical prompts, greedy",
+          "link": "https://github.com/The8Darkness/voidinfer/blob/a7dc1a74392d5368a513b11acabd09c65e95d90a/README.md",
+          "settings": "VoidInfer defaults (EXL3 6 bpw, L0 OSCAR INT4 KV, exact VeriCache); decode of one request with a 4K prompt and 1,024 tokens; prefill and time to first token for a 32K prompt (3K / 128K prompts: 3.5K / 3.2K tok/s; 128K TTFT 40.8 s)",
+          "figures": {
+            "decode_tok_s": 147,
+            "prefill_tok_s": 3900,
+            "ttft_ms": 8100
+          }
+        },
+        {
+          "method": "KL divergence to the BF16 model on the served path, 4K",
+          "link": "https://github.com/The8Darkness/voidinfer/blob/a7dc1a74392d5368a513b11acabd09c65e95d90a/docs/ninfer-comparison-2026-10-12.md",
+          "settings": "top-1 agreement 97.2%",
+          "figures": {
+            "kld_mean": 0.014
+          }
+        },
+        {
+          "method": "Maximum context per lane, one request",
+          "link": "https://github.com/The8Darkness/voidinfer/blob/a7dc1a74392d5368a513b11acabd09c65e95d90a/README.md",
+          "settings": "the full window: a 258,089-token prompt prefilled and 4,055 tokens generated",
+          "figures": {
+            "context_tokens": 262144
+          }
+        }
+      ]
+    }
+  ]
+}
