@@ -1,0 +1,156 @@
+# yaml-language-server: $schema=../../../schemas/card.schema.json
+title: ninfer
+summary: 'NInfer: from-scratch C++/CUDA engine for Qwen3.6/3.8 on one RTX 5090, NVFP4 or groupwise weights, MTP3'
+origin: external
+contributor:
+  name: Neroued
+  repository: https://github.com/Neroued/ninfer
+license: Apache-2.0
+features:
+- openai-api
+- tool-calls
+- vision
+- speculative
+source:
+  repository: https://github.com/Neroued/ninfer
+  revision: 64d10fbf9f8e6bfc79ab0570b94674c5b9997929
+requirements:
+  platforms:
+  - linux
+  gpu_arch:
+  - sm_120a
+  gpu_memory_gb: 32
+  cuda: '13.4'
+checkpoints:
+  qwen3.8-27b@NVFP4:
+    repository: neroued/Qwen3.8-27B-nvfp4-NInfer
+    revision: a107ba1b5b0609d9ca90d5ed61439f5f5cc7d64d
+  qwen3.8-27b@groupwise-int:
+    repository: neroued/Qwen3.8-27B-NInfer
+    revision: 1cbd84e7221e51186bd7f093a149912d2489625b
+  qwen3.6-35b-a3b@groupwise-int:
+    repository: neroued/Qwen3.6-35B-A3B-NInfer
+    revision: ee4495803bc4f8015b8a7e22d4cf9b67de8e27c6
+  qwen3.6-27b@NVFP4:
+    repository: neroued/Qwen3.6-27B-nvfp4-NInfer
+    revision: 284521801f80d9c3f4a3f8389e2c68048ba90edb
+  qwen3.6-27b@groupwise-int:
+    repository: neroued/Qwen3.6-27B-NInfer
+    revision: 3e3d9a3951c452c1ca80bd7a2860c7f3bfc5a829
+supports:
+- gpus:
+  - rtx5090
+  models:
+  - qwen3.6-27b@NVFP4
+  - qwen3.6-27b@groupwise-int
+results:
+- gpu: rtx5090
+  model: qwen3.8-27b@NVFP4
+  measured_with: NInfer performance suite
+  measured_on: null
+  hardware: Linux; RTX 5090 32 GB
+  stats:
+    decode_tok_s: 147.7
+    prefill_tok_s: 12819.1
+    ttft_ms: null
+    ppl: null
+    kld_mean: null
+    context_tokens: 260096
+  evidence:
+  - file: evidence/self-reported.json
+    sha256: 938c209a67cf529a3eca15e094e3003a3894e22cc19711625a0352955c7523a1
+- gpu: rtx5090
+  model: qwen3.8-27b@groupwise-int
+  measured_with: NInfer performance suite
+  measured_on: null
+  hardware: Linux; RTX 5090 32 GB
+  stats:
+    decode_tok_s: 136.5
+    prefill_tok_s: 3331.9
+    ttft_ms: null
+    ppl: null
+    kld_mean: null
+    context_tokens: 260096
+  evidence:
+  - file: evidence/self-reported.json
+    sha256: 938c209a67cf529a3eca15e094e3003a3894e22cc19711625a0352955c7523a1
+- gpu: rtx5090
+  model: qwen3.6-35b-a3b@groupwise-int
+  measured_with: NInfer performance suite
+  measured_on: null
+  hardware: Linux; RTX 5090 32 GB
+  stats:
+    decode_tok_s: 642.5
+    prefill_tok_s: 17705.4
+    ttft_ms: null
+    ppl: null
+    kld_mean: null
+    context_tokens: 260096
+  evidence:
+  - file: evidence/self-reported.json
+    sha256: 938c209a67cf529a3eca15e094e3003a3894e22cc19711625a0352955c7523a1
+readme:
+  intro: |
+    NInfer is a from-scratch C++/CUDA inference engine for a single NVIDIA GeForce RTX 5090. It serves
+    Qwen3.5/3.6 dense and MoE models and Qwen4Exp (Qwen3.8-Flash-Next) with text, image and video prompts
+    and native MTP, from official v3 `.ninfer` artifacts that carry the model's configuration, encoded
+    weights and frontend resources. One GPU, one resident model and one to eight execution lanes fixed at
+    startup. Several engines in this registry (NInfer-3090, NInfer-4090, NInfer V100X2, NInfer 6000,
+    capy-flash, Infernix, VoidInfer and giveen's ninfer-ext) started from it.
+  design: |
+    | Part | How |
+    | --- | --- |
+    | Weights | Official artifacts in `groupwise-int` or `nvfp4`; your own conversions through the recipes in `docs/weight-conversion.md` |
+    | Execution | One GPU, one resident model, 1–8 lanes fixed at startup, CUDA Graphs |
+    | Speculation | Native MTP (`--spec mtp --draft-tokens 3`), with an optional smaller quantized proposal head (`--lm-head-draft`) |
+    | KV cache | FP8 E4M3 row-256 for Qwen3.8 and INT8 group-64 for Qwen3.6 in the published runs; a shared device KV pool with pause and resume under pressure |
+    | Context reuse | Checkpoints of KV plus the complete continuation state at exact token frontiers, retained across turns in device and pinned host memory |
+    | Serving | Local CLI and OpenAI- and Anthropic-compatible HTTP APIs |
+  measured: |
+    From the README at the pinned commit (excerpts of the [performance index](https://github.com/Neroued/ninfer/blob/64d10fbf9f8e6bfc79ab0570b94674c5b9997929/docs/performance.md)), one RTX 5090:
+
+    | Model profile | Decode, C=1 / C=8, MTP3 | Prefill, 7,680 / 260,096 tokens | Structured MTP3 decode |
+    | --- | ---: | ---: | ---: |
+    | Qwen3.8-27B `nvfp4` | 147.7 / 922.4 tok/s | 12,819.1 / 4,016.4 tok/s | 231.7 tok/s |
+    | Qwen3.8-27B `groupwise-int` | 136.5 / 582.4 tok/s | 3,331.9 / 2,139.4 tok/s | 214.7 tok/s |
+    | Qwen3.6-35B-A3B `groupwise-int` | 642.5 / 1,380.7 tok/s | 17,705.4 / 5,247.0 tok/s | 779.6 tok/s |
+
+    Decode is the saturated MTP3 suite: one 8,192-token generation per active request, aggregate
+    committed tokens over intervals whose decode batch equaled the concurrency. Prefill is the serial
+    serving corpus (1,024-token chunks, five seeds after warm-up). Qwen3.6-27B (`groupwise-int` and
+    `nvfp4`) has the same tables upstream and is listed as supported here.
+  checks: |
+    - **Capability:** AIME 2025/2026, GPQA-Diamond, ERQA and RealWorldQA through the serving route with
+      thinking on and MTP3 (EvalScope 1.9.0); Qwen3.8-27B `nvfp4` scores 96.67% / 96.67% / 90.40% on the
+      first three.
+    - **Method:** the measurement rules are in `docs/performance/methodology.md` upstream; this entry does
+      not re-run them.
+  limits: |
+    - Linux on x86-64 and an RTX 5090 only: the build rejects CUDA architectures other than `sm_120a`.
+    - v3 artifacts only; older v2 downloads must be upgraded locally first.
+    - No install target or packaged binaries; run from the build tree.
+  build_and_chat: |
+    ```sh
+    git clone https://github.com/Neroued/ninfer.git
+    git -C ninfer checkout 64d10fbf9f8e6bfc79ab0570b94674c5b9997929
+    cd ninfer
+    cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+    cmake --build build -j
+    hf download neroued/Qwen3.8-27B-nvfp4-NInfer qwen3_8_27b_nvfp4.ninfer --local-dir models
+    ```
+
+    Check a download against [card.lock.json](card.lock.json) with
+    `python -B tools/verify_model.py <this engine folder> <model folder>` from a crit-hub checkout. Serve:
+
+    ```sh
+    ./build/apps/ninfer-serve models/qwen3_8_27b_nvfp4.ninfer --max-context 240000 --kv-capacity 240000 \
+      --max-concurrency 2 --kv-dtype fp8 --device-state-slots 2 --spec mtp --draft-tokens 3 \
+      --lm-head-draft --preserve-thinking
+    ```
+
+    The server listens on `http://127.0.0.1:8080` (`/v1/chat/completions`). One-shot chat:
+    `./build/apps/ninfer models/qwen3_8_27b_nvfp4.ninfer --prompt "..." --max-context 32768 --kv-dtype fp8 --spec mtp --draft-tokens 3 --lm-head-draft`.
+  credits: |
+    NInfer is licensed under the Apache License 2.0,
+    [LICENSE](https://github.com/Neroued/ninfer/blob/64d10fbf9f8e6bfc79ab0570b94674c5b9997929/LICENSE) at the
+    pinned commit. The model weights keep their own licenses, given on each artifact's Hugging Face card.

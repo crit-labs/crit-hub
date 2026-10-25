@@ -1,0 +1,128 @@
+{
+  "checkpoints": {
+    "qwen3.8-27b@NVFP4": {
+      "repository": "neroued/Qwen3.8-27B-nvfp4-NInfer",
+      "revision": "a107ba1b5b0609d9ca90d5ed61439f5f5cc7d64d",
+      "files": [
+        {
+          "path": ".gitattributes",
+          "bytes": 1580,
+          "sha256": "217ce9047a1f67451c0cef914bbc558e72629a00ed940917562525b88466fe38"
+        },
+        {
+          "path": "LICENSE",
+          "bytes": 11357,
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        },
+        {
+          "path": "README.md",
+          "bytes": 15114,
+          "sha256": "7b0a52e53ea345cfd77d4e8c72537bfa47be362d6448b538af9dc29b1e589210"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 91,
+          "sha256": "eca369ddb42523c5dc3b3cdcfc3d8f3037ed9ce08549579f81921a66b66fa5e7"
+        },
+        {
+          "path": "artifact-manifest.json",
+          "bytes": 2351,
+          "sha256": "5738311e6ac4296b50097c3b9c27d263932889dc5cd14cf7aa6beb0bdaad3f64"
+        },
+        {
+          "path": "qwen3_8_27b_nvfp4.ninfer",
+          "bytes": 23719715844,
+          "sha256": "74d2c57145e6ff11d1d2faa79594477f9bc903a611af1fb20218189fbbb77d82"
+        }
+      ]
+    },
+    "qwen3.8-27b@groupwise-int": {
+      "repository": "neroued/Qwen3.8-27B-NInfer",
+      "revision": "1cbd84e7221e51186bd7f093a149912d2489625b",
+      "files": [
+        {
+          "path": ".gitattributes",
+          "bytes": 1564,
+          "sha256": "f04e5f959c6653de827b7bdcbc64343e0ff030a45c5002c2ba77db1c8b85b553"
+        },
+        {
+          "path": "LICENSE",
+          "bytes": 11357,
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        },
+        {
+          "path": "README.md",
+          "bytes": 10496,
+          "sha256": "b0c782aa2606075ac55a29961e6928689c4defed2db685ef0f4a471d6249b250"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 85,
+          "sha256": "64f2e72691d5d8533f6c861e71ddd6e22f18a26b53312cc6b3ecf28696e934e9"
+        },
+        {
+          "path": "artifact-manifest.json",
+          "bytes": 2012,
+          "sha256": "6ecddb4ac7f40dd5e37ff63debab7d7274d0a85bac46efb03a3bd2707a8c9c8f"
+        },
+        {
+          "path": "qwen3_8_27b.ninfer",
+          "bytes": 20437521664,
+          "sha256": "81f924d440c27261d820c19a9f8d45794c5aee410f8a68bd358133fa8c0375da"
+        }
+      ]
+    },
+    "qwen3.6-35b-a3b@groupwise-int": {
+      "repository": "neroued/Qwen3.6-35B-A3B-NInfer",
+      "revision": "ee4495803bc4f8015b8a7e22d4cf9b67de8e27c6",
+      "files": [
+        {
+          "path": ".gitattributes",
+          "bytes": 1564,
+          "sha256": "f04e5f959c6653de827b7bdcbc64343e0ff030a45c5002c2ba77db1c8b85b553"
+        },
+        {
+          "path": "LICENSE",
+          "bytes": 11357,
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        },
+        {
+          "path": "README.md",
+          "bytes": 13451,
+          "sha256": "454974c6efbbe9fcbd851208f31be05993ff2925d9eaea129b05037cd57ddaab"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 89,
+          "sha256": "9bb945ad40aa9b3820162f9f07be6bf82b9b785df2afe1b51659d45b233a63fa"
+        },
+        {
+          "path": "artifact-manifest.json",
+          "bytes": 1895,
+          "sha256": "7bb161f941046609b7125a734c12cbb4b1905f914de8a0f8c8d6bc14ea511fbc"
+        },
+        {
+          "path": "qwen3_6_35b_a3b.ninfer",
+          "bytes": 22790484480,
+          "sha256": "3e33297645dc33557751be1a3c407a74ed7c00f34909b5d4e8cfdce91b3dbe84"
+        }
+      ]
+    }
+  },
+  "provenance": {
+    "listed_from": "crit's reference-engine collection; figures are the upstream README's, not re-measured by crit-hub",
+    "artifact": {
+      "format": "ninfer-v3",
+      "note": "the official .ninfer artifacts are the checkpoints below; each carries configuration, encoded weights and frontend resources"
+    },
+    "toolchain": {
+      "cuda": "13.4 (the validated development toolkit)",
+      "cuda_architectures": "120a",
+      "build": "CMake 3.28+, Ninja, C++20 host compiler"
+    },
+    "runtime_prerequisites": [
+      "x86-64 Linux with an NVIDIA GeForce RTX 5090 (sm_120a)",
+      "FFmpeg development libraries, hwloc >= 2.5, liburing >= 2.5, libcurl >= 7.85, pkg-config"
+    ]
+  }
+}
