@@ -1,0 +1,20 @@
+{
+  "results": [
+    {
+      "gpu": "rtxpro6000",
+      "model": "glm-5.3-flash@Maya-M-IQ2-S",
+      "measurements": [
+        {
+          "method": "./maya.sh --bench on a user's machine, reported in issue #172",
+          "link": "https://github.com/mw00/project-maya/blob/8d9a9b5d705049a87da853717cdc59440252de30/README.md",
+          "settings": "Project Maya v1.1.7, Maya-M quant, 256K context; prefill of an 8K-token prompt; reported by @yundddd",
+          "figures": {
+            "decode_tok_s": 81.0,
+            "prefill_tok_s": 3102,
+            "context_tokens": 262144
+          }
+        }
+      ]
+    }
+  ]
+}
