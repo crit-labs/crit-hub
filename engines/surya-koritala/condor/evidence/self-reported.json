@@ -1,0 +1,21 @@
+{
+  "results": [
+    {
+      "gpu": "rtx4080super",
+      "model": "qwen3.8-flash-next@hummingbird-precise",
+      "measurements": [
+        {
+          "method": "bench/compare.py, greedy, thinking off",
+          "link": "https://github.com/surya-koritala/glyd-condor/blob/2f6267b1f41392a3980e06b12d3e7b9192b1887c/README.md",
+          "settings": "precise mode (v0.2.0/v0.2.1, October 2026): writing with a short prompt 118 tok/s (4K / 30K prompts: 110 / 96); time to read a 30K-token prompt 7.5 s; KL divergence to BF16 on wikitext-2 0.22; context up to 262,144 tokens (default 32,768)",
+          "figures": {
+            "decode_tok_s": 118,
+            "ttft_ms": 7500,
+            "kld_mean": 0.22,
+            "context_tokens": 262144
+          }
+        }
+      ]
+    }
+  ]
+}
