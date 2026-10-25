@@ -1,0 +1,19 @@
+{
+  "results": [
+    {
+      "gpu": "rtx3060",
+      "model": "deepseek-v4.1-flash-1017@CtC-2bit",
+      "measurements": [
+        {
+          "method": "160 new tokens per prompt, code prompt, cold expert cache",
+          "link": "https://github.com/Magnvs7/Promethevs/blob/9e06221518531b353c2d45e71a60951ac452eaef/RESULTS.md",
+          "settings": "engine with the full method (2-bit experts, gate 0.45, exact FP4 corrections, 2-bit draft head); runs 4.98, 5.82, 5.95 tok/s; warm best case 7.4; plain exact decoding 2.14; time to first token about 126 s on a 1,163-token prompt (read-bound)",
+          "figures": {
+            "decode_tok_s": 5.8,
+            "ttft_ms": 126000
+          }
+        }
+      ]
+    }
+  ]
+}
