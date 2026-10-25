@@ -1,0 +1,29 @@
+{
+  "results": [
+    {
+      "gpu": "rtx3090",
+      "model": "qwen3.8-27b@Q4-K-M",
+      "measurements": [
+        {
+          "method": "Greedy decode, 4 chat prompts x 512 tokens (bench/code_bench.py)",
+          "link": "https://github.com/L-Forster/open-jet/blob/72ba4a7e587ed0cda1312e3384e415962eaa0db3/megakernel/README.md",
+          "settings": "-d 4 drafts; mean of the four prompts (code 139.7 tok/s); llama-server with open-jet's flags 63.1; sampled reasoning mode as open-jet runs it (thinking on, temperature 1.0, top_p 0.95, top_k 20, 5 coding prompts x 2 seeds): 78.0 against 50.9 tok/s",
+          "figures": {
+            "decode_tok_s": 106.7
+          }
+        },
+        {
+          "method": "Prompt processing, 2-8K tokens",
+          "link": "https://github.com/L-Forster/open-jet/blob/72ba4a7e587ed0cda1312e3384e415962eaa0db3/README.md",
+          "settings": "batched tensor-core prefill; llama.cpp 1,050-1,140 tok/s",
+          "figures": {
+            "prefill_tok_s": [
+              1530,
+              1600
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
