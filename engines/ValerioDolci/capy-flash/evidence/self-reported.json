@@ -1,0 +1,35 @@
+{
+  "results": [
+    {
+      "gpu": "2x-rtx5070ti",
+      "model": "qwen3.8-flash-next@NVFP4",
+      "measurements": [
+        {
+          "method": "Agentic replay (bench/capy_flash): 3 synthetic coding-agent sessions, 53 turns up to ~81k tokens",
+          "link": "https://github.com/ValerioDolci/capy-flash/blob/60a4153be06d33bddc410917c3214e5fb9664cd2/README.md",
+          "settings": "v0.6, --profile flash-next (TP2, INT8 KV, elastic budget, --max-context 262144, concurrency 1, MTP K=3), ~90% prefix reuse, 256 output tokens per turn, temperature 0, full clocks; server-side median decode and median time to first token (p90 2.62 s)",
+          "figures": {
+            "decode_tok_s": 155,
+            "ttft_ms": 1480
+          }
+        },
+        {
+          "method": "Prefill of a ~15k-token prompt, server side, no prefix reuse",
+          "link": "https://github.com/ValerioDolci/capy-flash/blob/60a4153be06d33bddc410917c3214e5fb9664cd2/README.md",
+          "settings": "same machine and profile; ~3.5k / ~55k-token prompts: 2,422 / 4,828 tok/s",
+          "figures": {
+            "prefill_tok_s": 4615
+          }
+        },
+        {
+          "method": "Serving profile",
+          "link": "https://github.com/ValerioDolci/capy-flash/blob/60a4153be06d33bddc410917c3214e5fb9664cd2/README.md",
+          "settings": "--profile flash-next serves up to 262,144 tokens of context (elastic INT8 KV / expert-slot budget)",
+          "figures": {
+            "context_tokens": 262144
+          }
+        }
+      ]
+    }
+  ]
+}
