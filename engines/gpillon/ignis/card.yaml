@@ -1,0 +1,107 @@
+# yaml-language-server: $schema=../../../schemas/card.schema.json
+title: ignis
+summary: 'Ignis: Rust/CUDA engine for Qwen3.8-27B NVFP4 on one Blackwell card, DFlash2, eight lanes, built for agents'
+origin: external
+contributor:
+  name: gpillon
+  repository: https://github.com/gpillon/ignis
+license: Apache-2.0
+features:
+- openai-api
+- tool-calls
+- vision
+- speculative
+source:
+  repository: https://github.com/gpillon/ignis
+  revision: 75c9fdc838ada96ff84129f4e6c70058c690ccd0
+requirements:
+  platforms:
+  - linux
+  - windows
+  gpu_arch:
+  - sm_120a
+  gpu_memory_gb: 32
+  cuda: '13.1'
+checkpoints:
+  qwen3.8-27b@NVFP4:
+    repository: gpillon/Qwen3.8-27B-nvfp4full-dflash2-NInfer
+    revision: 86d9a4bf76997639dcd64f78fde2d73740ad9a3e
+  qwen3.8-flash-next@trellis-2.5bpw:
+    repository: gpillon/Qwen3.8-Flash-Next-trellis-a25-ignis
+    revision: 258a3d43d6dbd682c1a31e6c7efbf248ff72bef0
+supports:
+- gpus:
+  - rtx5090
+  - rtxpro6000
+  models:
+  - qwen3.8-flash-next@trellis-2.5bpw
+results:
+- gpu: rtx5090
+  model: qwen3.8-27b@NVFP4
+  measured_with: Ignis findings A/B
+  measured_on: '2026-09-24'
+  hardware: RTX 5090 32 GB; 64 GB DDR4-3200; PCIe 3.0
+  stats:
+    decode_tok_s: 367
+    prefill_tok_s: null
+    ttft_ms: null
+    ppl: null
+    kld_mean: null
+    context_tokens: 262144
+  evidence:
+  - file: evidence/self-reported.json
+    sha256: 7d43926f62caa4ee987f484b44360ffa12d57ba68ddda7d24900793c14b9341c
+readme:
+  intro: |
+    Ignis is a deliberately specialized engine: one model family on one class of card. It loads an
+    NVFP4 Qwen3.8-27B onto a single RTX 5090 or RTX PRO 6000 and is shaped around one main agent plus a
+    handful of subagents hitting the same card: eight resident decode lanes run as one batch-wide round,
+    the paged KV cache is budgeted in bytes, conversation state outlives the request that built it, and
+    a reasoning loop is caught while it streams. It also serves Qwen3.8-Flash-Next (trellis 2.5 bpw
+    experts) and Qwen-Image-2.1-Turbo, switching models without a restart.
+  design: |
+    | Part | How |
+    | --- | --- |
+    | Runtime | Rust above the step (scheduling, admission, KV accounting, serving); a C++/CUDA static library for the forward pass |
+    | Weights | Qwen3.8-27B NVFP4 with a DFlash2 drafter in the artifact; Flash-Next experts re-quantized to a 2-4 bit trellis code (2.5 bpw average) |
+    | Speculation | DFlash2, 7 draft tokens (27B); the model's MTP head on the `rtxpro6000` profile (Flash-Next) |
+    | KV cache | Paged, byte-budgeted, `hq-e8-2b` (7.11x the capacity of BF16); 512K context with YaRN x2 |
+    | Serving | OpenAI v1 API, Playground, live Monitor and Prometheus metrics in the binary |
+  measured: |
+    One RTX 5090 (64 GB DDR4-3200, PCIe 3.0), Qwen3.8-27B NVFP4, hq-e8-2b KV, DFlash2 with 7 draft
+    tokens, greedy, short prompts, 262,144-token maximum:
+
+    | Load | Throughput |
+    | --- | ---: |
+    | One lane, eight coding prompts, geometric mean | **367 tok/s** |
+    | One lane, predictable code / free prose | 491 / 167 tok/s |
+    | Eight lanes, aggregate | 1,065 tok/s |
+
+    Flash-Next on the same 32 GB card runs about 100 tok/s at one lane on a PCIe 3.0 board; on a 96 GB
+    RTX PRO 6000 with every expert in VRAM, about 258 tok/s on code at one lane. The README notes that
+    prefill is where Ignis is not ahead.
+  checks: |
+    - **Findings:** each figure links a dated findings document under `docs/findings/` upstream.
+  limits: |
+    - One model family and one class of card (SM120a); no DGX Spark (see `docs/user/dgx-spark.md` upstream).
+    - Prefill trails other engines on the same card.
+    - The image model's weights are for non-commercial use only.
+  build_and_chat: |
+    ```sh
+    git clone https://github.com/gpillon/ignis.git
+    git -C ignis checkout 75c9fdc838ada96ff84129f4e6c70058c690ccd0
+    ```
+
+    Build from the checkout as [Quick start](https://github.com/gpillon/ignis/blob/75c9fdc838ada96ff84129f4e6c70058c690ccd0/README.md#quick-start)
+    describes, or take a [release](https://github.com/gpillon/ignis/releases). Then:
+
+    ```sh
+    ignis-server --model-max-context 524288 --spec-backend dflash2 --spec-draft-tokens 7 --vision-enabled
+    ```
+
+    The API is on `http://127.0.0.1:8000/v1` and the Playground on `/ui/`. Check the weights with
+    `python -B tools/verify_model.py <this engine folder> <model folder>`.
+  credits: |
+    Apache License 2.0,
+    [LICENSE](https://github.com/gpillon/ignis/blob/75c9fdc838ada96ff84129f4e6c70058c690ccd0/LICENSE)
+    at the pinned commit. The weights keep their own licenses, given on their Hugging Face cards.
