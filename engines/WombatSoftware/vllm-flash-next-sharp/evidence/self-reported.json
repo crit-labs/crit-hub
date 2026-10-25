@@ -1,0 +1,21 @@
+{
+  "results": [
+    {
+      "gpu": "rtxpro6000",
+      "model": "qwen3.8-flash-next@NVFP4-BF16MTP",
+      "measurements": [
+        {
+          "method": "llama-benchy, 3 runs per cell, under the repository's bench guard",
+          "link": "https://github.com/WombatSoftware/vllm-qwen3.8-flash-next-rtx-pro-6000-sharp-monitoring/blob/b34cc936f0bb156cd4bf440b3f405fe41acbe056/docs/benchmarks.md",
+          "settings": "vLLM nightly 18f8f96025, MTP-3, fp8 KV, 262,144-token context, prefix caching; pp2048 and tg128 at concurrency 1 with no prior context; at 131,072 tokens of context tg128 is 155.08 tok/s",
+          "figures": {
+            "decode_tok_s": 156.06,
+            "prefill_tok_s": 20457.64,
+            "context_tokens": 262144,
+            "long_context_decode_tok_s": 155.08
+          }
+        }
+      ]
+    }
+  ]
+}
