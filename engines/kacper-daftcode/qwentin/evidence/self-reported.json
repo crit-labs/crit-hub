@@ -1,0 +1,28 @@
+{
+  "results": [
+    {
+      "gpu": "rtx5090",
+      "model": "qwen3.8-27b@EXL3-5.75bpw",
+      "measurements": [
+        {
+          "method": "Decode per stream at 32K, N = 1, speculation on (v0.11)",
+          "link": "https://github.com/kacper-daftcode/qwentin/blob/6a15ea399c2ebd9408268de9d3a20e9ecee108a8/README.md",
+          "settings": "engine dd6d21e, the served line (TQ_CTX=262144, TQ_KV_Q4=1, 12 slots), 550 W, CUDA 13.1; one prompt per spec-on cell, 3.78 tokens per round; 106 / 79 tok/s at N = 4 / 8, 115 tok/s at 128K; cold time to first token 11.6 s at 32K (59.7 s at 128K); gate logs in docs/evidence/",
+          "figures": {
+            "decode_tok_s": 177,
+            "ttft_ms": 11600,
+            "context_tokens": 262144
+          }
+        },
+        {
+          "method": "KL divergence and top-1 against the BF16 model (docs/QUALITY.md)",
+          "link": "https://github.com/kacper-daftcode/qwentin/blob/6a15ea399c2ebd9408268de9d3a20e9ecee108a8/docs/QUALITY.md",
+          "settings": "EXL3 5.75 bpw weights with the 4-bit trellis KV; the README reports 0.0022-0.0027 KL and 99.0-99.1% top-1; the upper bound is stated here",
+          "figures": {
+            "kld_mean": 0.0027
+          }
+        }
+      ]
+    }
+  ]
+}

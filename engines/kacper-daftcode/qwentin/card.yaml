@@ -1,0 +1,101 @@
+# yaml-language-server: $schema=../../../schemas/card.schema.json
+title: qwentin
+summary: 'qwentin: Qwen3.8-27B on one RTX 5090, EXL3 5.75 bpw, 4-bit trellis KV, MTP on every stream, 12 sessions'
+origin: external
+contributor:
+  name: kacper-daftcode
+  repository: https://github.com/kacper-daftcode/qwentin
+license: MIT
+features:
+- openai-api
+- speculative
+source:
+  repository: https://github.com/kacper-daftcode/qwentin
+  revision: 6a15ea399c2ebd9408268de9d3a20e9ecee108a8
+requirements:
+  platforms:
+  - linux
+  gpu_arch:
+  - sm_120
+  gpu_memory_gb: 32
+  cuda: '13.1'
+checkpoints:
+  qwen3.8-27b@EXL3-5.75bpw:
+    repository: Qwen/Qwen3.8-27B
+    revision: 1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0
+results:
+- gpu: rtx5090
+  model: qwen3.8-27b@EXL3-5.75bpw
+  measured_with: qwentin gate logs
+  measured_on: '2026-10-20'
+  hardware: RTX 5090 32 GB at 550 W; CUDA 13.1
+  stats:
+    decode_tok_s: 177
+    prefill_tok_s: null
+    ttft_ms: 11600
+    ppl: null
+    kld_mean: 0.0027
+    context_tokens: 262144
+  evidence:
+  - file: evidence/self-reported.json
+    sha256: f3e759e16fc4e2f591f0a3f14a86cbaeb0cd9d85b425b0237e79f6436794549a
+readme:
+  intro: |
+    qwentin is a from-scratch CUDA inference engine for the 27B hybrid-attention Qwen3.6/3.8 model on
+    one consumer Blackwell GPU: hand-written tensor-core kernels behind an OpenAI-compatible server with
+    paged continuous batching. Its memory comes from EXL3 trellis-quantized weights at 5.75 bpw (made
+    with turboderp's exllamav3), its own 4-bit trellis-coded KV cache (16.5 KiB per token) and the
+    model's own MTP head as the drafter, which together pool 576K tokens of context across 12 sessions.
+    It was built by AI coding agents directed by the maintainer, and every number is backed by a log in
+    `docs/evidence/`.
+  design: |
+    | Part | How |
+    | --- | --- |
+    | Weights | EXL3 5.75 bpw, quantized from Qwen's BF16 checkpoint with the served recipe, packed into a `.tqf` file |
+    | KV cache | 4-bit trellis-coded K and V, 16.5 KiB per token; 12 slots and 576K pooled tokens in 29,894 MiB |
+    | Speculation | The model's MTP head on every stream |
+    | Serving | `tools/serve_batched.py`, OpenAI-compatible, paged continuous batching, `/health` with pool and spec stats |
+  measured: |
+    One RTX 5090, v0.11 (2026-10-20), against vLLM on the same cards:
+
+    | | qwentin, 1x RTX 5090 | vLLM NVFP4, 1x RTX 5090 (bf16 ; fp8 KV) | vLLM FP8, 2x RTX 5090 |
+    | --- | --- | --- | --- |
+    | Pooled KV capacity | **576K tokens** | 147-179K ; 283K | 493K |
+    | KL / top-1 vs BF16 | **0.0022-0.0027 / 99.0-99.1%** | about 0.04 KL | 0.0037 / 98.7% |
+    | Decode per stream @32K, N = 1 / 4 / 8 | **177 / 106 / 79 tok/s** | 71.5 / 51.4 / – ; 75.3 / 58.8 / – | 76.8 / 60.3 / 50.4 |
+    | Decode per stream @128K, N = 1 | **115 tok/s** | 55.5 ; 66.0 | 65.8 |
+    | Cold TTFT, 32K / 128K | 11.6 / 59.7 s | **3.1 / 25.2 s** ; 3.3 / 30.0 s | **4.4 / 24.1 s** |
+
+    Each spec-on cell is one prompt, and its speed follows the accepted draft length (3.78 tokens per
+    round at 32K, N = 1). `bench/reproduce.sh` reads 176 / 79 tok/s at N = 1 / 8 with the vLLM checkout
+    as corpus.
+  checks: |
+    - **Quality:** KL and top-1 against BF16 (`docs/QUALITY.md`); EvalPlus equal to FP8.
+    - **Retrieval:** needle in a repository 6/6 at 32K and 128K.
+    - **Reproduction:** `bench/reproduce.sh` builds, checks the model, runs the served line, needle,
+      spec A/B and speed, and writes a results file.
+  limits: |
+    - Cold time to first token is slower than vLLM's (11.6 s against 3.1 s at 32K).
+    - No converted weights are published: conversion takes about 40 minutes on one 5090.
+    - Spec-on speeds are single prompts and move with the accepted draft length.
+  build_and_chat: |
+    ```sh
+    git clone https://github.com/kacper-daftcode/qwentin.git
+    git -C qwentin checkout 6a15ea399c2ebd9408268de9d3a20e9ecee108a8
+    cd qwentin
+    cmake -S . -B build-qwen -DCMAKE_CUDA_COMPILER=/usr/local/cuda-13.1/bin/nvcc && make -C build-qwen -j8
+    pip install -r requirements.txt
+    ```
+
+    Check the BF16 checkpoint with `python -B tools/verify_model.py <this engine folder> /path/to/Qwen3.8-27B`,
+    convert it with exllamav3 and `tools/convert_qwen_tqf.py` as the README shows, then serve:
+
+    ```sh
+    CUDA_VISIBLE_DEVICES=0 TQ_CTX=262144 TQ_KV_Q4=1 TQ_EMBED_FP8=2 TQ_PAGED_ATTN_MMA=1 python3 -u tools/serve_batched.py \
+      --port 8100 --max-slots 12 --num-blocks 4500 --timeout 1800 --model-name qwen3.8-27b \
+      --tqf /path/to/qwen3_8-27b-exl3-opt5.75-mtp4.tqf --model-dir /path/to/Qwen3.8-27B --lib build-qwen/libforward_qwen.so
+    ```
+  credits: |
+    MIT, [LICENSE](https://github.com/kacper-daftcode/qwentin/blob/6a15ea399c2ebd9408268de9d3a20e9ecee108a8/LICENSE)
+    at the pinned commit. The quality numbers stand on turboderp's
+    [exllamav3](https://github.com/turboderp-org/exllamav3) EXL3 quantizer.
