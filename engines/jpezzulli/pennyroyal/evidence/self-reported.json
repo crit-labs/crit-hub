@@ -1,0 +1,20 @@
+{
+  "results": [
+    {
+      "gpu": "rtxpro6000",
+      "model": "qwen3.8-flash-next@NVFP4",
+      "measurements": [
+        {
+          "method": "Single-request decode after the first token, 1,024 output tokens",
+          "link": "https://github.com/aiueo52/sglang-rtxpro6000/blob/468e63a96a63628f8cd1bc217e2287c164088456/README.md",
+          "settings": "v2.5.0, FR-Spec, online FP8 on, RAM-backed PLE, 824,384-token KV pool, 524,288-token context with HiCache and NIXL; short prompt, three-run median (161.47 with online FP8 off); 128K and 490K contexts single runs: 195.63 and 172.64 tok/s",
+          "figures": {
+            "decode_tok_s": 207.12,
+            "context_tokens": 524288,
+            "long_context_decode_tok_s": 172.64
+          }
+        }
+      ]
+    }
+  ]
+}
