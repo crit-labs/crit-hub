@@ -1,0 +1,20 @@
+{
+  "results": [
+    {
+      "gpu": "2x-rtxpro6000",
+      "model": "deepseek-v4-flash@W4A16-FP8-Acti-MTP",
+      "measurements": [
+        {
+          "method": "Single-stream decode, greedy, against the base model without MTP",
+          "link": "https://huggingface.co/LordNeel/DeepSeek-V4-Flash-Acti-MTP-W4A16-FP8/blob/f5619820ba471ce89f34033ffb177d8c037ad3d9/README.md",
+          "settings": "v2 GPTQ MTP head, jasl/vllm b158e5001 with Acti's MTP-loader patches, TP=2, fp8 KV, --max-model-len 524288, MTP with 1 speculative token, --disable-custom-all-reduce; base without MTP 52.85 tok/s; 128K single stream about 111 tok/s",
+          "figures": {
+            "decode_tok_s": 85.52,
+            "ttft_ms": 155,
+            "context_tokens": 524288
+          }
+        }
+      ]
+    }
+  ]
+}
