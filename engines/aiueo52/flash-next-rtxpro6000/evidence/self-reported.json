@@ -1,0 +1,22 @@
+{
+  "results": [
+    {
+      "gpu": "rtxpro6000",
+      "model": "qwen3.8-flash-next@NVFP4",
+      "measurements": [
+        {
+          "method": "Client-side decode rate over 8 held-out prompts per workload, one request at a time, shipped 2026-10-02 build",
+          "link": "https://github.com/aiueo52/flash-next-rtxpro6000/blob/e0fa9fa9fc3ccd710a8fb3d2639b85ce62188c23/results/TABLES.md",
+          "settings": "wa adaptive draft width, greedy, thinking on (reasoning tokens counted), the checkpoint's original MTP head with the public 49,152-token map tokenmaps/public/public_49152.pt; FP8 KV, context length 262,144; range over prose-en 232, prose-ja 248, agent-loop 307 and code-edit 468 tok/s",
+          "figures": {
+            "decode_tok_s": [
+              232,
+              468
+            ],
+            "context_tokens": 262144
+          }
+        }
+      ]
+    }
+  ]
+}
