@@ -1,0 +1,97 @@
+# yaml-language-server: $schema=../../../schemas/card.schema.json
+title: dwarfstar
+summary: 'DwarfStar (ds4.c): small native engine for DeepSeek V4 Flash and a few other big models on Macs, DGX Spark and CUDA'
+origin: external
+contributor:
+  name: antirez
+  repository: https://github.com/antirez/ds4
+license: MIT
+features:
+- openai-api
+- tool-calls
+- vision
+- speculative
+source:
+  repository: https://github.com/antirez/ds4
+  revision: 5379c1c9ac315f1540371b06a3db88491d4059ff
+requirements:
+  platforms:
+  - macos
+  - linux
+  gpu_arch:
+  - sm_121a
+  - sm_120a
+  - sm_89
+  gpu_memory_gb: 128
+  cuda: '13.0'
+checkpoints:
+  deepseek-v4-flash@ds4-Q2:
+    repository: antirez/deepseek-v4-gguf
+    revision: f71f23d552d664e523b422157b2befbf74040380
+results:
+- gpu: dgx-spark
+  model: deepseek-v4-flash@ds4-Q2
+  measured_with: ds4-bench context sweep
+  measured_on: null
+  hardware: DGX Spark, 128 GB unified memory
+  stats:
+    decode_tok_s: 18.05
+    prefill_tok_s: 825.76
+    ttft_ms: null
+    ppl: null
+    kld_mean: null
+    context_tokens: 65536
+  more:
+    long_context_decode_tok_s: 13.84
+  evidence:
+  - file: evidence/self-reported.json
+    sha256: 5e48ccc0dc37ac572ee73ed52e67d7c1ce122ae6d7c7f28fb0dd824db7cc18fa
+readme:
+  intro: |
+    DwarfStar is Salvatore Sanfilippo's small native inference engine for a few excellent large models on
+    hardware people can own: DeepSeek V4 Flash first, plus DeepSeek V4.1 Flash, GLM 5.2/5.3, GLM 5.3
+    Flash, DeepSeek V4 PRO and Qwen3.8 Flash Next. It is deliberately narrow, runs only the GGUF files
+    the project produces, and tests loading, prompt rendering, tool calls, KV state, the HTTP server and
+    its native coding agent together. Metal is the primary target; on CUDA the DGX Spark is the main goal.
+  design: |
+    | Part | How |
+    | --- | --- |
+    | Engine | `ds4.c`, no GGML linkage; GGUF quant layouts and some kernels adapted from llama.cpp under MIT |
+    | Weights | Project GGUFs: Flash Q2 has 2-bit routed experts with Q8 attention projections, shared experts and output |
+    | Memory | SSD streaming for models larger than RAM; compressed KV caches; disk KV snapshots for sessions |
+    | Scale-out | Two Macs over RDMA with tensor parallelism; layer pipelines across machines; multi-GPU CUDA including Ada |
+    | Speculation | DSpark for V4 Flash, MTP for GLM and Qwen (opt-in) |
+  measured: |
+    Recorded DeepSeek V4 Flash Q2 baseline, 2,048-token continued-prefill intervals, 128 greedy tokens per frontier:
+
+    | Machine | Context | Prefill | Generation |
+    | --- | ---: | ---: | ---: |
+    | DGX Spark, 128 GB | 2,048 | 825.76 tok/s | **18.05 tok/s** |
+    | DGX Spark, 128 GB | 16,384 | 872.44 tok/s | 15.10 tok/s |
+    | DGX Spark, 128 GB | 32,768 | 855.94 tok/s | 14.43 tok/s |
+    | DGX Spark, 128 GB | 65,536 | 822.98 tok/s | 13.84 tok/s |
+    | M5 Max, 128 GB | 2,048 | 790.18 tok/s | 39.35 tok/s |
+
+    Eight L40S cards reach about 126 tok/s aggregate with 16 sessions.
+  checks: |
+    - **Capability:** `ds4-eval` runs embedded regression suites (`core`, `hard`) against a real GGUF; these are integration checks, not leaderboard scores.
+    - **Releases:** a QA run precedes each release (QA_BEFORE_RELEASES.md).
+  limits: |
+    - Beta quality and fast-changing; the speed table is a recorded baseline, not a fresh benchmark of the pinned commit.
+    - The pinned file is the current Flash Q2 GGUF (checkpoint 0731), which may be newer than the one recorded.
+    - The project states it is developed with strong assistance from AI coding agents.
+  build_and_chat: |
+    ```sh
+    git clone https://github.com/antirez/ds4.git
+    git -C ds4 checkout 5379c1c9ac315f1540371b06a3db88491d4059ff
+    make -C ds4 cuda-spark
+    ```
+
+    Download the model with `./download_model.sh ds4f-q2` (into `gguf/`), check it with
+    `python -B tools/verify_model.py <this engine folder> <model folder>`, then `./ds4 --cuda` or
+    `./ds4-server --ctx 32768`. Platform guides:
+    [docs/DGX_SPARK.md](https://github.com/antirez/ds4/blob/5379c1c9ac315f1540371b06a3db88491d4059ff/docs/DGX_SPARK.md).
+  credits: |
+    MIT, [LICENSE](https://github.com/antirez/ds4/blob/5379c1c9ac315f1540371b06a3db88491d4059ff/LICENSE)
+    at the pinned commit, keeping the ggml authors' and DeepSeek's copyright notices. By Salvatore
+    Sanfilippo and the ds4.c authors, with thanks to llama.cpp and GGML.

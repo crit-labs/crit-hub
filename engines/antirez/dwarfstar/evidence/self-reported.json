@@ -1,0 +1,21 @@
+{
+  "results": [
+    {
+      "gpu": "dgx-spark",
+      "model": "deepseek-v4-flash@ds4-Q2",
+      "measurements": [
+        {
+          "method": "Recorded Flash Q2 baseline: ds4-bench sweep with 2,048-token continued-prefill intervals and 128 greedy generation tokens per frontier",
+          "link": "https://github.com/antirez/ds4/blob/5379c1c9ac315f1540371b06a3db88491d4059ff/docs/PERFORMANCE.md",
+          "settings": "the I Promessi Sposi prompt, contexts 2,048 to 65,536; figures at 2,048 tokens (prefill of the added interval, generation); at 65,536: 822.98 / 13.84 tok/s; raw data speed-bench/gb10.csv; a recorded baseline, not a measurement of every commit",
+          "figures": {
+            "decode_tok_s": 18.05,
+            "prefill_tok_s": 825.76,
+            "context_tokens": 65536,
+            "long_context_decode_tok_s": 13.84
+          }
+        }
+      ]
+    }
+  ]
+}
