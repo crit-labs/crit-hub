@@ -1,0 +1,81 @@
+{
+  "checkpoints": {
+    "deepseek-v4-flash@W4A16-FP8": {
+      "repository": "canada-quant/DeepSeek-V4-Flash-W4A16-FP8",
+      "revision": "087ae8abe03d7f8961e8adcb9d59206d3ce8377e",
+      "files": [
+        {
+          "path": ".gitattributes",
+          "bytes": 1519,
+          "sha256": "11ad7efa24975ee4b0c3c3a38ed18737f0658a5f75a0a96787b576a78a023361"
+        },
+        {
+          "path": "README.md",
+          "bytes": 20430,
+          "sha256": "48103889c590ac49e4568f2d99a72daee487d923a498b12487221f2db760015a"
+        },
+        {
+          "path": "config.json",
+          "bytes": 12195,
+          "sha256": "5be00e4ffd14905dc3f10bcf46468fa6df20d84168185851e1113186f9b71919"
+        },
+        {
+          "path": "generation_config.json",
+          "bytes": 174,
+          "sha256": "eae6c2c07c6750ab115243b6b1670c029833d8d871a7aed06ddd083cbbabc059"
+        },
+        {
+          "path": "model-00001-of-00004.safetensors",
+          "bytes": 50000483978,
+          "sha256": "231c801d6515438bce61340c51e2023e94c3d0dff9afa7bbf152888e568b2add"
+        },
+        {
+          "path": "model-00002-of-00004.safetensors",
+          "bytes": 49980495040,
+          "sha256": "9310d273d50fa057192d7a324daec6d282efae727121cee992166d0213fe6fd3"
+        },
+        {
+          "path": "model-00003-of-00004.safetensors",
+          "bytes": 50003691840,
+          "sha256": "5783e4e6c32d5c83c2ae7a1cff9e7f8f28de5a78f46e092bd63baf8353b8fc3a"
+        },
+        {
+          "path": "model-00004-of-00004.safetensors",
+          "bytes": 2484315128,
+          "sha256": "dfd9218139ae1b589ec43f805e5306231b5d4c66a0888e33777a909fda7a02ca"
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "bytes": 8507608,
+          "sha256": "3e67e2961a49c3127633df733234fb3ad92ac150273b4fe2ced7a3a6c2684c58"
+        },
+        {
+          "path": "recipe.yaml",
+          "bytes": 1968,
+          "sha256": "7640d3bb3fae6c190e614eb9659fce032ae106a2de486736b56c1d183c011957"
+        },
+        {
+          "path": "tokenizer.json",
+          "bytes": 10071762,
+          "sha256": "599c35568d2325e647acc42abce605a5e7cffd0507136021da8c7fea26eeeebd"
+        },
+        {
+          "path": "tokenizer_config.json",
+          "bytes": 397,
+          "sha256": "21aa165d554e2c2f252a49730b71962edc15c36bbfa4b090ab7bd3340a2fa549"
+        }
+      ]
+    }
+  },
+  "provenance": {
+    "listed_from": "crit's reference-engine collection; figures are the upstream README's, not re-measured by crit-hub",
+    "toolchain": {
+      "cuda": "13.0 (vLLM's torch+cu13 pin)",
+      "vllm": "jasl/vllm 428e08e (dual Spark) or ds4-sm120-experimental abad5dc71 (RTX PRO 6000), plus the vendored kylesayrs deepseek-ct patch"
+    },
+    "runtime_prerequisites": [
+      "two DGX Spark linked over QSFP with a uniform NVIDIA driver, or two RTX PRO 6000",
+      "passwordless sudo for ip on each Spark node (bootstrap script)"
+    ]
+  }
+}

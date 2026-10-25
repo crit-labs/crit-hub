@@ -1,0 +1,106 @@
+# yaml-language-server: $schema=../../../schemas/card.schema.json
+title: dsv4-flash-w4a16-fp8
+summary: vLLM recipe for DeepSeek-V4-Flash W4A16-FP8 at TP=2 on two DGX Spark or two RTX PRO 6000, up to 1M context
+origin: external
+contributor:
+  name: canada-quant
+  repository: https://github.com/canada-quant/dsv4-flash-w4a16-fp8
+license: MIT
+features:
+- openai-api
+- tool-calls
+source:
+  repository: https://github.com/canada-quant/dsv4-flash-w4a16-fp8
+  revision: 6abcceeb055608b7f08ff593e2e38ffc753c97eb
+requirements:
+  platforms:
+  - linux
+  gpu_arch:
+  - sm_121a
+  - sm_120a
+  - sm_90a
+  gpu_memory_gb: 192
+  cuda: '13.0'
+checkpoints:
+  deepseek-v4-flash@W4A16-FP8:
+    repository: canada-quant/DeepSeek-V4-Flash-W4A16-FP8
+    revision: 087ae8abe03d7f8961e8adcb9d59206d3ce8377e
+results:
+- gpu: 2x-dgx-spark
+  model: deepseek-v4-flash@W4A16-FP8
+  measured_with: canada-quant dual-Spark bench
+  measured_on: '2026-05-26'
+  hardware: 2x DGX Spark (GB10, 128 GB unified memory each) over QSFP, TP=2
+  stats:
+    decode_tok_s:
+    - 14
+    - 17
+    prefill_tok_s: null
+    ttft_ms: null
+    ppl: null
+    kld_mean: null
+    context_tokens: 1048576
+  evidence:
+  - file: evidence/self-reported.json
+    sha256: a43d18a7519a9e8bb12796a899c30cfa21f7d9313e43f9cc4c5973db254721f2
+- gpu: 2x-rtxpro6000
+  model: deepseek-v4-flash@W4A16-FP8
+  measured_with: canada-quant RTX PRO 6000 validation
+  measured_on: '2026-05-05'
+  hardware: 2x RTX PRO 6000 Blackwell 96 GB, TP=2
+  stats:
+    decode_tok_s: 47.5
+    prefill_tok_s: null
+    ttft_ms: null
+    ppl: null
+    kld_mean: null
+    context_tokens: null
+  evidence:
+  - file: evidence/self-reported.json
+    sha256: a43d18a7519a9e8bb12796a899c30cfa21f7d9313e43f9cc4c5973db254721f2
+readme:
+  intro: |
+    The reproduction repository for canada-quant's DeepSeek-V4-Flash quantization with W4A16 GPTQ routed
+    experts and FP8 block attention, which serves in vLLM at TP=2 on H200 (SM 9.0a), DGX Spark GB10 (SM
+    12.1a) and RTX PRO 6000 (SM 12.0). The headline path is a single bootstrap script that brings up two
+    DGX Sparks as one TP=2 server with the model's full 1M-token context.
+  design: |
+    | Part | How |
+    | --- | --- |
+    | Weights | W4A16 GPTQ routed experts, FP8_BLOCK attention (RedHat's topology with NVFP4 swapped for W4A16) |
+    | Engine | jasl/vllm SM12x DeepSeek-V4 branch with the vendored kylesayrs deepseek-ct patch and a `packed_modules_mapping` patch |
+    | Dual Spark | `scripts/bootstrap_dsv4_spark.sh`: QSFP /30 setup, image build, head and worker containers, health wait |
+    | KV cache | fp8, block size 256; 1M context with one sequence |
+  measured: |
+    | Test | 2x DGX Spark TP=2 | 2x RTX PRO 6000 TP=2 |
+    | --- | --- | --- |
+    | Decode, batch size 1 (1,024 in / 1,024 out) | 14-17 tok/s | 47.5 tok/s (TPOT 20.8 ms) |
+    | GSM8K 8-shot strict-match | 95.45% | 95.07% |
+    | HumanEval pass@1 | 80.49% | 78.05% |
+    | NIAH 75K to 500K, single | 4/4 | 5/5 |
+
+    On two Sparks aggregate decode scales from 12 tok/s at one sequence to 125 tok/s at sixteen (16-128K
+    contexts); 1M tokens with one sequence fits, 1.5M does not.
+  checks: |
+    - **Tools:** toolcall15 41/45 (dual Spark) and 27/30 (RTX PRO 6000); chat-smoke passes on every SKU.
+    - **Reasoning:** AIME-2024 think-max 4/5 with no truncations at 65,536 max tokens (dual Spark).
+  limits: |
+    - The published artifact is load-blocked on current upstream vLLM (FP8 compressor loading, `.weight_scale` naming, a missing gate bias); pin `jasl/vllm@428e08e` or `abad5dc71`.
+    - TP=1 runs out of memory on one 141 GB H200; TP of 4 or more hits the Marlin MoE scale-sharding bug (vllm#41511).
+    - The RTX PRO 6000 figures are from a 2026-05-05 build; 1M context is dual-Spark only.
+  build_and_chat: |
+    ```sh
+    git clone https://github.com/canada-quant/dsv4-flash-w4a16-fp8.git
+    git -C dsv4-flash-w4a16-fp8 checkout 6abcceeb055608b7f08ff593e2e38ffc753c97eb
+    ./dsv4-flash-w4a16-fp8/scripts/bootstrap_dsv4_spark.sh --head-host spark-a --worker-host spark-b
+    ```
+
+    The walk-through is
+    [findings/QUICKSTART_DUAL_SPARK.md](https://github.com/canada-quant/dsv4-flash-w4a16-fp8/blob/6abcceeb055608b7f08ff593e2e38ffc753c97eb/findings/QUICKSTART_DUAL_SPARK.md);
+    other TP=2 hardware builds jasl's branch with the two patches as in the README. Check the download
+    with `python -B tools/verify_model.py <this engine folder> <model folder>`.
+  credits: |
+    MIT, [LICENSE](https://github.com/canada-quant/dsv4-flash-w4a16-fp8/blob/6abcceeb055608b7f08ff593e2e38ffc753c97eb/LICENSE)
+    at the pinned commit, inherited from deepseek-ai/DeepSeek-V4-Flash. Credits jasl (SM12x DeepSeek-V4
+    support), kylesayrs (compressed-tensors V4 attention), aabbccddwasd, bbbearxyz, wuwenthink and
+    RedHatAI's NVFP4-FP8 reference.

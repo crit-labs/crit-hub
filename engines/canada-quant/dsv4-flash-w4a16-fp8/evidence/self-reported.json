@@ -1,0 +1,36 @@
+{
+  "results": [
+    {
+      "gpu": "2x-dgx-spark",
+      "model": "deepseek-v4-flash@W4A16-FP8",
+      "measurements": [
+        {
+          "method": "Decode at batch size 1, 1,024-token prompts and outputs",
+          "link": "https://github.com/canada-quant/dsv4-flash-w4a16-fp8/blob/6abcceeb055608b7f08ff593e2e38ffc753c97eb/README.md",
+          "settings": "image vllm-w4a16-dsv4:baseline-428e08e (jasl/vllm 428e08e), CUDA graphs on, fp8 KV, --max-model-len 1048576 with max_num_seqs 1; 12 tok/s at seq=1 with 16-128K contexts, 125 tok/s aggregate at seq=16",
+          "figures": {
+            "decode_tok_s": [
+              14,
+              17
+            ],
+            "context_tokens": 1048576
+          }
+        }
+      ]
+    },
+    {
+      "gpu": "2x-rtxpro6000",
+      "model": "deepseek-v4-flash@W4A16-FP8",
+      "measurements": [
+        {
+          "method": "Decode at batch size 1, 1,024-token prompts and outputs",
+          "link": "https://github.com/canada-quant/dsv4-flash-w4a16-fp8/blob/6abcceeb055608b7f08ff593e2e38ffc753c97eb/findings/rtxpro6000_blackwell_deployment.md",
+          "settings": "historical jasl/vllm ds4-sm120-experimental abad5dc71 build, TPOT 20.8 ms; the published artifact does not load on current upstream vLLM without the fixes in vllm#43564",
+          "figures": {
+            "decode_tok_s": 47.5
+          }
+        }
+      ]
+    }
+  ]
+}
