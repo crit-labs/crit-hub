@@ -1,0 +1,57 @@
+{
+  "checkpoints": {
+    "qwen3.8-27b@NVFP4": {
+      "repository": "MirkoCovizzi/Qwen3.8-27B-QUASAR-NVFP4-NInfer",
+      "revision": "d03d4f4f7bdc4efa6df63a2fa3d9becceeb9ae2c",
+      "files": [
+        {
+          "path": ".gitattributes",
+          "bytes": 1580,
+          "sha256": "217ce9047a1f67451c0cef914bbc558e72629a00ed940917562525b88466fe38"
+        },
+        {
+          "path": "README.md",
+          "bytes": 11955,
+          "sha256": "b12d064b3628e1f7d18b3829c78ff72d1c45694e22e2221eb8f726321fac31fb"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 91,
+          "sha256": "3f24eea8869456a3d5e5d8ba3971e914d83561a2cab87511ea166abee1e78664"
+        },
+        {
+          "path": "artifact-manifest.json",
+          "bytes": 4776,
+          "sha256": "307bfea5b1d6f27f30ff7b58683ef5a756a597fb5425ce6e1f1bb8c48871fea1"
+        },
+        {
+          "path": "qwen3_8_27b_nvfp4.ninfer",
+          "bytes": 19782432752,
+          "sha256": "29bd2a543dd779e28fa6cbc4ff532447e3f861018384b3c5e4a8b98ba4b2587b"
+        },
+        {
+          "path": "qwen3_8_27b_nvfp4.ninfer.upgrade.json",
+          "bytes": 1764,
+          "sha256": "1d02925f9591f808d430395618119bbf70a4003402af11a34a0d475ad8026089"
+        },
+        {
+          "path": "qwen3_8_27b_nvfp4.v2.conversion.json",
+          "bytes": 6271,
+          "sha256": "b2a7339caead9c19d9b124540c772fa3927f79246d7f57478f084a93fefc719c"
+        }
+      ]
+    }
+  },
+  "provenance": {
+    "listed_from": "crit's reference-engine collection; figures are the upstream README's, not re-measured by crit-hub",
+    "toolchain": {
+      "cuda": "12.8",
+      "cuda_architectures": "70",
+      "build": "tools/v100/build_dependencies.sh, CMake 3.28+, Ninja, C++20"
+    },
+    "runtime_prerequisites": [
+      "two Tesla V100 16 GB with PCIe P2P",
+      "Linux, FFmpeg development libraries, libcurl"
+    ]
+  }
+}
