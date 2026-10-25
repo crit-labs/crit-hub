@@ -1,0 +1,34 @@
+{
+  "results": [
+    {
+      "gpu": "rtx4090",
+      "model": "qwen3.8-27b@groupwise-int",
+      "measurements": [
+        {
+          "method": "Decode, code generation, MTP3, from the ninfer-serve /metrics counters",
+          "link": "https://github.com/sergiuszm/ninfer-4090/blob/fdb7a6cf3284770b9609ef7b3eac873f84e3849f/README.md",
+          "settings": "single request, greedy, CUDA Graphs, INT8 KV, --prefill-chunk 1024, official 16.96 GiB artifact; 81.0% draft acceptance (bench corpus: 106.5 tok/s at 48.7%; no speculation: 50.5 tok/s)",
+          "figures": {
+            "decode_tok_s": 148.6
+          }
+        },
+        {
+          "method": "64K needle-in-a-haystack, computed prefill from /metrics",
+          "link": "https://github.com/sergiuszm/ninfer-4090/blob/fdb7a6cf3284770b9609ef7b3eac873f84e3849f/README.md",
+          "settings": "same configuration; exact answer (128K: 1,561 tok/s)",
+          "figures": {
+            "prefill_tok_s": 1849
+          }
+        },
+        {
+          "method": "Full native context with the E8 4-bit KV (rk4v4-e8), the shipping default",
+          "link": "https://github.com/sergiuszm/ninfer-4090/blob/fdb7a6cf3284770b9609ef7b3eac873f84e3849f/README.md",
+          "settings": "--max-context 262144 --kv-capacity 262144; retrieval exact through 260K; costs a 5.7% decode tax and 1-2% of prefill against INT8",
+          "figures": {
+            "context_tokens": 262144
+          }
+        }
+      ]
+    }
+  ]
+}

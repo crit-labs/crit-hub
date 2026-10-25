@@ -1,0 +1,52 @@
+{
+  "checkpoints": {
+    "qwen3.8-27b@groupwise-int": {
+      "repository": "neroued/Qwen3.8-27B-NInfer",
+      "revision": "1cbd84e7221e51186bd7f093a149912d2489625b",
+      "files": [
+        {
+          "path": ".gitattributes",
+          "bytes": 1564,
+          "sha256": "f04e5f959c6653de827b7bdcbc64343e0ff030a45c5002c2ba77db1c8b85b553"
+        },
+        {
+          "path": "LICENSE",
+          "bytes": 11357,
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        },
+        {
+          "path": "README.md",
+          "bytes": 10496,
+          "sha256": "b0c782aa2606075ac55a29961e6928689c4defed2db685ef0f4a471d6249b250"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 85,
+          "sha256": "64f2e72691d5d8533f6c861e71ddd6e22f18a26b53312cc6b3ecf28696e934e9"
+        },
+        {
+          "path": "artifact-manifest.json",
+          "bytes": 2012,
+          "sha256": "6ecddb4ac7f40dd5e37ff63debab7d7274d0a85bac46efb03a3bd2707a8c9c8f"
+        },
+        {
+          "path": "qwen3_8_27b.ninfer",
+          "bytes": 20437521664,
+          "sha256": "81f924d440c27261d820c19a9f8d45794c5aee410f8a68bd358133fa8c0375da"
+        }
+      ]
+    }
+  },
+  "provenance": {
+    "listed_from": "crit's reference-engine collection; figures are the upstream README's, not re-measured by crit-hub",
+    "toolchain": {
+      "windows": "VS 2026 + CUDA 13.3, CMAKE_CUDA_ARCHITECTURES=89",
+      "linux": "Docker image ninfer-4090:sm89 built from the repository"
+    },
+    "runtime_prerequisites": [
+      "an RTX 4090",
+      "a recent NVIDIA driver",
+      "Docker with the NVIDIA Container Toolkit on Linux"
+    ]
+  }
+}
