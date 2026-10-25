@@ -1,0 +1,104 @@
+# yaml-language-server: $schema=../../../schemas/card.schema.json
+title: dsv4-flash-w4a16-fp8-mtp
+summary: vLLM recipe for DeepSeek-V4-Flash W4A16-FP8 with its BF16 MTP head kept, on two or four RTX PRO 6000
+origin: external
+contributor:
+  name: canada-quant
+  repository: https://github.com/canada-quant/dsv4-flash-w4a16-fp8-mtp
+license: MIT
+features:
+- openai-api
+- tool-calls
+- speculative
+source:
+  repository: https://github.com/canada-quant/dsv4-flash-w4a16-fp8-mtp
+  revision: 3e9cc06a14f6255cdd858944825d7800a98bc95a
+requirements:
+  platforms:
+  - linux
+  gpu_arch:
+  - sm_120a
+  gpu_memory_gb: 192
+  cuda: '12.9'
+checkpoints:
+  deepseek-v4-flash@W4A16-FP8-MTP:
+    repository: canada-quant/DeepSeek-V4-Flash-W4A16-FP8-MTP
+    revision: 4a4f86303d4fd8c43bafbf02d5523b06275e577d
+results:
+- gpu: 2x-rtxpro6000
+  model: deepseek-v4-flash@W4A16-FP8-MTP
+  measured_with: vllm bench serve, random 256/256
+  measured_on: '2026-05-29'
+  hardware: 2 of 4 RTX PRO 6000 Blackwell Server Edition 96 GB on a Brev g7e.24xlarge, TP=2
+  stats:
+    decode_tok_s: 95.2
+    prefill_tok_s: null
+    ttft_ms: null
+    ppl: null
+    kld_mean: null
+    context_tokens: 65536
+  evidence:
+  - file: evidence/self-reported.json
+    sha256: 380c6f991515f1d259e3467368c4e06b6c34d51ea535abafdeb048b356a06603
+- gpu: 4x-rtxpro6000
+  model: deepseek-v4-flash@W4A16-FP8-MTP
+  measured_with: vllm bench serve, random 256/256
+  measured_on: '2026-05-29'
+  hardware: 4x RTX PRO 6000 Blackwell Server Edition 96 GB on a Brev g7e.24xlarge, TP=4
+  stats:
+    decode_tok_s: 108.1
+    prefill_tok_s: null
+    ttft_ms: null
+    ppl: null
+    kld_mean: null
+    context_tokens: 65536
+  evidence:
+  - file: evidence/self-reported.json
+    sha256: 380c6f991515f1d259e3467368c4e06b6c34d51ea535abafdeb048b356a06603
+readme:
+  intro: |
+    The reproduction and serving repository for canada-quant's DeepSeek-V4-Flash quantization with W4A16
+    INT4 routed experts, FP8 128x128 block attention and the BF16 Multi-Token Prediction head kept, so
+    vLLM can self-speculate. It covers the GPTQ calibration on 8x H200, the vLLM patch series and a
+    Docker image for RTX PRO 6000 Blackwell (SM 12.0) at TP=2 or TP=4.
+  design: |
+    | Part | How |
+    | --- | --- |
+    | Weights | W4A16 GPTQ routed experts (group 128), FP8 block attention, BF16 MTP head retained |
+    | Speculation | vLLM MTP, 1 draft token (DeepGEMM's paged MQA logits cap it at 1) |
+    | Engine | jasl/vllm `27fd665b` with the BF16-MTP cherry-pick, Marlin MoE `c_tmp`/workspace patches and native sm_120a Marlin cubins |
+    | KV cache | fp8, block size 256 |
+  measured: |
+    RTX PRO 6000 Blackwell Server Edition, fresh Docker image, 2026-05-29, random 256/256, MTP on, one replica:
+
+    | Batch size | TP=2 tok/s | TP=2 TPOT p50 | TP=4 tok/s | TP=4 TPOT p50 |
+    | --- | ---: | ---: | ---: | ---: |
+    | 1 | **95.2** | 8.05 ms | **108.1** | 7.32 ms |
+    | 4 | 40.6 | 83.18 ms | 104.3 | 11.31 ms |
+    | 8 | 45.7 | 79.02 ms | 433.2 | 16.44 ms |
+
+    TP=2 with two sequences also loads the model's full 1,048,576-token window (smoke tests only);
+    prefill at 1M tokens takes about 8-12 minutes.
+  checks: |
+    - **AIME-2024, thinking-high, c=4:** 27/30 (TP=2) and 29/30 (TP=4), with zero CUDA errors and 91-92% MTP acceptance.
+    - **GSM8K 8-shot, n=50:** 84-90% (TP=2), 80-86% (TP=4); the model card reports GSM8K 93.71%, MMLU 86.88%, HumanEval 84.76%.
+  limits: |
+    - The W4A16 Marlin MoE decode path has a kernel race under concurrent thinking-mode load on SM 12.0; the NVFP4 sibling is recommended for batched thinking.
+    - The artifact's scale tensors use `.weight_scale` naming, which current upstream vLLM rejects; the pinned jasl build loads it.
+    - Verified on Server Edition only; Workstation Edition is expected to be 5-15% slower.
+    - The README states MIT, but there is no LICENSE file at the pinned commit.
+  build_and_chat: |
+    ```sh
+    git clone https://github.com/canada-quant/dsv4-flash-w4a16-fp8-mtp.git
+    git -C dsv4-flash-w4a16-fp8-mtp checkout 3e9cc06a14f6255cdd858944825d7800a98bc95a
+    ```
+
+    Build the image from `docker/Dockerfile.rtx6000pro` (or pull `canada-quant/dsv4-rtx6000pro:v3`),
+    download `canada-quant/DeepSeek-V4-Flash-W4A16-FP8-MTP`, check it with
+    `python -B tools/verify_model.py <this engine folder> <model folder>`, and start
+    `scripts/serve_rtx6000pro_w4a16.sh` with `TP=2` or `TP=4`; the full recipe is in
+    [RECIPE_RTX6000PRO.md](https://github.com/canada-quant/dsv4-flash-w4a16-fp8-mtp/blob/3e9cc06a14f6255cdd858944825d7800a98bc95a/RECIPE_RTX6000PRO.md).
+  credits: |
+    MIT as stated in the README (no LICENSE file at the pinned commit), inherited from
+    deepseek-ai/DeepSeek-V4-Flash. Builds on jasl's vLLM fork and benchmark harness, kylesayrs's
+    compressed-tensors V4 attention path and the RedHatAI NVFP4-FP8 recipe topology.
