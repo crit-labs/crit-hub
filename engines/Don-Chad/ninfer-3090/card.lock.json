@@ -1,0 +1,79 @@
+{
+  "checkpoints": {
+    "qwen3.8-27b@groupwise-int": {
+      "repository": "WarlaxZ/Qwen3.8-27B-NInfer-3090",
+      "revision": "ea90e8766354c723e6bd0cf0ed731d5d71ce5fa1",
+      "files": [
+        {
+          "path": ".gitattributes",
+          "bytes": 1574,
+          "sha256": "7e2f09d88c8be795a51aeb8ea6a464d0e919d59665168215256e337e8885dab5"
+        },
+        {
+          "path": "LICENSE",
+          "bytes": 11357,
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        },
+        {
+          "path": "README.md",
+          "bytes": 10704,
+          "sha256": "d87fe23baca3d0af4220212600831debe628fbf200969c74d80a6aa06cc5b29f"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 183,
+          "sha256": "450cb3519f37b4148be284c71c8885641f2a6b4720ba2e958fe42b789788ca0b"
+        },
+        {
+          "path": "artifact-manifest.json",
+          "bytes": 2621,
+          "sha256": "b7822310f1610f9e452e8a599d45f9c3ca2739f38fb6584b3b3ef2ce4003e9f4"
+        },
+        {
+          "path": "assets/llamacpp-vs-ninfer-27b.svg",
+          "bytes": 4961,
+          "sha256": "94741ccd34397f7163b40ac5dcac77704af1756c2441defe8b3c5a641f506570"
+        },
+        {
+          "path": "assets/perf-uplift.svg",
+          "bytes": 6446,
+          "sha256": "ab6cb714ebfcabbb06c0cdc7e8699dd6f76455163a5594f334f6a61f1aadc871"
+        },
+        {
+          "path": "assets/qwen38-artifact-gains.svg",
+          "bytes": 7169,
+          "sha256": "b48cef653875e0b9f2cc08bcbfd42dd324fc68423bce00f2a3b4bb5dcf40a51c"
+        },
+        {
+          "path": "qwen3_8_27b.imatrix.safetensors",
+          "bytes": 13940360,
+          "sha256": "28f1dd1effa1e1e3323be4dfa5dd760964e346e44367f9e9f267d977cadcacbf"
+        },
+        {
+          "path": "qwen3_8_27b.ninfer",
+          "bytes": 18982458624,
+          "sha256": "7f2a0086a071ee932c66106e1552d118a85cfec8ddef13c67a54cd64abb39706"
+        },
+        {
+          "path": "qwen3_8_27b.ninfer.conversion.json",
+          "bytes": 610889,
+          "sha256": "5b1eb57031c3b76580f1ebab7dd86899d41865bb76ee68627ed71307477ed50b"
+        }
+      ]
+    }
+  },
+  "provenance": {
+    "listed_from": "crit's reference-engine collection; figures are the upstream README's, not re-measured by crit-hub",
+    "toolchain": {
+      "os": "Windows",
+      "cuda": "13.2",
+      "cxx": "MSVC 14.43",
+      "cuda_architectures": "86"
+    },
+    "runtime_prerequisites": [
+      "RTX 3090 / 3090 Ti with 24 GB",
+      "a recent NVIDIA driver",
+      "about 19 GB of disk for the recommended artifact"
+    ]
+  }
+}
