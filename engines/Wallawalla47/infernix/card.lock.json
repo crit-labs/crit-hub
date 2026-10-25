@@ -1,0 +1,78 @@
+{
+  "checkpoints": {
+    "qwen3.8-flash-next@NVFP4-Dense8": {
+      "repository": "Wallawalla47/Qwen3.8-Flash-Next-NVIDIA-NVFP4-Dense8-Infernix",
+      "revision": "bb9a48f68c4a183cf04be9ef970be25e608c0c64",
+      "files": [
+        {
+          "path": ".gitattributes",
+          "bytes": 1926,
+          "sha256": "e7db803f12df2e1b5470999299d93e2769757874745cad98067a6e3954cbe237"
+        },
+        {
+          "path": "LICENSE",
+          "bytes": 3235,
+          "sha256": "a0dc422560841fd68e06d974907f8b4c709bca44a67daad2b528437bdf676c08"
+        },
+        {
+          "path": "NOTICE",
+          "bytes": 448,
+          "sha256": "b897e71a5d07f812d375825941ae04557a97ca2e00f59323bb4d1bfcf3b0cc45"
+        },
+        {
+          "path": "NVIDIA-Open-Model-License.txt",
+          "bytes": 10429,
+          "sha256": "0cae4799b4f5e83bc9d7c76febff6e11ef2de472ba388764bddba84f47bd76fc"
+        },
+        {
+          "path": "Qwen3.8-Flash-Next-NVIDIA-NVFP4-Dense8-Infernix-00001-of-00003.infernix",
+          "bytes": 32000000000,
+          "sha256": "ded1ceb1cccaa5ff2c4815f93bb5673d3f91e186c423d12231bb44ad1dc3f839"
+        },
+        {
+          "path": "Qwen3.8-Flash-Next-NVIDIA-NVFP4-Dense8-Infernix-00002-of-00003.infernix",
+          "bytes": 32000000000,
+          "sha256": "4209a9cb03d4e9d9401cfd23e807b5b4decae9f10e00703b860157dccc2aef2f"
+        },
+        {
+          "path": "Qwen3.8-Flash-Next-NVIDIA-NVFP4-Dense8-Infernix-00003-of-00003.infernix",
+          "bytes": 12867265280,
+          "sha256": "063d211e7bfa6430ac7bd9fead213a05887adfaf23e3c0494ca3a69c043f282f"
+        },
+        {
+          "path": "Qwen3.8-Flash-Next-NVIDIA-NVFP4-Dense8-Infernix.conversion.json",
+          "bytes": 906018,
+          "sha256": "7364df7153fa2bb850d2580cce1bef4f6faeb4a8c1ccbf4bd8c25bf788b2fb3b"
+        },
+        {
+          "path": "Qwen3.8-Flash-Next-NVIDIA-NVFP4-Infernix.ngram",
+          "bytes": 52429058048,
+          "sha256": "2f185b4864e4644b187f4605227c82647dd2e3ae414b5d1dfe4b459477c3e481"
+        },
+        {
+          "path": "README.md",
+          "bytes": 14817,
+          "sha256": "2fb87a1eb2d9b9983a4222a6ed19195d5ce7f0f18425d84eb76b3f34b6fad708"
+        },
+        {
+          "path": "config.json",
+          "bytes": 709,
+          "sha256": "ca45571d3a49b3d73ff2921bb04de9fa516581beb2bdbb0bdcd84a7a5ed17ca0"
+        }
+      ]
+    }
+  },
+  "provenance": {
+    "listed_from": "crit's reference-engine collection; figures are the upstream README's, not re-measured by crit-hub",
+    "release": "windows-2026.10.18 (the measured build)",
+    "toolchain": {
+      "cuda": "13.4",
+      "builds": "native MSVC and GCC"
+    },
+    "runtime_prerequisites": [
+      "an RTX 50-series GPU (tuned on the RTX 5090)",
+      "host RAM for the pinned NVFP4 experts (63 GiB)",
+      "an NVMe drive for the 52 GB n-gram embedding table"
+    ]
+  }
+}
