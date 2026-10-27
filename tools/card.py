@@ -243,7 +243,7 @@ def measured(results):
 
 def hardware(host):
     """One line naming the machine a crit Eval result ran on, from its `host`, as crit Eval's own report
-    says it (crit_eval.host.summary); None when the result records no hardware (before crit Eval did)."""
+    says it (crit_eval.run.host.summary); None when the result records no hardware (before crit Eval did)."""
     if not isinstance(host, dict) or not (host.get("os") or host.get("cpu") or host.get("gpus")):
         return None
     gib = lambda n: f"{n / 1024 ** 3:.0f} GiB"
