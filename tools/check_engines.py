@@ -12,7 +12,9 @@ Every result states the six headline stats (decode, prefill, time to first token
 mean KL divergence, context; null when not measured). A result measured with crit Eval ("crit-eval-v7") lists its
 result files with their SHA-256, and every stat and further figure must be what those files hold;
 any other result is the contributor's own report, and when evidence/self-reported.json is given
-every figure it states must be one that file records. A crit engine's source is in
+every figure it states must be one that file records. A crit Eval result was judged in the quality mode its
+result files record (schemas/quality-modes.yaml lists the modes; the default when they record none), which the
+card states as quality_mode unless it is the default. A crit engine's source is in
 crit-labs/crit-engines, pinned to a full commit, with its sealed run in card.lock.json.
 """
 import argparse
@@ -46,7 +48,8 @@ CARD_FIELDS = {"title", "summary", "origin", "contributor", "license", "features
                "checkpoints", "supports", "derived_from", "built", "results", "readme"}
 ENGINE_ID = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
 BUILT_FIELDS = {"hours", "agent_tokens", "api_usd", "agent", "candidates"}
-RESULT_FIELDS = {"gpu", "model", "measured_with", "measured_on", "sampling", "hardware", "stats", "more", "evidence"}
+RESULT_FIELDS = {"gpu", "model", "measured_with", "measured_on", "quality_mode", "sampling", "hardware", "stats", "more", "evidence"}
+MODE = re.compile(r"[a-z][a-z0-9_]*")
 PLATFORMS = {"linux", "wsl2", "windows", "macos"}
 GPU_ARCH = re.compile(r"sm_[0-9]{2,3}[a-z]?")
 CUDA = re.compile(r"[0-9]+\.[0-9]+")
@@ -345,6 +348,7 @@ def check_crit_eval(name, result, loaded):
     """Every stat and further figure of a crit Eval result is what its result files hold."""
     problems = []
     gpu = re.sub(r"[^a-z0-9]", "", result["gpu"])
+    sampled = cardlib.sampled_eval(result["measured_with"])
     for file, data in loaded:
         if not isinstance(data, dict):
             problems.append(f"{name}: {file} is not a crit Eval result")
@@ -353,9 +357,9 @@ def check_crit_eval(name, result, loaded):
             problems.append(f"{name}: {file} ran under {data.get('protocol')}, not {result['measured_with']}")
         if data.get("aborted") or not (data.get("speed") or {}).get("complete"):
             problems.append(f"{name}: {file} is not a complete speed run")
-        if cardlib.eval_major(result["measured_with"]) >= 7 and not (data.get("sampled_speed") or {}).get("complete"):
+        if sampled and not (data.get("sampled_speed") or {}).get("complete"):
             problems.append(f"{name}: {file} is not a complete sampled speed run")
-        if cardlib.eval_major(result["measured_with"]) >= 7:
+        if sampled:
             sampled = data.get("sampled_speed") or {}
             source = sampled.get("sampling_source") or "generation_config"
             stated = result.get("sampling")
@@ -363,6 +367,14 @@ def check_crit_eval(name, result, loaded):
             if stated != found:
                 problems.append(f"{name}: {file} sampled its decode at {sampled.get('sampling')} ({source}); the card's "
                                 f"sampling must be {found if found else 'absent (the model defaults)'}")
+        # The quality mode it was judged in (crit-eval 0.2.0 records it; before, every run was the default's).
+        judged = cardlib.evidence_mode(data)
+        if judged not in cardlib.quality_modes():
+            problems.append(f"{name}: {file} was judged in quality mode {judged}, which crit-hub does not list yet: "
+                            f"add it to schemas/quality-modes.yaml")
+        elif judged != cardlib.quality_mode(result):
+            problems.append(f"{name}: {file} was judged in quality mode {judged}; the card's quality_mode must be {judged}"
+                            + (" (or left out, the default)" if judged == cardlib.default_mode() else ""))
         failed = [g.get("name") for g in (data.get("status") or {}).get("gates", []) if isinstance(g, dict) and g.get("state") == "fail"]
         if failed:
             problems.append(f"{name}: {file} failed gate(s) {', '.join(map(str, failed))}")
@@ -370,7 +382,7 @@ def check_crit_eval(name, result, loaded):
             problems.append(f"{name}: {file} ran on {(data.get('device') or {}).get('device')}, not {result['gpu']}")
     stats, more = result["stats"], result.get("more") or {}
     figures = {**stats, **more}
-    for key, (section, field) in (SCORES_V7 if cardlib.eval_major(result["measured_with"]) >= 7 else SCORES).items():
+    for key, (section, field) in (SCORES_V7 if sampled else SCORES).items():
         value, scores = figures.get(key), [(data.get(section) or {}).get(field) for _, data in loaded]
         if value is None:
             continue
@@ -397,7 +409,7 @@ def check_crit_eval(name, result, loaded):
             problems.append(f"{name}: {key} {value} is not its result files' worst served {field}")
     if stats["ppl"] and "absolute" in stats["ppl"]:
         problems.append(f"{name}: a crit Eval result gives perplexity against the reference, ppl: {{vs_reference: ...}}")
-    if "greedy_decode_tok_s" in more and cardlib.eval_major(result["measured_with"]) < 7:
+    if "greedy_decode_tok_s" in more and not sampled:
         problems.append(f"{name}: greedy_decode_tok_s is for crit-eval-v7 results; through v6 decode itself is greedy")
     if "long_context_decode_tok_s" in more:
         scores = [(((data.get("status") or {}).get("kpis") or {}).get("context") or {}).get("decode", {}).get("score") for _, data in loaded]
@@ -476,9 +488,12 @@ def check_results(folder, card):
         on = result.get("measured_on")
         if on is not None and not (isinstance(on, str) and re.fullmatch(r"\d{4}-\d{2}-\d{2}", on)):
             problems.append(f"{name}: measured_on is the day it was measured, YYYY-MM-DD, or null when unknown")
-        if "sampling" in result and not (cardlib.crit_eval(result["measured_with"])
-                                         and cardlib.eval_major(result["measured_with"]) >= 7):
+        if "sampling" in result and not cardlib.sampled_eval(result["measured_with"]):
             problems.append(f"{name}: sampling states a crit-eval-v7 result's non-default sampling")
+        if "quality_mode" in result and (not MODE.fullmatch(str(result["quality_mode"]))
+                                         or result["quality_mode"] not in cardlib.quality_modes()):
+            problems.append(f"{name}: quality_mode is one of {', '.join(cardlib.quality_modes())} (schemas/quality-modes.yaml), "
+                            f"not {result['quality_mode']}")
         if "hardware" in result and not (isinstance(result["hardware"], str) and result["hardware"].strip() and "\n" not in result["hardware"]):
             problems.append(f"{name}: hardware is one line naming the machine it ran on")
         stat_problems = check_stats(name, result.get("stats"), result.get("more", {}))
@@ -577,7 +592,27 @@ def check(folder):
     return problems
 
 
+def check_modes():
+    """schemas/quality-modes.yaml: every mode an id with a label and a one-line summary, exactly one the default."""
+    modes = cardlib.quality_modes()
+    if not isinstance(modes, dict) or not modes:
+        return ["schemas/quality-modes.yaml lists the quality modes, {<mode>: {label, summary, default}}"]
+    problems = []
+    for mode, about in modes.items():
+        one_line = lambda key: isinstance(about.get(key), str) and about[key].strip() and "\n" not in about[key]
+        if not MODE.fullmatch(str(mode)) or not isinstance(about, dict) or set(about) - {"label", "summary", "default"} \
+                or not (one_line("label") and one_line("summary")) or about.get("default", False) not in (True, False):
+            problems.append(f"schemas/quality-modes.yaml {mode}: a lowercase id (letters, digits, _) with one-line label and summary, "
+                            "and optionally default: true")
+    if sum(isinstance(about, dict) and about.get("default") is True for about in modes.values()) != 1:
+        problems.append("schemas/quality-modes.yaml marks exactly one mode default: true")
+    return problems
+
+
 def main(hub):
+    modes = check_modes()
+    if modes:
+        raise SystemExit("FAIL schemas/quality-modes.yaml\n  " + "\n  ".join(modes))
     folders = sorted(p for p in (Path(hub) / "engines").glob("*/*") if p.is_dir() and not p.parent.name.startswith("_"))
     failed = 0
     for folder in folders:

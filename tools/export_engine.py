@@ -183,6 +183,8 @@ def measured(args, seal, candidate, target):
             raise ValueError(f"eval/{attempt}.json is not a complete crit Eval speed run")
     if len({r["protocol"] for r in results}) > 1:
         raise ValueError("The --eval attempts ran under different crit Eval protocols")
+    if len({cardlib.evidence_mode(r) for r in results}) > 1:
+        raise ValueError("The --eval attempts were judged in different quality modes")
     target.mkdir(parents=True)
     if not args.eval:
         return {"gpu": args.gpu, "model": args.model, "measured_with": None, "measured_on": None,
@@ -205,7 +207,7 @@ def measured(args, seal, candidate, target):
     tokens = {(r.get("context") or {}).get("tokens") for r in results}
     ppl, kld, budget = worst("ppl_ratio"), worst("kld_mean"), worst("budget_used")
     # From crit-eval-v7 the headline decode is the sampled suite's, the greedy one a further figure.
-    sampled = cardlib.eval_major(results[0]["protocol"]) >= 7
+    sampled = cardlib.sampled_eval(results[0]["protocol"])
     stats = {
         "decode_tok_s": figure([r["sampled_speed" if sampled else "speed"]["decode_score"] for r in results], 1),
         "prefill_tok_s": figure([r["speed"]["prefill_score"] for r in results], 0),
@@ -226,6 +228,10 @@ def measured(args, seal, candidate, target):
     entry = {"gpu": args.gpu, "model": args.model, "measured_with": results[0]["protocol"],
              "measured_on": max(str(r.get("started_at", ""))[:10] for r in results)}
     # The machine the result file records (crit Eval records hardware from v7 on).
+    # The quality mode it was judged in, as the result file records it (crit-eval 0.2.0 on).
+    mode = (results[0].get("requirements") or {}).get("quality_mode")
+    if mode:
+        entry["quality_mode"] = mode
     machine = cardlib.hardware(results[0].get("host"))
     if machine:
         entry["hardware"] = machine

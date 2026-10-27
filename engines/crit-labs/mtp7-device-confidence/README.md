@@ -12,6 +12,7 @@
 | – | **252.4 tok/s** | **7,425 tok/s** | **150 ms** | **+0.1% vs reference** | **0.0028** | **262,144 tok** |
 
 - **Measured with:** crit Eval (crit-eval-v6, greedy decode) · [crit-eval.json](evidence/crit-eval.json)
+- **Quality mode:** preserve: quality judged against the checkpoint's own arithmetic with exact activations, so the drift is what the engine adds
 - **Further figures:** long-context decode 315.2 tok/s · held-out decode 163.3 tok/s · 5.8% of the quality budget
 - **Requires:** WSL2 · sm_120a · 32 GB GPU memory · CUDA 13.1 · crit Core 0.5.0
 - **Checkpoint** (`qwen3.8-27b@NVFP4`): [`unsloth/Qwen3.8-27B-NVFP4`](https://huggingface.co/unsloth/Qwen3.8-27B-NVFP4/tree/f0b7c9e722f5565102fff8481c99e4d86ae099c7) at `f0b7c9e7`

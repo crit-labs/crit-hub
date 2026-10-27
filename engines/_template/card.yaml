@@ -84,15 +84,21 @@ checkpoints:
 results:
 - gpu: rtx5090                     # the card in lowercase
   model: <model>@<encoding>
-  # crit-eval-v7 when measured with crit Eval (crit eval run --url measures any OpenAI-compatible
-  # server): then evidence/crit-eval.json is required and every figure must be what it holds.
+  # The crit Eval protocol when measured with crit Eval (crit eval run --url measures any OpenAI-compatible
+  # server), as its result file names it (crit-eval-v0.2.0; earlier ids such as crit-eval-v7 count too):
+  # then evidence/crit-eval.json is required and every figure must be what it holds.
   # Anything else (a leaderboard, your own benchmark) is shown as your own report.
-  measured_with: crit-eval-v7
+  measured_with: crit-eval-v0.2.0
   measured_on: "2026-10-23"        # the day it was measured; null when unknown (never for crit Eval)
+  # The quality mode it was judged in, one of schemas/quality-modes.yaml: preserve (against the checkpoint's
+  # own arithmetic with exact activations) or as_quantized (against the checkpoint run as quantized). crit Eval:
+  # what the result file's requirements.quality_mode records; may be left out when it is the default, preserve.
+  # Otherwise your own statement, left out when you do not know it.
+  quality_mode: preserve
   # The machine it ran on, in one line. crit Eval: exactly what the result file's host records, as
   # tools/export_engine.py writes it (left out for a result file that records none); otherwise your own.
   hardware: <OS>; <CPU> (<physical>/<logical> cores); <RAM> GiB RAM; <GPU> <VRAM> GiB, PCIe <generation>.0 x<width>
-  # crit-eval-v7, only when the decode was not sampled at the model's generation_config.json: as the result
+  # crit Eval from v7, only when the decode was not sampled at the model's generation_config.json: as the result
   # file's sampled_speed records it (a user's crit eval prepare --sampling override, or the protocol default).
   # sampling: {source: override, settings: {temperature: 0.6, top_p: 0.95, top_k: 20}}
   # The six headline stats, in this order, on every page that shows the engine. null when not measured.
@@ -107,7 +113,7 @@ results:
     context_tokens: 262144         # maximum context the engine was measured at
   # Optional further figures.
   more:
-    greedy_decode_tok_s: 240.0     # crit-eval-v7: the greedy suite's decode, next to the sampled one
+    greedy_decode_tok_s: 240.0     # crit Eval from v7: the greedy suite's decode, next to the sampled one
     long_context_decode_tok_s: 300.0
     # heldout_decode_tok_s: 160.0
     # host_ram_gib: 64             # when the engine keeps weights in host memory

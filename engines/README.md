@@ -45,7 +45,7 @@ them, and crit's case studies use them.
 
 | Stat | card.yaml | Shown as |
 | --- | --- | --- |
-| Decode | `decode_tok_s`: from crit-eval-v7 at the model's own sampling, through v6 greedy | `252.4 tok/s` |
+| Decode | `decode_tok_s`: from crit-eval-v7 (and every `crit-eval-v0.x.y`) at the model's own sampling, through v6 greedy | `252.4 tok/s` |
 | Prefill | `prefill_tok_s` | `7,425 tok/s` |
 | TTFT | `ttft_ms`: time to first token | `150 ms`, or `1.61 s` from one second on |
 | Perplexity vs reference | `ppl: {vs_reference: 1.001}`, or `ppl: {absolute: 4.28}` when no reference was measured | `+0.1%`, or `4.28` |
@@ -58,7 +58,7 @@ the stats as one table (a row per GPU and model when there are several), with de
 sampled and greedy. For a crit Eval result, `tools/card.py` also draws charts from its result file into
 `charts/` and shows them in Measured: decode by context above its prose, decode by workload below it;
 never edit them by hand. Under the table, the facts say how each result was measured
-and from which evidence, the `hardware` it ran on, and its further figures. Further figures go under
+and from which evidence, the quality mode it was judged in, the `hardware` it ran on, and its further figures. Further figures go under
 `more`: `greedy_decode_tok_s` (shown in the table), `long_context_decode_tok_s`,
 `heldout_decode_tok_s`, `host_ram_gib` and `quality_budget_pct`.
 
@@ -79,15 +79,30 @@ the README names them.
 A figure is either **crit Eval with its evidence** or **the contributor's own report**, whoever
 contributed the engine.
 
-- A result whose `measured_with` is a crit Eval protocol (`crit-eval-v7`) lists the result file
+- A result whose `measured_with` is a crit Eval protocol (`crit-eval-v0.2.0`, or an earlier one such
+  as `crit-eval-v7`) lists the result file
   `crit eval run` wrote, unchanged, as `evidence/crit-eval.json` with its SHA-256 (`crit-eval-2.json`
   and on for further runs or GPU/model pairs), and gives `measured_on`, the day it ran.
   `tools/check_engines.py` reads it and requires the protocol, the GPU, a complete speed run with no
   failed gate, and every stat and figure the card states: decode, prefill, first token and held-out
   decode from the speed scores, context from the measured context, perplexity and KL divergence from
   the worst served path of the quality section, the quality budget share and long-context decode.
-  Figures under the same major version of the protocol, such as `crit-eval-v7` and `crit-eval-v7.1`,
-  are comparable across engines.
+  Figures under the same series of the protocol are comparable across engines: one major version of
+  the ids up to v7 (`crit-eval-v7` and `crit-eval-v7.1`), and from `crit-eval-v0.1.0`, whose ids follow
+  crit-eval's version, one minor before 1.0 (`crit-eval-v0.2.0` and `crit-eval-v0.2.1`) and one major
+  after.
+- A crit Eval result was judged in a **quality mode**, which sets what its perplexity and KL
+  divergence are measured against: `preserve`, the checkpoint's own arithmetic with exact
+  activations, or `as_quantized`, the checkpoint run as quantized (its activations quantized as it
+  declares, as W4A4 and W8A8 serving stacks run it), with a drift budget of its own. crit Eval
+  records it in the result file (`requirements.quality_mode`, from crit-eval 0.2.0; a file that
+  records none was judged in `preserve`), and the result states it as `quality_mode`, which may be
+  left out when it is the default. An engine that keeps the activations exact is judged in
+  `preserve` and one that runs the checkpoint as quantized in `as_quantized`, so the README, the
+  website and `/index.json` show every result's mode beside its benchmark, and the website groups
+  each table's crit Eval rows by it. A self-reported result may state the mode it was judged in too.
+  [`schemas/quality-modes.yaml`](../schemas/quality-modes.yaml) is the only place modes are named:
+  a mode crit Eval adds is listed there, with its label and summary, and nothing else changes.
 - Any other `measured_with`, such as a leaderboard or your own benchmark, is shown as your own
   report. Its evidence can go in `evidence/self-reported.json` (optional): for each GPU and model,
   the measurements behind its figures, each with its `method`, a `link` to the run, leaderboard or
@@ -127,7 +142,7 @@ people read. [`_template/card.yaml`](_template/card.yaml) documents every key; i
 - **`built`** (optional, written by the exporter from the run's `cost.json`): what building the engine
   took, as `hours`, `candidates`, `agent_tokens`, `api_usd` and the `agent`.
 - **`results`**: for each GPU and model it was measured on, `measured_with`, `measured_on`, the
-  `hardware` it ran on, the six `stats`, optional `more` and its `evidence`.
+  `quality_mode` it was judged in, the `hardware` it ran on, the six `stats`, optional `more` and its `evidence`.
 - **`readme`**: the README's prose as markdown blocks, rendered in this order: `intro`,
   `design`, `measured`, `checks`, `limits`, `build_and_chat`, the optional `benchmark` and
   `credits`. The renderer adds the title, the credit (a note for a crit engine, a warning for an

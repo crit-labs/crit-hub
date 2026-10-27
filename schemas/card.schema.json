@@ -125,9 +125,11 @@
       "properties": {
         "gpu": {"$ref": "#/$defs/gpu"},
         "model": {"$ref": "#/$defs/model"},
-        "measured_with": {"type": "string", "description": "A crit Eval protocol (crit-eval-v7) or how else it was measured (LocalMaxxing, your own benchmark)."},
+        "measured_with": {"type": "string", "description": "A crit Eval protocol (crit-eval-v0.2.0, crit-eval-v7) or how else it was measured (LocalMaxxing, your own benchmark)."},
         "measured_on": {"description": "The day it was measured, YYYY-MM-DD (quoted); null when unknown, never for crit Eval.",
                         "oneOf": [{"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"}, {"type": "null"}]},
+        "quality_mode": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$",
+                         "description": "The quality mode it was judged in, one of schemas/quality-modes.yaml (preserve, as_quantized, ...). crit Eval: what the result file's requirements.quality_mode records, optional when it is the default; otherwise your own statement, left out when not known."},
         "hardware": {"type": "string", "minLength": 1, "description": "One line naming the machine it ran on. crit Eval: what the result file's host records (left out when it records none); otherwise your own statement."},
         "sampling": {
           "type": "object", "additionalProperties": false, "required": ["source", "settings"],

@@ -147,7 +147,7 @@ def decodes(result):
     """A result's (sampled, greedy) decode. crit Eval measures both from v7 and only greedy through v6; a
     self-reported decode counts as greedy, as on the website."""
     stats, more, how = result.get("stats") or {}, result.get("more") or {}, result.get("measured_with")
-    if crit_eval(how) and eval_major(how) >= 7:
+    if sampled_eval(how):
         return stats.get("decode_tok_s"), more.get("greedy_decode_tok_s")
     return None, stats.get("decode_tok_s")
 
@@ -203,13 +203,67 @@ def stats_table(results):
     ])
 
 
-def eval_major(measured_with):
-    """The crit Eval protocol's major version: 6 for crit-eval-v6.1. Through v6 Eval measures decode greedily."""
-    return int(re.fullmatch(r"crit-eval-v([0-9]+)(\.[0-9]+)?", str(measured_with)).group(1))
+def eval_protocol(measured_with):
+    """A crit Eval protocol id, read: {series, order, sampled}, or None for anything else. Through crit-eval-v7
+    the ids count up on their own (crit-eval-v6, v6.1, v7); from crit-eval-v0.1.0 (v8, renamed) they follow
+    crit-eval's version, X.Y.Z. Figures compare within a series (series): one major of the old ids, and of the
+    new one minor before 1.0 and one major after. order sorts protocols oldest first. sampled: the headline
+    decode is the sampled one, from v7 on; through v6 Eval measures decode greedily."""
+    old = re.fullmatch(r"crit-eval-v([1-9][0-9]*)(\.[0-9]+)?", str(measured_with))
+    if old:
+        major = int(old.group(1))
+        return {"series": f"crit-eval-v{major}", "order": (0, major, 0), "sampled": major >= 7}
+    new = re.fullmatch(r"crit-eval-v([0-9]+)\.([0-9]+)\.[0-9]+", str(measured_with))
+    if new:
+        major, minor = int(new.group(1)), int(new.group(2))
+        return {"series": f"crit-eval-v0.{minor}" if major == 0 else f"crit-eval-v{major}",
+                "order": (1, major, minor if major == 0 else 0), "sampled": True}
+    return None
 
 
 def crit_eval(measured_with):
-    return re.fullmatch(r"crit-eval-v[0-9]+(\.[0-9]+)?", str(measured_with)) is not None
+    return eval_protocol(measured_with) is not None
+
+
+def sampled_eval(measured_with):
+    """A crit Eval protocol whose headline decode is the sampled one (from v7)."""
+    protocol = eval_protocol(measured_with)
+    return bool(protocol and protocol["sampled"])
+
+
+# The quality modes crit-hub knows, in the order pages show them: schemas/quality-modes.yaml.
+MODES_FILE = Path(__file__).resolve().parent.parent / "schemas" / "quality-modes.yaml"
+_modes = None
+
+
+def quality_modes():
+    """{mode: {label, summary, default}} from schemas/quality-modes.yaml, the one place modes are named."""
+    global _modes
+    if _modes is None:
+        _modes = yaml.safe_load(MODES_FILE.read_text(encoding="utf-8")) if MODES_FILE.is_file() else {}
+    return _modes
+
+
+def default_mode():
+    """The mode a crit Eval result file that records none was judged in."""
+    return next((mode for mode, about in quality_modes().items() if isinstance(about, dict) and about.get("default")), None)
+
+
+def evidence_mode(data):
+    """The quality mode a crit Eval result file was judged in: its requirements.quality_mode, else the default."""
+    return ((data.get("requirements") or {}) if isinstance(data, dict) else {}).get("quality_mode") or default_mode()
+
+
+def quality_mode(result):
+    """The quality mode a card's result was judged in: its quality_mode; for a crit Eval result that states
+    none, the default; for another result that states none, None (not known)."""
+    return result.get("quality_mode") or (default_mode() if crit_eval(result.get("measured_with")) else None)
+
+
+def mode_text(mode):
+    """A mode as pages show it: its label and summary, or its id alone when the list does not hold it."""
+    about = quality_modes().get(mode) or {}
+    return f"{about.get('label', mode)}: {about['summary']}" if about.get("summary") else str(mode)
 
 
 def sampled_text(sampling):
@@ -223,16 +277,20 @@ def sampled_text(sampling):
 
 def measured(results):
     """The facts each result adds under the stats table: how it was measured and from which evidence, the
-    hardware it ran on, and its further figures. With several results, each names its GPU and model."""
+    quality mode it was judged in, the hardware it ran on, and its further figures. With several results,
+    each names its GPU and model."""
     lines = []
     for result in results:
         named = f" ({pair(result)})" if len(results) > 1 else ""
         label = lambda name: f"- **{name}**{named}: " if named else f"- **{name}:** "
         how = result["measured_with"]
-        how = (f"crit Eval ({how}, " + ("greedy decode" if eval_major(how) <= 6 else sampled_text(result.get("sampling"))) + ")"
+        how = (f"crit Eval ({how}, " + (sampled_text(result.get("sampling")) if sampled_eval(how) else "greedy decode") + ")"
                if crit_eval(how) else f"self-reported ({how})")
         files = [f"[{Path(e['file']).name}]({e['file']})" for e in result.get("evidence") or []]
         lines.append(label("Measured with") + " · ".join([how] + files))
+        mode = quality_mode(result)
+        if mode:
+            lines.append(label("Quality mode") + mode_text(mode))
         if result.get("hardware"):
             lines.append(label("Hardware") + result["hardware"])
         more = more_text(result.get("more") or {})

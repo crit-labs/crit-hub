@@ -1,0 +1,21 @@
+# The quality modes a result can be judged in: what its perplexity and KL divergence are measured
+# against. crit Eval records a run's mode in its result file (requirements.quality_mode); a result
+# file that records none, as before crit-eval 0.2.0, was judged in the default mode. A card states a
+# result's mode as quality_mode (the default when left out of a crit Eval result).
+#
+# This list is the only place crit-hub names modes: tools/check_engines.py accepts the modes listed
+# here, and tools/card.py and the website show their label and summary, in this order. When crit Eval
+# gains a mode, add it here; nothing else needs to change. Exactly one mode is the default.
+#
+#   <id>:            as crit Eval records it, lowercase letters, digits and _
+#     label:         how pages show it, a word or two
+#     summary:       one line: what quality is judged against
+#     default: true  the mode of a crit Eval result that records none
+
+preserve:
+  label: preserve
+  summary: quality judged against the checkpoint's own arithmetic with exact activations, so the drift is what the engine adds
+  default: true
+as_quantized:
+  label: as quantized
+  summary: quality judged against the checkpoint run as quantized, its activations quantized as it declares, with a drift budget of its own
