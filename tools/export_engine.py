@@ -200,8 +200,7 @@ def measured(args, seal, candidate, target):
         return values[0] if len(values) == 1 else [min(values), max(values)]
 
     def worst(field):
-        values = [s[field] for r in results for s in ((r.get("quality") or {}).get("sets") or {}).values()
-                  if isinstance(s, dict) and isinstance(s.get(field), (int, float))]
+        values = [v for v in (cardlib.worst_quality(r, field) for r in results) if v is not None]
         return max(values) if values else None
 
     tokens = {(r.get("context") or {}).get("tokens") for r in results}

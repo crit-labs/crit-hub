@@ -254,6 +254,18 @@ def evidence_mode(data):
     return ((data.get("requirements") or {}) if isinstance(data, dict) else {}).get("quality_mode") or default_mode()
 
 
+def worst_quality(data, field):
+    """The worst path's figure in a crit Eval result's quality section. Perplexity counts only the served paths
+    when the result has them: from crit-eval-v0.2.1 prompt positions report a perplexity ratio that KLD judges."""
+    sets = {name: s for name, s in (((data.get("quality") or {}).get("sets") or {}) if isinstance(data, dict) else {}).items()
+            if isinstance(s, dict)}
+    if field == "ppl_ratio" and any(name.endswith("/served") for name in sets):
+        sets = {name: s for name, s in sets.items() if name.endswith("/served")}
+    values = [s.get(field) for s in sets.values()]
+    values = [v for v in values if isinstance(v, (int, float)) and not isinstance(v, bool)]
+    return max(values) if values else None
+
+
 def quality_mode(result):
     """The quality mode a card's result was judged in: its quality_mode; for a crit Eval result that states
     none, the default; for another result that states none, None (not known)."""

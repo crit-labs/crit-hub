@@ -337,13 +337,6 @@ def read_evidence(folder, name, entries, allowed):
     return loaded, problems
 
 
-def worst(data, key):
-    """The worst served path's figure in a crit Eval result's quality section."""
-    values = [s.get(key) for s in ((data.get("quality") or {}).get("sets") or {}).values() if isinstance(s, dict)]
-    values = [v for v in values if isinstance(v, (int, float)) and not isinstance(v, bool)]
-    return max(values) if values else None
-
-
 def check_crit_eval(name, result, loaded):
     """Every stat and further figure of a crit Eval result is what its result files hold."""
     problems = []
@@ -400,7 +393,7 @@ def check_crit_eval(name, result, loaded):
         "quality_budget_pct": ("budget_used", 100, more.get("quality_budget_pct")),
     }
     for key, (field, scale, value) in derived.items():
-        scores = [worst(data, field) for _, data in loaded]
+        scores = [cardlib.worst_quality(data, field) for _, data in loaded]
         if value is None:
             if key != "quality_budget_pct" and all(s is not None for s in scores):
                 problems.append(f"{name}: {key} is measured in its result files; state it")
