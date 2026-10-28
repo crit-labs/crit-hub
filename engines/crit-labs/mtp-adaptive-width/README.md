@@ -12,9 +12,9 @@
 | **185.3 tok/s** | **195.5 tok/s** | **3,580 tok/s** | **337 ms** | **+0.4% vs reference** | **0.022** | **262,144 tok** |
 
 - **Measured with:** crit Eval (crit-eval-v0.2.1, decode sampled at the model's defaults) · [crit-eval.json](evidence/crit-eval.json)
-- **Quality mode:** preserve: quality judged against the checkpoint's own arithmetic with exact activations, so the drift is what the engine adds
+- **Quality mode:** preserve: quality judged against the checkpoint's own arithmetic with exact activations, so the drift is what the engine adds; the worst path uses 57.3% of its quality budget
 - **Hardware:** Ubuntu 24.04.4 LTS (WSL); AMD Ryzen 5 9600 6-Core Processor (6/12 cores); 82 GiB RAM; NVIDIA GeForce RTX 5090 32 GiB, PCIe 4.0 x16 (GPU supports 5.0)
-- **Further figures:** long-context decode 112.5 tok/s · held-out decode 126.3 tok/s · 57.3% of the quality budget
+- **Further figures:** long-context decode 112.5 tok/s · held-out decode 126.3 tok/s
 - **Requires:** WSL2 · sm_120 · 32 GB GPU memory · CUDA 13.1 · crit Core Python engine, torch 2.14.1+cu130, Triton 3.8.0
 - **Checkpoint** (`qwen3.8-27b@NVFP4`): [`unsloth/Qwen3.8-27B-NVFP4`](https://huggingface.co/unsloth/Qwen3.8-27B-NVFP4/tree/f0b7c9e722f5565102fff8481c99e4d86ae099c7) at `f0b7c9e7`
 - **Source:** [crit-labs/crit-engines/mtp-adaptive-width @ `10c52aea`](https://github.com/crit-labs/crit-engines/tree/10c52aea078eda2616a51f98dcdb3980fcc6b7b5/mtp-adaptive-width)

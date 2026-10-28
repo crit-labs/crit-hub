@@ -177,7 +177,8 @@ def stat_cells(result):
 
 
 def more_text(more):
-    """The further figures, but the greedy decode: the stats table shows it."""
+    """The further figures, but the greedy decode (the stats table shows it) and the quality budget used (the quality
+    mode's line does)."""
     parts = []
     if more.get("long_context_decode_tok_s") is not None:
         parts.append(f"long-context decode {figure(more['long_context_decode_tok_s'], ' tok/s')}")
@@ -185,8 +186,6 @@ def more_text(more):
         parts.append(f"held-out decode {figure(more['heldout_decode_tok_s'], ' tok/s')}")
     if more.get("host_ram_gib") is not None:
         parts.append(f"{more['host_ram_gib']} GiB host RAM")
-    if more.get("quality_budget_pct") is not None:
-        parts.append(f"{more['quality_budget_pct']}% of the quality budget")
     return " · ".join(parts)
 
 
@@ -301,8 +300,14 @@ def measured(results):
         files = [f"[{Path(e['file']).name}]({e['file']})" for e in result.get("evidence") or []]
         lines.append(label("Measured with") + " · ".join([how] + files))
         mode = quality_mode(result)
+        budget = (result.get("more") or {}).get("quality_budget_pct")
+        # Perplexity and KL divergence are judged against the mode's own budget (as_quantized's is wider, and raised
+        # per text to the reference's spread), so the share of it the worst path uses says whether they are in it.
+        used = f"; the worst path uses {budget}% of its quality budget" if budget is not None else ""
         if mode:
-            lines.append(label("Quality mode") + mode_text(mode))
+            lines.append(label("Quality mode") + mode_text(mode) + used)
+        elif used:
+            lines.append(label("Quality budget") + f"the worst path uses {budget}%")
         if result.get("hardware"):
             lines.append(label("Hardware") + result["hardware"])
         more = more_text(result.get("more") or {})

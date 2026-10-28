@@ -12,9 +12,9 @@
 | **189.0 tok/s** | **194.3 tok/s** | **8,295 tok/s** | **154 ms** | **+3.6% vs reference** | **0.13** | **262,144 tok** |
 
 - **Measured with:** crit Eval (crit-eval-v0.2.1, decode sampled at the model's defaults) · [crit-eval.json](evidence/crit-eval.json)
-- **Quality mode:** as quantized: quality judged against the checkpoint run as quantized, its activations quantized as it declares, with a drift budget of its own
+- **Quality mode:** as quantized: quality judged against the checkpoint run as quantized, its activations quantized as it declares, with a drift budget of its own; the worst path uses 70.1% of its quality budget
 - **Hardware:** Ubuntu 24.04.4 LTS (WSL); AMD Ryzen 5 9600 6-Core Processor (6/12 cores); 82 GiB RAM; NVIDIA GeForce RTX 5090 32 GiB, PCIe 4.0 x16 (GPU supports 5.0)
-- **Further figures:** long-context decode 136.7 tok/s · held-out decode 131.2 tok/s · 70.1% of the quality budget
+- **Further figures:** long-context decode 136.7 tok/s · held-out decode 131.2 tok/s
 - **Requires:** WSL2 · sm_120a · 32 GB GPU memory · CUDA 13.1 · crit Core Python engine, torch 2.14.1+cu130, Triton 3.8.0
 - **Checkpoint** (`qwen3.8-27b@NVFP4`): [`unsloth/Qwen3.8-27B-NVFP4`](https://huggingface.co/unsloth/Qwen3.8-27B-NVFP4/tree/f0b7c9e722f5565102fff8481c99e4d86ae099c7) at `f0b7c9e7`
 - **Source:** [crit-labs/crit-engines/mtp4-nvfp4-mma @ `10c52aea`](https://github.com/crit-labs/crit-engines/tree/10c52aea078eda2616a51f98dcdb3980fcc6b7b5/mtp4-nvfp4-mma)
