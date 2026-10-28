@@ -1,0 +1,88 @@
+{
+  "checkpoints": {
+    "qwen3.8-27b@NVFP4": {
+      "repository": "unsloth/Qwen3.8-27B-NVFP4",
+      "revision": "f0b7c9e722f5565102fff8481c99e4d86ae099c7",
+      "files": [
+        {
+          "path": "README.md",
+          "bytes": 6746,
+          "sha256": "a319a7af9a6fcb1d2c30e487d2c05bc012bba92a41cac04c09bf23beaee9ba9a"
+        },
+        {
+          "path": "chat_template.jinja",
+          "bytes": 9993,
+          "sha256": "12827f24b742ea4e80cdc12dbcf9622227056b9f797252a3149263d4f9aaadce"
+        },
+        {
+          "path": "config.json",
+          "bytes": 22564,
+          "sha256": "1b3c71868d1299e52df6fc907deb202d5132b1ef0f72aae0ef6d15185dd53a5c"
+        },
+        {
+          "path": "generation_config.json",
+          "bytes": 214,
+          "sha256": "d0d0ed2e37cdfafef4a5067d5ea2407b05f4fb50526e47c008a5b235d50240fb"
+        },
+        {
+          "path": "model.safetensors",
+          "bytes": 22568192096,
+          "sha256": "c473512c70eace07e2256fe9fd76596ac03e3295bee7d54cfb72676416afcc05"
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "bytes": 164371,
+          "sha256": "429430e1b9e65b2cb98eff8cd10a06e70a09cee89c48487a3914684aeb6df57f"
+        },
+        {
+          "path": "model_mtp.safetensors",
+          "bytes": 849400392,
+          "sha256": "1d8268aa85ace093a561e3e7b63b9d390dac1cd55a90cd55b5ec509c3c9da9fe"
+        },
+        {
+          "path": "preprocessor_config.json",
+          "bytes": 390,
+          "sha256": "27225450ac9c6529872ee1924fcb0962ff5634834f817040f444118116f4e516"
+        },
+        {
+          "path": "tokenizer.json",
+          "bytes": 19989325,
+          "sha256": "06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523"
+        },
+        {
+          "path": "tokenizer_config.json",
+          "bytes": 1047,
+          "sha256": "529f30018c36dca5387c99b5edf368287f386f2c32d3790aa7141956bc5119fa"
+        },
+        {
+          "path": "video_preprocessor_config.json",
+          "bytes": 385,
+          "sha256": "7768af27c1fafa9cc9011c1dc20067e03f8915e03b63504550e11d5066986d13"
+        },
+        {
+          "path": "vocab.json",
+          "bytes": 6722759,
+          "sha256": "ce99b4cb2983d118806ce0a8b777a35b093e2000a503ebde25853284c9dfa003"
+        }
+      ],
+      "run_model_manifest_sha256": "306701d28ce9480867281ad242dded1ff24bfcb2c557eb8aa14e2e7bef178248"
+    }
+  },
+  "provenance": {
+    "run_id": "run-20261028T062813Z-708a915c",
+    "candidate_id": "candidate-0005",
+    "source_manifest_sha256": "baf900ac6157794fdb9436af3cb6b5ae68f80fa9cc12b0f51c5a9223ca8a8915",
+    "original_package_sha256": "a6a11557a33ff9e95654ee5f00d0f4d76f4e8780c8e243c481346635af85b80c",
+    "configuration_sha256": "fbbe999d2168a25a4f14d09e14be5d67f0775318d7debc566245e2ba317f634a",
+    "model_manifest_sha256": "306701d28ce9480867281ad242dded1ff24bfcb2c557eb8aa14e2e7bef178248",
+    "toolchain": {
+      "python": "3.12.3",
+      "torch": "2.14.1+cu130",
+      "triton": "3.8.0",
+      "cuda_runtime": "13.0",
+      "host": "WSL2 Ubuntu (crit-venv)",
+      "nvcc": "CUDA 13.1 (/usr/local/cuda, sm_120a)"
+    },
+    "runtime_prerequisites": []
+  }
+}

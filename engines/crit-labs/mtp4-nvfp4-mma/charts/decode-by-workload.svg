@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 260" role="img" aria-label="Decode by workload"><title>Decode by workload</title><style>
+svg { font-family: -apple-system, 'Segoe UI', Inter, Helvetica, Arial, sans-serif; }
+.title { fill: #1f1b1c; font-size: 14px; font-weight: 600; }
+.subtitle, .tick { fill: #6b6466; font-size: 12px; }
+.cat { fill: #4a4446; font-size: 12.5px; }
+.value { fill: #1f1b1c; font-size: 12.5px; font-weight: 600; }
+.grid { stroke: #e6e1dc; stroke-width: 1; }
+.axis { stroke: #cfc8c2; stroke-width: 1; }
+.line { fill: none; stroke: #c4513e; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.dot, .bar { fill: #c4513e; }
+.dot { stroke: #ffffff; stroke-width: 2; }
+@media (prefers-color-scheme: dark) {
+  .title, .value { fill: #f5f1e8; } .subtitle, .tick { fill: #8a8385; } .cat { fill: #b9b2ae; }
+  .grid { stroke: #2a2a2a; } .axis { stroke: #3a3a3a; } .line { stroke: #dc6652; } .dot, .bar { fill: #dc6652; } .dot { stroke: #0d1117; }
+}
+</style><text x="0" y="16" class="title">Decode by workload</text><text x="0" y="36" class="subtitle">tok/s per crit Eval speed case, sampled decode</text><line x1="120.0" x2="120.0" y1="48" y2="232" class="axis"/><text x="120.0" y="250" class="tick" text-anchor="middle">0</text><line x1="246.7" x2="246.7" y1="48" y2="232" class="grid"/><text x="246.7" y="250" class="tick" text-anchor="middle">100</text><line x1="373.3" x2="373.3" y1="48" y2="232" class="grid"/><text x="373.3" y="250" class="tick" text-anchor="middle">200</text><line x1="500.0" x2="500.0" y1="48" y2="232" class="grid"/><text x="500.0" y="250" class="tick" text-anchor="middle">300</text><text x="110" y="71" class="cat" text-anchor="end">chat</text><rect x="120" y="58" width="173.5" height="18" rx="4" class="bar"/><text x="301.5" y="71" class="value">137.0 tok/s</text><text x="110" y="101" class="cat" text-anchor="end">code</text><rect x="120" y="88" width="246.8" height="18" rx="4" class="bar"/><text x="374.8" y="101" class="value">194.8 tok/s</text><text x="110" y="131" class="cat" text-anchor="end">math</text><rect x="120" y="118" width="247.1" height="18" rx="4" class="bar"/><text x="375.1" y="131" class="value">195.1 tok/s</text><text x="110" y="161" class="cat" text-anchor="end">tool-call</text><rect x="120" y="148" width="284.5" height="18" rx="4" class="bar"/><text x="412.5" y="161" class="value">224.6 tok/s</text><text x="110" y="191" class="cat" text-anchor="end">long-summary</text><rect x="120" y="178" width="199.2" height="18" rx="4" class="bar"/><text x="327.2" y="191" class="value">157.3 tok/s</text><text x="110" y="221" class="cat" text-anchor="end">agent-long</text><rect x="120" y="208" width="313.9" height="18" rx="4" class="bar"/><text x="441.9" y="221" class="value">247.8 tok/s</text></svg>
