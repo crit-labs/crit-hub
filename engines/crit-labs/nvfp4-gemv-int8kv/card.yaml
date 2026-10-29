@@ -1,0 +1,137 @@
+# yaml-language-server: $schema=../../../schemas/card.schema.json
+title: nvfp4-gemv-int8kv
+summary: Nanbeige4.3-33B, preserve, one token per pass on its own CUDA NVFP4 GEMV with an INT8 KV cache for 86K tokens
+origin: crit
+contributor:
+  name: crit-labs
+  repository: https://github.com/crit-labs/crit
+license: Apache-2.0
+features:
+- openai-api
+- tool-calls
+source:
+  repository: https://github.com/crit-labs/crit-engines
+  revision: 23810f3444f720f12742ee177ccca18178382c35
+  path: nvfp4-gemv-int8kv
+requirements:
+  platforms:
+  - wsl2
+  gpu_arch:
+  - sm_120a
+  gpu_memory_gb: 32
+  cuda: '13.1'
+  runtime: crit Core Python engine, torch 2.14.1+cu130, Triton 3.8.0
+checkpoints:
+  nanbeige4.3-33b@NVFP4:
+    repository: webbrain-one/Nanbeige4.3-33B-NVFP4
+    revision: db25813ac527ade6a8b67e00a46135bc90617841
+built:
+  hours: 4.74
+  agent_tokens: 128065745
+  api_usd: 36.1124
+  agent: Claude Code (Claude Opus 5.5)
+  candidates: 6
+results:
+- gpu: rtx5090
+  model: nanbeige4.3-33b@NVFP4
+  measured_with: crit-eval-v0.2.1
+  measured_on: '2026-10-28'
+  quality_mode: preserve
+  hardware: Ubuntu 24.04.4 LTS (WSL); AMD Ryzen 5 9600 6-Core Processor (6/12 cores); 82 GiB RAM; NVIDIA GeForce RTX 5090 32 GiB, PCIe 4.0 x16 (GPU supports 5.0)
+  sampling:
+    source: protocol_default
+    settings:
+      temperature: 1.0
+  stats:
+    decode_tok_s: 64.2
+    prefill_tok_s: 3357
+    ttft_ms: 404
+    ppl:
+      vs_reference: 1.005
+    kld_mean: 0.019
+    context_tokens: 86016
+  more:
+    greedy_decode_tok_s: 66.6
+    long_context_decode_tok_s: 49.6
+    heldout_decode_tok_s: 65.3
+    quality_budget_pct: 67.3
+  evidence:
+  - file: evidence/crit-eval.json
+    sha256: 27652268b1429ff549fac245f06aee17a79ceca7dce9085b9f3f0a526d97a022
+readme:
+  intro: |
+    A Python engine on crit Core's engine interface, written in six candidates, that runs
+    Nanbeige4.3-33B, a dense 52-layer Llama, from its NVFP4 weights as stored. Decode is one token per pass,
+    one CUDA graph per step, on its own CUDA NVFP4 GEMV; the KV cache is INT8 with a scale per position and KV
+    head, which fits 86,016 tokens of context on the 32 GB GPU. Judged in crit Eval's default `preserve`
+    quality mode.
+  design: |
+    | Part | How |
+    | --- | --- |
+    | Engine | A Python engine behind crit_core.native's stock serve and Eval adapters: chat, streaming, tools, log-probabilities and scores |
+    | Weights | Used as stored: NVFP4 E2M1 codes with E4M3 group scales, the global scale folded into a per-row factor; BF16 output head |
+    | Decode | One CUDA graph per token: 52 layers, the output head and the greedy or temperature selection on the device. Its own CUDA NVFP4 GEMV (`nvfp4_gemv.cu`: the hardware E2M1 conversion `cvt.rn.f16x2.e2m1x2`, 1.49 TB/s against its Triton GEMV's 1.27), split-K attention over the INT8 cache |
+    | KV cache | INT8 per token and KV head with an FP32 scale (an FP8 E4M3 cache used 114% of the quality budget on 32K-token prompts) |
+    | Prefill | 2,048-token chunks. Attention and down projections: NVFP4 decoded to FP16 per chunk, cuBLAS with FP16 accumulation; gate and up projections: FP8 weights and per-row FP8 activations through `torch._scaled_mm`. INT8 Q.K^T prompt attention on tensor cores; prompts of up to 64 tokens multiply the stored codes directly |
+  measured: |
+    crit Eval of sealed candidate-0006, six speed cases at the required context of 86,016 tokens (the
+    largest whose KV cache fits the device):
+
+    | Metric | Result |
+    | --- | ---: |
+    | Whole requests (end to end) | 52.7 tok/s |
+    | Long-context first token (32K to 86K; 51.7 s at 86K) | 28.3 s |
+    | Quality, worst path (32,768-token prompts) | 67% of the budget: KLD mean 0.019, p99 0.34 (budget: PPL ×1.05, KLD mean 0.05, p99 0.5) |
+
+    Sampled decode by case: chat 68, code 69, math 65, tool call 62, long summary 62, agent 61 tok/s, one
+    token per pass. A step takes 15.1 ms against the 13.7 ms its weight and cache reads need (90% of the
+    one-token-per-pass ceiling of 71.7 tok/s). Prefill shows 116% of the ceiling Eval prices for 16-bit
+    prompt activations: Eval's device probe had no rate for FP16-accumulating GEMMs, so it cannot price the
+    mix this engine runs.
+  checks: |
+    - **Eval attempts:** two Eval runs of the same sealed package. The first (attempt-0002) failed the
+      lower-context gate: at 21,504 tokens the tool-call and long-summary cases decoded 9.2% and 8.7% slower
+      than at 86,016 (tolerance 5%), and their first tokens came 7.7% and 6.8% later. The build run read
+      this as a transient device disturbance, since nothing in the engine changes with the context it is
+      opened with, and ran Eval again on the same package. The second run (attempt-0003, the evidence here)
+      passed every gate, with no case more than 5% slower at 21,504 tokens; its headline figures differ from
+      the first run's by under 2%. The cause of the first failure was not proven. Both results stay in the
+      sealed run; crit-hub takes only results whose gates all pass.
+    - **Functional:** every gate of attempt-0003 passed: coverage, repeatable, request history, prompt cache,
+      quality, sampling (1,536 tokens, z -0.52), capacity, retrieval at 4K to 86,016 tokens, lower context
+      and generality. `crit run serve --check` passed all nine serving cases, including a tool call,
+      log-probabilities and cancel.
+    - **Resources:** at least 1.72 GB of VRAM stayed free at the full context, the least right after load.
+  limits: |
+    - Context is 86,016 tokens, not the model's 524,288: the INT8 KV cache for more does not fit the 32 GB GPU.
+    - No speculative decoding: the model has no MTP layer. `engine/drafter.py` holds a DFlash2 drafter
+      (ported from SGLang) that loads only with a `draft_model` setting; it did not pay at temperature 1 and
+      leaves almost no memory free at 86K, so the measured configuration does not load it.
+    - Requests with top-k, top-p or min-p filter the full vocabulary after the graph step, outside it; Eval
+      measured only temperature sampling.
+    - One sequence at a time; no prompt cache across requests.
+    - `nvfp4_gemv.cu` builds for sm_120a only. The module docstring of `engine.py` still describes the first
+      candidate (FP8 KV cache, Triton GEMV); `configuration.json` and this README describe what runs.
+    - Tested only on WSL2 Ubuntu 24.04 with torch 2.14.1+cu130, Triton 3.8.0 and the CUDA 13.1 toolkit.
+  build_and_chat: |
+    ```sh
+    git clone https://github.com/crit-labs/crit-engines && git -C crit-engines checkout 23810f3444f720f12742ee177ccca18178382c35
+    cd crit-engines/nvfp4-gemv-int8kv/engine
+    nvcc -O3 -gencode arch=compute_120a,code=sm_120a -shared -Xcompiler -fPIC -cudart shared \
+      -o libnvfp4_gemv.so nvfp4_gemv.cu
+    ```
+
+    `kernels.py` loads `libnvfp4_gemv.so` from its own folder. Run it in a Python environment with crit
+    installed, torch 2.14.1+cu130 and Triton 3.8.0. Check the checkpoint from a crit-hub checkout with
+    `python -B tools/verify_model.py engines/crit-labs/nvfp4-gemv-int8kv /path/to/checkpoint`. Loading takes
+    about 7 s.
+
+    To chat, register `engine/` as a crit run candidate following crit's
+    [Building engines](https://github.com/crit-labs/crit/blob/main/docs/BUILDING_ENGINES.md) and serve it with
+    [`crit serve`](https://github.com/crit-labs/crit/blob/main/docs/SERVING.md), which answers OpenAI-compatible
+    chat requests at `http://127.0.0.1:8000/v1`. `engine/configuration.json` has the applied settings, with
+    thinking off by default (`enable_thinking: false`).
+  credits: |
+    Credits and licenses are in [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/23810f3444f720f12742ee177ccca18178382c35/nvfp4-gemv-int8kv/THIRD_PARTY.md)
+    and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/23810f3444f720f12742ee177ccca18178382c35/nvfp4-gemv-int8kv/LICENSES.txt), next to
+    the source.

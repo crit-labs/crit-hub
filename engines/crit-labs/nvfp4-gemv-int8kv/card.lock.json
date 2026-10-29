@@ -1,0 +1,102 @@
+{
+  "checkpoints": {
+    "nanbeige4.3-33b@NVFP4": {
+      "repository": "webbrain-one/Nanbeige4.3-33B-NVFP4",
+      "revision": "db25813ac527ade6a8b67e00a46135bc90617841",
+      "files": [
+        {
+          "path": "README.md",
+          "bytes": 3035,
+          "sha256": "212882c3c81bb2dd6b8762cd63a88ac2baca29ee60a81a9abe80667ebc07813f"
+        },
+        {
+          "path": "added_tokens.json",
+          "bytes": 174,
+          "sha256": "9e3b127a27647df2c353cc1e5500826f7cdbe8bd15a458e368bba8422e9719cf"
+        },
+        {
+          "path": "config.json",
+          "bytes": 2257,
+          "sha256": "f0c3e5594c4c2780036873dd267d5037623510c07967a7f9b28604595152253c"
+        },
+        {
+          "path": "generation_config.json",
+          "bytes": 164,
+          "sha256": "fa8b09c0d2ab1db7a2736a780586df21b1602f8e02e29fa9feee325bb57d18ee"
+        },
+        {
+          "path": "model-00001-of-00005.safetensors",
+          "bytes": 4963236584,
+          "sha256": "e191eed3d287180f97f050b8c22a742899617d29988867d4daec4a1207e5ee43"
+        },
+        {
+          "path": "model-00002-of-00005.safetensors",
+          "bytes": 4985969336,
+          "sha256": "4d87e20fed3985ef8f5c580f6dadef96c15f7ebe94251bd30e35e85e7a4a1bd3"
+        },
+        {
+          "path": "model-00003-of-00005.safetensors",
+          "bytes": 4985969400,
+          "sha256": "3ab82d182d45b87442dfa6ca6482b09ae80ef19eb054d1ff8d4073b2b0f4ae65"
+        },
+        {
+          "path": "model-00004-of-00005.safetensors",
+          "bytes": 4742383496,
+          "sha256": "e9c57f86036f37f1533d78cbadcba6941b1071c6219c5890ca1ad117de7f0220"
+        },
+        {
+          "path": "model-00005-of-00005.safetensors",
+          "bytes": 2392850560,
+          "sha256": "0be847296d50615cd512a67d89a5260042dd50797905b7099ccd18e56c18523d"
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "bytes": 141389,
+          "sha256": "65b4614904c5ce026ff32ac53d4d3f47c4f69e40093b820387501c35744ece18"
+        },
+        {
+          "path": "recipe.yaml",
+          "bytes": 208,
+          "sha256": "5587ac70e855ba41617c1d2d4d05d42ea7a03546d0a76847d7e8e34e077dd6d7"
+        },
+        {
+          "path": "special_tokens_map.json",
+          "bytes": 623,
+          "sha256": "b718fce2b7a8940ffeddc1e67f3b092cc0d13ac885c63a021528786f8c4cf6c0"
+        },
+        {
+          "path": "tokenizer.json",
+          "bytes": 18450979,
+          "sha256": "1d858a0fc007f22af6ae18bfa1ae52d30e398aa9cd1ea06e7777176869346a3f"
+        },
+        {
+          "path": "tokenizer.model",
+          "bytes": 2782298,
+          "sha256": "fb41d04798b714520a9b075727b0226538b7330254299062742c50ec8374bc36"
+        },
+        {
+          "path": "tokenizer_config.json",
+          "bytes": 11033,
+          "sha256": "91f4aec9f1fafb9924659bc3d843130bd3b092418327f31a998156aa07aa44b7"
+        }
+      ],
+      "run_model_manifest_sha256": "7e2b618b80e2a11bad6c2a52a0c0ea495b24c8d758a35e22dd389f43c0dbc3fd"
+    }
+  },
+  "provenance": {
+    "run_id": "run-20261028T182458Z-ceca50f1",
+    "candidate_id": "candidate-0006",
+    "source_manifest_sha256": "f50585d6d7622ed63298ada962c07b37d3af7c126436227c6732823899b9c456",
+    "original_package_sha256": "58788c1349aa51c69539485b01088e4221b6c8c390510bd3fe416577918bd754",
+    "configuration_sha256": "808445de54a51e4439ed1515a092351189ecd145b106f1e202caabecc5eae975",
+    "model_manifest_sha256": "7e2b618b80e2a11bad6c2a52a0c0ea495b24c8d758a35e22dd389f43c0dbc3fd",
+    "toolchain": {
+      "python": "3.12.3 (/llm/engines/crit/crit-venv)",
+      "torch": "2.14.1+cu130",
+      "triton": "3.8.0",
+      "nvcc": "13.1 (/usr/local/cuda/bin/nvcc), -gencode arch=compute_120a,code=sm_120a, shared cudart",
+      "driver": "596.49"
+    },
+    "runtime_prerequisites": []
+  }
+}
