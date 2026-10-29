@@ -22,6 +22,10 @@ requirements:
   gpu_memory_gb: 32
   cuda: '13.1'
   runtime: crit Core Python engine, torch 2.14.1+cu130, Triton 3.8.0
+build:
+  command:
+  - python
+  - qwen38/csrc/build.py
 checkpoints:
   qwen3.8-27b@NVFP4:
     repository: unsloth/Qwen3.8-27B-NVFP4

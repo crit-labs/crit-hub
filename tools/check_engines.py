@@ -44,7 +44,7 @@ GPU = re.compile(r"[a-z0-9][a-z0-9.-]*")
 MODEL = re.compile(r"[a-z0-9][a-z0-9.-]*@[A-Za-z0-9.+-]+")
 HF_REPOSITORY = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
 FEATURES = {"openai-api", "tool-calls", "vision", "speculative"}
-CARD_FIELDS = {"title", "summary", "origin", "contributor", "license", "features", "source", "requirements", "downloads",
+CARD_FIELDS = {"title", "summary", "origin", "contributor", "license", "features", "source", "requirements", "build", "downloads",
                "checkpoints", "supports", "derived_from", "built", "results", "readme"}
 ENGINE_ID = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
 BUILT_FIELDS = {"hours", "agent_tokens", "api_usd", "agent", "candidates"}
@@ -181,6 +181,21 @@ def check_requirements(card):
     if "runtime" in requirements and not (isinstance(requirements["runtime"], str) and requirements["runtime"].strip()):
         problems.append("card.yaml requirements.runtime names what the engine links, like crit Core 0.5.0")
     return problems
+
+
+def check_build(card):
+    """build.command: the literal arguments crit pull runs in the engine/ folder of a crit engine's pinned source."""
+    if "build" not in card:
+        return []
+    build = card["build"]
+    if not isinstance(build, dict) or set(build) != {"command"}:
+        return ["card.yaml build holds command: the literal arguments that build the engine in its engine/ folder"]
+    command = build["command"]
+    if not (isinstance(command, list) and command and all(isinstance(a, str) and a.strip() for a in command)):
+        return ["card.yaml build.command is a list of literal arguments, like [python, csrc/build.py]"]
+    if card.get("origin") != "crit":
+        return ["card.yaml build is for crit engines (origin: crit), which crit pull installs"]
+    return []
 
 
 def check_downloads(card):
@@ -566,7 +581,7 @@ def check(folder):
         lock = cardlib.load_lock(folder)
     except json.JSONDecodeError as e:
         return [f"card.lock.json is not JSON: {e}"]
-    problems = (check_schema(card) + check_identity(folder, card) + check_requirements(card) + check_downloads(card)
+    problems = (check_schema(card) + check_identity(folder, card) + check_requirements(card) + check_build(card) + check_downloads(card)
                 + check_supports(card) + check_lineage(card))
     result_problems, listed = check_results(folder, card)
     problems += result_problems + check_checkpoints(card, lock) + check_lock(card, lock)

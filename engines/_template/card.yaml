@@ -50,6 +50,11 @@ requirements:
   cuda: "13.1"        # CUDA toolkit it builds with (quoted)
   # runtime: crit Core 0.5.0      # optional: what it links
 
+# Optional, crit engines only: how `crit pull` builds the source, as literal arguments run in its
+# engine/ folder (a first argument python is the Python crit runs in). Leave it out when it runs as it is.
+# build:
+#   command: [python, csrc/build.py]
+
 # Optional: what to fetch besides the checkpoint, each pinned by revision or by the sha256 of its file.
 # downloads:
 # - kind: drafter                 # drafter or artifact

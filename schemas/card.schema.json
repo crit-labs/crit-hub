@@ -38,6 +38,14 @@
         "runtime": {"type": "string", "description": "What the engine links, e.g. crit Core 0.5.0."}
       }
     },
+    "build": {
+      "type": "object", "additionalProperties": false, "required": ["command"],
+      "description": "How crit pull builds a crit engine's source; leave it out when the source runs as it is.",
+      "properties": {
+        "command": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1},
+                    "description": "Literal arguments, run in the engine/ folder of the pinned source; a first argument python is the Python crit runs in."}
+      }
+    },
     "downloads": {
       "type": "array", "description": "What to fetch besides the pinned checkpoint, each pinned by revision or sha256.",
       "items": {

@@ -59,7 +59,8 @@ or the result carries no quality figures. Then copy `result.json` to `evidence/c
    checkpoint's files and the sealed run's provenance; and, for each `--eval attempt-N`, the
    candidate's sealed crit Eval result in `evidence/`, from which it fills the six stats and further
    figures.
-4. **Fill in the card**: summary, license, features and requirements, and any downloads.
+4. **Fill in the card**: summary, license, features and requirements, the `build` command when the
+   source needs one (what `crit pull` runs in `engine/`), and any downloads.
 5. **Render and check:** `python -B tools/card.py engines/<owner>/<name>` writes README.md;
    for your first engine, `python -B tools/codeowners.py` adds your account to
    [.github/CODEOWNERS](.github/CODEOWNERS); `python -B tools/check_engines.py` must pass.

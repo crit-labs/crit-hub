@@ -129,6 +129,9 @@ people read. [`_template/card.yaml`](_template/card.yaml) documents every key; i
   and optionally `path`, its folder there.
 - **`requirements`**: the `platforms` it was built and run on, the `gpu_arch` it is compiled for,
   the `gpu_memory_gb` it needs, the `cuda` toolkit and optionally the `runtime` it links.
+- **`build`** (optional, crit engines): the `command` that builds the source, as literal arguments
+  run in its `engine/` folder (a first argument `python` is the Python crit runs in). `crit pull`
+  runs it when it installs the engine; leave it out when the source runs as it is.
 - **`downloads`** (optional): what to fetch besides the checkpoint, such as a `drafter` or a
   converted `artifact`, pinned by `revision` or the `sha256` of its `file`.
 - **`checkpoints`**: the Hugging Face `repository` and `revision` of every model the engine measures

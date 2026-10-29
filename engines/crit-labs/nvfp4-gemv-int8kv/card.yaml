@@ -21,6 +21,20 @@ requirements:
   gpu_memory_gb: 32
   cuda: '13.1'
   runtime: crit Core Python engine, torch 2.14.1+cu130, Triton 3.8.0
+build:
+  command:
+  - nvcc
+  - -O3
+  - -gencode
+  - 'arch=compute_120a,code=sm_120a'
+  - -shared
+  - -Xcompiler
+  - -fPIC
+  - -cudart
+  - shared
+  - -o
+  - libnvfp4_gemv.so
+  - nvfp4_gemv.cu
 checkpoints:
   nanbeige4.3-33b@NVFP4:
     repository: webbrain-one/Nanbeige4.3-33B-NVFP4
