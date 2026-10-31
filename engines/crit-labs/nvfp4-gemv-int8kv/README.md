@@ -5,7 +5,7 @@
 ### rtx5090 · nanbeige4.3-33b@NVFP4
 
 > [!NOTE]
-> **Contributed by** crit-labs · [crit-labs/crit](https://github.com/crit-labs/crit)
+> **Contributed by** [crit-labs](https://github.com/crit-labs)
 
 | Decode (sampled) | Decode (greedy) | Prefill | TTFT | Perplexity | Mean KL divergence | Context |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: |

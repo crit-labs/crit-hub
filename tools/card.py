@@ -404,8 +404,9 @@ def credit(card):
     """The box under the title, the same for every engine but its kind: a note for a crit engine, a
     warning for an external one, whose source crit-hub has not reviewed. The source pin is in the facts."""
     c = card["contributor"]
-    shown = c["repository"].split("://", 1)[1].split("/", 1)[1].rstrip("/")
-    line = f"> **Contributed by** {c['name']} · [{shown}]({c['repository']})"
+    # The name links to whoever owns the contributor's repository on GitHub.
+    owner = c["repository"].split("://", 1)[1].split("/")[1]
+    line = f"> **Contributed by** [{c['name']}](https://github.com/{owner})"
     if card["origin"] == "crit":
         return "> [!NOTE]\n" + line
     return "> [!WARNING]\n" + line + "\n>\n> External engine: crit-hub has not reviewed its source. Read it before you build or run it."

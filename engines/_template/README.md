@@ -5,7 +5,7 @@
 ### rtx5090 · <model>@<encoding>
 
 > [!WARNING]
-> **Contributed by** <your account> · [<your account>/<your repository>](https://github.com/<your account>/<your repository>)
+> **Contributed by** [<your account>](https://github.com/<your account>)
 >
 > External engine: crit-hub has not reviewed its source. Read it before you build or run it.
 
