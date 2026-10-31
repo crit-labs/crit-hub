@@ -104,6 +104,23 @@ thinking off by default (`enable_thinking: false`).
 
 ---
 
+## Benchmark your machine
+
+Measure this engine on your machine and add the result to this card:
+
+```sh
+crit pull crit-labs/mtp-adaptive-width
+crit bench crit-labs/mtp-adaptive-width --data <a folder for crit Eval's data> --out result.json
+crit hub report crit-labs/mtp-adaptive-width result.json --hub <your crit-hub checkout> --by <your GitHub account>
+```
+
+`crit bench` prepares crit Eval's data from the checkpoint `crit pull` installed, runs its speed suite (and quality
+where the data holds the reference's scores) and prints this card's stats beside yours. `crit hub report` adds your
+result file under `evidence/` and to this card, as a reproduction of the GPU and model it measured or as a new result,
+for a pull request to crit-hub.
+
+---
+
 ## Credits
 
 Credits and licenses are in [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/53e4423ba6f0704a0d8862e2c15add650edef6a9/mtp-adaptive-width/THIRD_PARTY.md)

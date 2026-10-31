@@ -140,6 +140,7 @@
     }
   },
   "$defs": {
+    "account": {"type": "string", "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$", "description": "A GitHub account."},
     "https": {"type": "string", "pattern": "^https://[A-Za-z0-9.-]+(/[A-Za-z0-9_.~-]+)+/?$"},
     "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
     "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
@@ -158,6 +159,7 @@
       "properties": {
         "gpu": {"$ref": "#/$defs/gpu"},
         "model": {"$ref": "#/$defs/model"},
+        "by": {"$ref": "#/$defs/account", "description": "Who measured it, when not the contributor: their GitHub account (tools/add_result.py, crit hub report)."},
         "measured_with": {"type": "string", "description": "A crit Eval protocol (crit-eval-v0.2.0, crit-eval-v7) or how else it was measured (LocalMaxxing, your own benchmark)."},
         "measured_on": {"description": "The day it was measured, YYYY-MM-DD (quoted); null when unknown, never for crit Eval.",
                         "oneOf": [{"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"}, {"type": "null"}]},
@@ -208,6 +210,25 @@
             "properties": {
               "concurrency": {"type": "integer", "minimum": 1, "description": "The requests running at once."},
               "tok_s": {"$ref": "#/$defs/figure", "description": "Their completion tokens per second together; [low, high] across runs."}
+            }
+          }
+        },
+        "reproductions": {
+          "type": "array", "minItems": 1,
+          "description": "The same GPU and model measured again with crit Eval on someone else's machine (tools/add_result.py, crit hub report), each from its own result files, which its figures must be.",
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["by", "measured_with", "measured_on", "stats", "evidence"],
+            "properties": {
+              "by": {"$ref": "#/$defs/account", "description": "Who measured it: their GitHub account."},
+              "measured_with": {"type": "string", "description": "The crit Eval protocol its result files ran under."},
+              "measured_on": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"},
+              "quality_mode": {"$ref": "#/$defs/result/properties/quality_mode"},
+              "hardware": {"$ref": "#/$defs/result/properties/hardware"},
+              "sampling": {"$ref": "#/$defs/result/properties/sampling"},
+              "stats": {"$ref": "#/$defs/result/properties/stats"},
+              "more": {"$ref": "#/$defs/result/properties/more"},
+              "throughput": {"$ref": "#/$defs/result/properties/throughput"},
+              "evidence": {"$ref": "#/$defs/result/properties/evidence"}
             }
           }
         },

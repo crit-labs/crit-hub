@@ -194,6 +194,13 @@ def measured(args, seal, candidate, target):
         name = "evidence/crit-eval.json" if number == 1 else f"evidence/crit-eval-{number}.json"
         copy(path, target / name)
         evidence.append({"file": name, "sha256": digest(target / name)})
+    return {"gpu": args.gpu, "model": args.model, **result_entry(results), "evidence": evidence}
+
+
+def result_entry(results):
+    """What crit Eval result files (one machine's, one protocol and quality mode) give a card's result: measured_with
+    and measured_on, the quality mode, hardware and sampling they record, the six stats and further figures (ranges
+    across the files) and the throughput by concurrency."""
 
     def figure(values, places):
         values = [round(v, places) if places else round(v) for v in values]
@@ -228,7 +235,7 @@ def measured(args, seal, candidate, target):
     levels = sorted({int(n) for r in results for n in ((r.get("concurrency") or {}).get("levels") or {})})
     throughput = [{"concurrency": n, "tok_s": figure([cardlib.throughput_score(r, n) for r in results], 1)}
                   for n in levels if all(isinstance(cardlib.throughput_score(r, n), (int, float)) for r in results)]
-    entry = {"gpu": args.gpu, "model": args.model, "measured_with": results[0]["protocol"],
+    entry = {"measured_with": results[0]["protocol"],
              "measured_on": max(str(r.get("started_at", ""))[:10] for r in results)}
     # The machine the result file records (crit Eval records hardware from v7 on).
     # The quality mode it was judged in, as the result file records it (crit-eval 0.2.0 on).
@@ -242,7 +249,7 @@ def measured(args, seal, candidate, target):
     source = (results[0].get("sampled_speed") or {}).get("sampling_source") or "generation_config"
     if sampled and source != "generation_config":
         entry["sampling"] = {"source": source, "settings": results[0]["sampled_speed"]["sampling"]}
-    return {**entry, "stats": stats, "more": more, **({"throughput": throughput} if throughput else {}), "evidence": evidence}
+    return {**entry, "stats": stats, "more": more, **({"throughput": throughput} if throughput else {})}
 
 
 def export_entry(args):

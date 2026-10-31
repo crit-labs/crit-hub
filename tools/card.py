@@ -192,10 +192,18 @@ def more_text(more):
     return " · ".join(parts)
 
 
+def reproductions(result):
+    """A result's reproductions as results of its GPU and model, each labelled by who measured it."""
+    return [{**rep, "gpu": result["gpu"], "model": result["model"]} for rep in result.get("reproductions") or []]
+
+
 def stats_table(results):
     """The stats as one markdown table, the stats in bold. The subheader names the GPU and model, so only
-    an engine measured on several opens each row with its GPU and model."""
-    rows = [stat_cells(r) for r in results]
+    an engine measured on several, or reproduced, opens each row with its GPU and model (and who reproduced it)."""
+    rows = []
+    for r in results:
+        rows.append(stat_cells(r))
+        rows += [[f"{pair(rep)}, reproduced by {rep['by']}"] + stat_cells(rep)[1:] for rep in reproductions(r)]
     first = 0 if len(rows) > 1 else 1
     return "\n".join([
         "| " + " | ".join(COLUMNS[first:]) + " |",
@@ -318,7 +326,8 @@ def measured(results):
         how = (f"crit Eval ({how}, " + (sampled_text(result.get("sampling")) if sampled_eval(how) else "greedy decode") + ")"
                if crit_eval(how) else f"self-reported ({how})")
         files = [f"[{Path(e['file']).name}]({e['file']})" for e in result.get("evidence") or []]
-        lines.append(label("Measured with") + " · ".join([how] + files))
+        by = f"by [{result['by']}](https://github.com/{result['by']}), " if result.get("by") else ""
+        lines.append(label("Measured with") + by + " · ".join([how] + files))
         mode = quality_mode(result)
         budget = (result.get("more") or {}).get("quality_budget_pct")
         # Perplexity and KL divergence are judged against the mode's own budget (as_quantized's is wider, and raised
@@ -335,6 +344,13 @@ def measured(results):
             lines.append(label("Further figures") + more)
         if result.get("throughput"):
             lines.append(label("Throughput") + throughput_text(result))
+        for rep in reproductions(result):
+            files = [f"[{Path(e['file']).name}]({e['file']})" for e in rep["evidence"]]
+            how = f"crit Eval ({rep['measured_with']}, " + (sampled_text(rep.get("sampling")) if sampled_eval(
+                rep["measured_with"]) else "greedy decode") + ")"
+            lines.append(label("Reproduced") + f"by [{rep['by']}](https://github.com/{rep['by']}) on "
+                         f"{rep['measured_on']}, " + " · ".join([how] + files)
+                         + (f"; {rep['hardware']}" if rep.get("hardware") else ""))
     return lines
 
 
@@ -589,7 +605,8 @@ def render(card, figures=()):
     if card.get("results"):
         parts += [stats_table(card["results"]), ""]
     parts += [facts(card), ""]
-    readme = card.get("readme") or {}
+    readme = {**(card.get("readme") or {})}
+    readme.setdefault("benchmark", benchmark(card))
     for key, heading in SECTIONS:
         if not readme.get(key):
             continue
@@ -601,6 +618,38 @@ def render(card, figures=()):
         after = [i for i, f in zip(images, figures) if Path(f).name in CHARTS_AFTER]
         parts += (before + [""] if before else []) + [readme[key].rstrip("\n"), ""] + (after + [""] if after else [])
     return "\n".join(parts).rstrip("\n") + "\n"
+
+
+def benchmark(card):
+    """The README's standard tail when the card writes no Benchmark your machine of its own: how to measure the engine
+    on your machine and add the result to this card, a reproduction of a GPU and model it measured or a new result."""
+    # engines/<contributor>/<title>/ (tools/check_engines.py checks both)
+    engine = f"{(card.get('contributor') or {}).get('name', '<owner>')}/{card.get('title', '<name>')}"
+    if card.get("origin") == "crit":
+        return f"""Measure this engine on your machine and add the result to this card:
+
+```sh
+crit pull {engine}
+crit bench {engine} --data <a folder for crit Eval's data> --out result.json
+crit hub report {engine} result.json --hub <your crit-hub checkout> --by <your GitHub account>
+```
+
+`crit bench` prepares crit Eval's data from the checkpoint `crit pull` installed, runs its speed suite (and quality
+where the data holds the reference's scores) and prints this card's stats beside yours. `crit hub report` adds your
+result file under `evidence/` and to this card, as a reproduction of the GPU and model it measured or as a new result,
+for a pull request to crit-hub.
+"""
+    return f"""Measure this engine on your machine with crit Eval, which measures any engine behind an OpenAI-compatible
+server, and add the result to this card:
+
+```sh
+crit eval run --url http://127.0.0.1:8000/v1 --model <the checkpoint> --data <prepared crit Eval data> --context <the server's context> --out result.json
+python -B tools/add_result.py engines/{engine} result.json --by <your GitHub account>
+```
+
+`tools/add_result.py` adds your result file under `evidence/` and to this card, as a reproduction of the GPU and model
+it measured or as a new result, for a pull request to crit-hub.
+"""
 
 
 def engine_folders(hub):

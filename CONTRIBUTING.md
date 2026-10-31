@@ -52,7 +52,8 @@ or the result carries no quality figures. Then copy `result.json` to `evidence/c
    checkout. Commit it there.
 2. **Write the README text** as markdown with the sections of the
    [template](engines/_template/card.yaml): an intro, then `## Design`, `## Measured`,
-   `## Checks`, `## Limits`, `## Build and chat`, optionally `## Benchmark your machine`, and
+   `## Checks`, `## Limits`, `## Build and chat`, optionally `## Benchmark your machine` (left out, the
+   README gets the standard one: how to measure the engine with `crit bench` and add the result), and
    `## Credits`. Build and chat starts from
    `git clone https://github.com/crit-labs/crit-engines && git -C crit-engines checkout <crit-engines commit>`;
    the exporter fills in the commit.
@@ -96,6 +97,25 @@ crit-hub records where it is, what it targets and what it measured.
 The folder holds no source, binaries, test data, scripts or license texts; those stay with your
 source. The rendered README opens with the external-engine notice: crit-hub has not reviewed the
 code.
+
+## Add your measurement of an engine
+
+A second machine's numbers are worth more than any check: they show the engine's figures hold off its
+author's machine. Measure it with crit Eval and add the result to its card, in one pull request:
+
+```sh
+crit pull <owner>/<name>
+crit bench <owner>/<name> --data <a folder for crit Eval's data> --out result.json
+crit hub report <owner>/<name> result.json --hub <your crit-hub checkout> --by <your GitHub account>
+```
+
+`crit hub report` runs `python -B tools/add_result.py engines/<owner>/<name> result.json --by <your
+account>` in your checkout, which you can also run yourself on any crit Eval result (an external engine
+measured with `crit eval run --url`). On a GPU and model the card measured, your result becomes a
+**reproduction** of it (`reproductions`, with your account, hardware and figures); on one it did not, a
+new **result** (with `by`), which leaves the card's `supports`. Your result file goes into `evidence/` as
+the next `crit-eval-N.json`, unchanged, and every figure must be what it holds, as for the contributor's
+own. The engine's folder is its contributor's: they approve the pull request (Who approves and merges).
 
 ## Update an engine
 

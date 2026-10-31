@@ -49,7 +49,10 @@ CARD_FIELDS = {"title", "summary", "origin", "contributor", "license", "features
                "checkpoints", "supports", "derived_from", "built", "results", "readme"}
 ENGINE_ID = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
 BUILT_FIELDS = {"hours", "agent_tokens", "api_usd", "agent", "candidates"}
-RESULT_FIELDS = {"gpu", "model", "measured_with", "measured_on", "quality_mode", "sampling", "hardware", "stats", "more", "throughput",
+ACCOUNT = re.compile(r"[A-Za-z0-9][A-Za-z0-9-]{0,38}")
+REPRODUCTION_FIELDS = {"by", "measured_with", "measured_on", "quality_mode", "sampling", "hardware", "stats", "more",
+                       "throughput", "evidence"}
+RESULT_FIELDS = {"gpu", "model", "by", "reproductions", "measured_with", "measured_on", "quality_mode", "sampling", "hardware", "stats", "more", "throughput",
                  "evidence"}
 MODE = re.compile(r"[a-z][a-z0-9_]*")
 PLATFORMS = {"linux", "wsl2", "windows", "macos"}
@@ -552,6 +555,48 @@ def check_crit_eval(name, result, loaded):
     return problems
 
 
+def check_reproductions(folder, name, result, listed):
+    """A crit Eval result's reproductions: each the same GPU and model measured again with crit Eval by someone else
+    (by), from its own result files, which every figure must be, as a result's are (check_crit_eval). Returns the
+    problems and the evidence files they list."""
+    problems, files = [], set()
+    reproductions = result.get("reproductions") or []
+    if not isinstance(reproductions, list):
+        return [f"{name}: reproductions lists the same GPU and model measured again"], files
+    for number, rep in enumerate(reproductions, 1):
+        label = f"{name} reproduction {number}"
+        if not isinstance(rep, dict) or set(rep) - REPRODUCTION_FIELDS:
+            problems.append(f"{label}: holds {', '.join(sorted(REPRODUCTION_FIELDS))}")
+            continue
+        label = f"{name} reproduced by {rep.get('by')}"
+        if not ACCOUNT.fullmatch(str(rep.get("by"))):
+            problems.append(f"{label}: by is the GitHub account that measured it")
+        if not cardlib.crit_eval(rep.get("measured_with")):
+            problems.append(f"{label}: a reproduction is measured with crit Eval (measured_with: crit-eval-v0.7.0)")
+            continue
+        if isinstance(rep.get("measured_on"), datetime.date):
+            rep["measured_on"] = rep["measured_on"].isoformat()
+        found = check_stats(label, rep.get("stats"), rep.get("more", {}))
+        if "throughput" in rep:
+            found += check_throughput(label, rep["throughput"])
+        evidence = rep.get("evidence")
+        if not isinstance(evidence, list) or not evidence or not all(isinstance(e, dict) and set(e) == {"file", "sha256"}
+                                                                    for e in evidence):
+            found.append(f"{label}: evidence lists its result files, {{file: evidence/crit-eval-N.json, sha256: ...}}")
+        problems += found
+        if found:
+            continue
+        mine = {e["file"] for e in evidence}
+        if mine & (listed | files):
+            problems.append(f"{label}: lists {', '.join(sorted(mine & (listed | files)))}, which another result lists")
+        files |= mine
+        loaded, missing = read_evidence(folder, label, evidence, CRIT_EVAL_FILE.fullmatch)
+        problems += missing
+        if len(loaded) == len(evidence):
+            problems += check_crit_eval(label, {"gpu": result["gpu"], **rep}, loaded)
+    return problems, files
+
+
 def check_self_reported(name, result, data):
     """The evidence behind a self-reported result: its measurements, each with method, link, settings
     and figures. Every figure the result states must be one the file records."""
@@ -633,6 +678,8 @@ def check_results(folder, card):
             problems.append(f'{name}: evidence lists {{file: evidence/<file>, sha256: <sha256>}}')
             continue
         listed |= {e["file"] for e in evidence}
+        if "by" in result and not ACCOUNT.fullmatch(str(result["by"])):
+            problems.append(f"{name}: by is the GitHub account that measured it")
         if stat_problems:
             continue
         if cardlib.crit_eval(result["measured_with"]):
@@ -646,6 +693,11 @@ def check_results(folder, card):
             problems += found
             if len(loaded) == len(evidence):
                 problems += check_crit_eval(name, result, loaded)
+            more, files = check_reproductions(folder, name, result, listed)
+            problems += more
+            listed |= files
+        elif result.get("reproductions"):
+            problems.append(f"{name}: reproductions are of a crit Eval result")
         elif evidence:
             loaded, found = read_evidence(folder, name, evidence, lambda f: f == SELF_REPORTED)
             problems += found

@@ -166,10 +166,14 @@ people read. [`_template/card.yaml`](_template/card.yaml) documents every key; i
   took, as `hours`, `candidates`, `agent_tokens`, `api_usd` and the `agent`.
 - **`results`**: for each GPU and model it was measured on, `measured_with`, `measured_on`, the
   `quality_mode` it was judged in, the `hardware` it ran on, the six `stats`, optional `more`, an optional
-  `throughput` by concurrency and its `evidence`.
+  `throughput` by concurrency and its `evidence`; `by`, the GitHub account that measured it when that is
+  not the contributor; and optional `reproductions`: the same GPU and model measured again with crit Eval
+  on someone else's machine, each with its `by`, `measured_with`, `measured_on`, `hardware`, `stats` and
+  its own `evidence` files, which its figures must be (`tools/add_result.py` adds both).
 - **`readme`**: the README's prose as markdown blocks, rendered in this order: `intro`,
-  `design`, `measured`, `checks`, `limits`, `build_and_chat`, the optional `benchmark` and
-  `credits`. The renderer adds the title, the credit (a note for a crit engine, a warning for an
+  `design`, `measured`, `checks`, `limits`, `build_and_chat`, the optional `benchmark` (left out, the
+  standard Benchmark your machine: `crit pull`, `crit bench` and `crit hub report` for a crit engine,
+  `crit eval run --url` and `tools/add_result.py` for an external one) and `credits`. The renderer adds the title, the credit (a note for a crit engine, a warning for an
   external one), the stats table and the facts: how each result was measured, its hardware and further figures,
   then requirements, checkpoints, downloads, source and license.
 

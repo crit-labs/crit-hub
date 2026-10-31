@@ -195,7 +195,7 @@ readme:
     ```sh
     git clone https://github.com/<your account>/<your repository> && git -C <your repository> checkout <40-character commit>
     ```
-  # benchmark: |                   # optional: only when the engine ships a benchmark tool
-  #   How to run it and how to share results.
+  # benchmark: |                   # optional: left out, the README gets the standard Benchmark your machine
+  #   How to run it and how to share results.   (crit bench and crit hub report, or tools/add_result.py)
   credits: |
     The source's license, linked at the pinned commit, and the credits for what the engine uses.
