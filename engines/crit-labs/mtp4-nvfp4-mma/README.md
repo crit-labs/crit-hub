@@ -17,7 +17,7 @@
 - **Further figures:** long-context decode 136.7 tok/s · held-out decode 131.2 tok/s
 - **Requires:** WSL2 · sm_120a · 32 GB GPU memory · CUDA 13.1 · crit Core Python engine, torch 2.14.1+cu130, Triton 3.8.0
 - **Checkpoint** (`qwen3.8-27b@NVFP4`): [`unsloth/Qwen3.8-27B-NVFP4`](https://huggingface.co/unsloth/Qwen3.8-27B-NVFP4/tree/f0b7c9e722f5565102fff8481c99e4d86ae099c7) at `f0b7c9e7`
-- **Source:** [crit-labs/crit-engines/mtp4-nvfp4-mma @ `10c52aea`](https://github.com/crit-labs/crit-engines/tree/10c52aea078eda2616a51f98dcdb3980fcc6b7b5/mtp4-nvfp4-mma)
+- **Source:** [crit-labs/crit-engines/mtp4-nvfp4-mma @ `53e4423b`](https://github.com/crit-labs/crit-engines/tree/53e4423ba6f0704a0d8862e2c15add650edef6a9/mtp4-nvfp4-mma)
 - **Built:** 3.91 h · 5 candidates · 149.3M agent tokens · $50.75 API-equivalent · by Claude Code (Claude Opus 5.5)
 - **License:** Apache-2.0
 
@@ -87,7 +87,7 @@ and a draft step 1.24 ms against 0.62 ms; prefill runs at 46% of the GPU's measu
 ## Build and chat
 
 ```sh
-git clone https://github.com/crit-labs/crit-engines && git -C crit-engines checkout 10c52aea078eda2616a51f98dcdb3980fcc6b7b5
+git clone https://github.com/crit-labs/crit-engines && git -C crit-engines checkout 53e4423ba6f0704a0d8862e2c15add650edef6a9
 ENGINE=crit-engines/mtp4-nvfp4-mma/engine
 python "$ENGINE/qwen38/csrc/build.py"
 ```
@@ -107,6 +107,6 @@ thinking off by default (`enable_thinking: false`).
 
 ## Credits
 
-Credits and licenses are in [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/10c52aea078eda2616a51f98dcdb3980fcc6b7b5/mtp4-nvfp4-mma/THIRD_PARTY.md)
-and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/10c52aea078eda2616a51f98dcdb3980fcc6b7b5/mtp4-nvfp4-mma/LICENSES.txt), next to
+Credits and licenses are in [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/53e4423ba6f0704a0d8862e2c15add650edef6a9/mtp4-nvfp4-mma/THIRD_PARTY.md)
+and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/53e4423ba6f0704a0d8862e2c15add650edef6a9/mtp4-nvfp4-mma/LICENSES.txt), next to
 the source.

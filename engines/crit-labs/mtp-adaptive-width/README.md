@@ -17,7 +17,7 @@
 - **Further figures:** long-context decode 112.5 tok/s · held-out decode 126.3 tok/s
 - **Requires:** WSL2 · sm_120 · 32 GB GPU memory · CUDA 13.1 · crit Core Python engine, torch 2.14.1+cu130, Triton 3.8.0
 - **Checkpoint** (`qwen3.8-27b@NVFP4`): [`unsloth/Qwen3.8-27B-NVFP4`](https://huggingface.co/unsloth/Qwen3.8-27B-NVFP4/tree/f0b7c9e722f5565102fff8481c99e4d86ae099c7) at `f0b7c9e7`
-- **Source:** [crit-labs/crit-engines/mtp-adaptive-width @ `10c52aea`](https://github.com/crit-labs/crit-engines/tree/10c52aea078eda2616a51f98dcdb3980fcc6b7b5/mtp-adaptive-width)
+- **Source:** [crit-labs/crit-engines/mtp-adaptive-width @ `53e4423b`](https://github.com/crit-labs/crit-engines/tree/53e4423ba6f0704a0d8862e2c15add650edef6a9/mtp-adaptive-width)
 - **Built:** 3.34 h · 5 candidates · 127.2M agent tokens · $36.81 API-equivalent · by Claude Code (Claude Opus 5.5)
 - **License:** Apache-2.0
 
@@ -86,7 +86,7 @@ prefill runs at 77% of the ceiling Eval prices for 16-bit prompt activations.
 ## Build and chat
 
 ```sh
-git clone https://github.com/crit-labs/crit-engines && git -C crit-engines checkout 10c52aea078eda2616a51f98dcdb3980fcc6b7b5
+git clone https://github.com/crit-labs/crit-engines && git -C crit-engines checkout 53e4423ba6f0704a0d8862e2c15add650edef6a9
 ENGINE=crit-engines/mtp-adaptive-width/engine
 bash "$ENGINE/native/build.sh"
 ```
@@ -106,6 +106,6 @@ thinking off by default (`enable_thinking: false`).
 
 ## Credits
 
-Credits and licenses are in [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/10c52aea078eda2616a51f98dcdb3980fcc6b7b5/mtp-adaptive-width/THIRD_PARTY.md)
-and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/10c52aea078eda2616a51f98dcdb3980fcc6b7b5/mtp-adaptive-width/LICENSES.txt), next to
+Credits and licenses are in [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/53e4423ba6f0704a0d8862e2c15add650edef6a9/mtp-adaptive-width/THIRD_PARTY.md)
+and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/53e4423ba6f0704a0d8862e2c15add650edef6a9/mtp-adaptive-width/LICENSES.txt), next to
 the source.

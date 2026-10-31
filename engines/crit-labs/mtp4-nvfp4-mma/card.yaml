@@ -12,7 +12,7 @@ features:
 - speculative
 source:
   repository: https://github.com/crit-labs/crit-engines
-  revision: 10c52aea078eda2616a51f98dcdb3980fcc6b7b5
+  revision: 53e4423ba6f0704a0d8862e2c15add650edef6a9
   path: mtp4-nvfp4-mma
 requirements:
   platforms:
@@ -103,7 +103,7 @@ readme:
     - Tested only on WSL2 Ubuntu 24.04 with torch 2.14.1+cu130, Triton 3.8.0 and the CUDA 13.1 toolkit.
   build_and_chat: |
     ```sh
-    git clone https://github.com/crit-labs/crit-engines && git -C crit-engines checkout 10c52aea078eda2616a51f98dcdb3980fcc6b7b5
+    git clone https://github.com/crit-labs/crit-engines && git -C crit-engines checkout 53e4423ba6f0704a0d8862e2c15add650edef6a9
     ENGINE=crit-engines/mtp4-nvfp4-mma/engine
     python "$ENGINE/qwen38/csrc/build.py"
     ```
@@ -119,6 +119,6 @@ readme:
     chat requests at `http://127.0.0.1:8000/v1`. `engine/configuration.json` has the applied settings, with
     thinking off by default (`enable_thinking: false`).
   credits: |
-    Credits and licenses are in [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/10c52aea078eda2616a51f98dcdb3980fcc6b7b5/mtp4-nvfp4-mma/THIRD_PARTY.md)
-    and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/10c52aea078eda2616a51f98dcdb3980fcc6b7b5/mtp4-nvfp4-mma/LICENSES.txt), next to
+    Credits and licenses are in [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/53e4423ba6f0704a0d8862e2c15add650edef6a9/mtp4-nvfp4-mma/THIRD_PARTY.md)
+    and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/53e4423ba6f0704a0d8862e2c15add650edef6a9/mtp4-nvfp4-mma/LICENSES.txt), next to
     the source.

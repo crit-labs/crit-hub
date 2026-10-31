@@ -11,7 +11,7 @@ features:
 - tool-calls
 source:
   repository: https://github.com/crit-labs/crit-engines
-  revision: 23810f3444f720f12742ee177ccca18178382c35
+  revision: 2fe7df08acf9a81e82c9f27266b6f56e4fc0913b
   path: nvfp4-gemv-int8kv
 requirements:
   platforms:
@@ -129,7 +129,7 @@ readme:
     - Tested only on WSL2 Ubuntu 24.04 with torch 2.14.1+cu130, Triton 3.8.0 and the CUDA 13.1 toolkit.
   build_and_chat: |
     ```sh
-    git clone https://github.com/crit-labs/crit-engines && git -C crit-engines checkout 23810f3444f720f12742ee177ccca18178382c35
+    git clone https://github.com/crit-labs/crit-engines && git -C crit-engines checkout 2fe7df08acf9a81e82c9f27266b6f56e4fc0913b
     cd crit-engines/nvfp4-gemv-int8kv/engine
     nvcc -O3 -gencode arch=compute_120a,code=sm_120a -shared -Xcompiler -fPIC -cudart shared \
       -o libnvfp4_gemv.so nvfp4_gemv.cu
@@ -146,6 +146,6 @@ readme:
     chat requests at `http://127.0.0.1:8000/v1`. `engine/configuration.json` has the applied settings, with
     thinking off by default (`enable_thinking: false`).
   credits: |
-    Credits and licenses are in [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/23810f3444f720f12742ee177ccca18178382c35/nvfp4-gemv-int8kv/THIRD_PARTY.md)
-    and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/23810f3444f720f12742ee177ccca18178382c35/nvfp4-gemv-int8kv/LICENSES.txt), next to
+    Credits and licenses are in [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/2fe7df08acf9a81e82c9f27266b6f56e4fc0913b/nvfp4-gemv-int8kv/THIRD_PARTY.md)
+    and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/2fe7df08acf9a81e82c9f27266b6f56e4fc0913b/nvfp4-gemv-int8kv/LICENSES.txt), next to
     the source.

@@ -17,7 +17,7 @@
 - **Further figures:** long-context decode 49.6 tok/s · held-out decode 65.3 tok/s
 - **Requires:** WSL2 · sm_120a · 32 GB GPU memory · CUDA 13.1 · crit Core Python engine, torch 2.14.1+cu130, Triton 3.8.0
 - **Checkpoint** (`nanbeige4.3-33b@NVFP4`): [`webbrain-one/Nanbeige4.3-33B-NVFP4`](https://huggingface.co/webbrain-one/Nanbeige4.3-33B-NVFP4/tree/db25813ac527ade6a8b67e00a46135bc90617841) at `db25813a`
-- **Source:** [crit-labs/crit-engines/nvfp4-gemv-int8kv @ `23810f34`](https://github.com/crit-labs/crit-engines/tree/23810f3444f720f12742ee177ccca18178382c35/nvfp4-gemv-int8kv)
+- **Source:** [crit-labs/crit-engines/nvfp4-gemv-int8kv @ `2fe7df08`](https://github.com/crit-labs/crit-engines/tree/2fe7df08acf9a81e82c9f27266b6f56e4fc0913b/nvfp4-gemv-int8kv)
 - **Built:** 4.74 h · 6 candidates · 128.1M agent tokens · $36.11 API-equivalent · by Claude Code (Claude Opus 5.5)
 - **License:** Apache-2.0
 
@@ -100,7 +100,7 @@ mix this engine runs.
 ## Build and chat
 
 ```sh
-git clone https://github.com/crit-labs/crit-engines && git -C crit-engines checkout 23810f3444f720f12742ee177ccca18178382c35
+git clone https://github.com/crit-labs/crit-engines && git -C crit-engines checkout 2fe7df08acf9a81e82c9f27266b6f56e4fc0913b
 cd crit-engines/nvfp4-gemv-int8kv/engine
 nvcc -O3 -gencode arch=compute_120a,code=sm_120a -shared -Xcompiler -fPIC -cudart shared \
   -o libnvfp4_gemv.so nvfp4_gemv.cu
@@ -121,6 +121,6 @@ thinking off by default (`enable_thinking: false`).
 
 ## Credits
 
-Credits and licenses are in [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/23810f3444f720f12742ee177ccca18178382c35/nvfp4-gemv-int8kv/THIRD_PARTY.md)
-and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/23810f3444f720f12742ee177ccca18178382c35/nvfp4-gemv-int8kv/LICENSES.txt), next to
+Credits and licenses are in [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/2fe7df08acf9a81e82c9f27266b6f56e4fc0913b/nvfp4-gemv-int8kv/THIRD_PARTY.md)
+and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/2fe7df08acf9a81e82c9f27266b6f56e4fc0913b/nvfp4-gemv-int8kv/LICENSES.txt), next to
 the source.
