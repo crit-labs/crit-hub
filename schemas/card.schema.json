@@ -29,14 +29,26 @@
       }
     },
     "requirements": {
-      "type": "object", "additionalProperties": false, "required": ["platforms", "gpu_arch", "gpu_memory_gb", "cuda"],
+      "type": "object", "additionalProperties": false, "required": ["platforms", "gpu_arch", "gpu_memory_gb"],
       "properties": {
         "platforms": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["linux", "wsl2", "windows", "macos"]}},
-        "gpu_arch": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^sm_[0-9]{2,3}[a-z]?$"}},
+        "backend": {"enum": ["cuda", "hip", "metal", "vulkan"], "description": "The device API the engine runs on; cuda when left out."},
+        "gpu_arch": {"type": "array", "minItems": 1, "items": {"type": "string"},
+                     "description": "Architectures it is built for: sm_120a (cuda), gfx1201 (hip), apple9 (metal), a device family (vulkan)."},
         "gpu_memory_gb": {"type": "number", "exclusiveMinimum": 0},
-        "cuda": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+$", "description": "Quote it in YAML: \"13.1\"."},
+        "cuda": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+$", "description": "CUDA toolkit (backend cuda). Quote it in YAML: \"13.1\"."},
+        "rocm": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+$", "description": "ROCm version (backend hip). Quote it in YAML: \"6.4\"."},
+        "metal": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+$", "description": "Metal Shading Language version (backend metal), like \"3.2\"."},
+        "vulkan": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+$", "description": "Vulkan API version (backend vulkan), like \"1.3\"."},
         "runtime": {"type": "string", "description": "What the engine links, e.g. crit Core 0.5.0."}
-      }
+      },
+      "allOf": [
+        {"if": {"not": {"required": ["backend"]}}, "then": {"required": ["cuda"], "properties": {"gpu_arch": {"items": {"pattern": "^sm_[0-9]{2,3}[a-z]?$"}}}}},
+        {"if": {"properties": {"backend": {"const": "cuda"}}, "required": ["backend"]}, "then": {"required": ["cuda"], "properties": {"gpu_arch": {"items": {"pattern": "^sm_[0-9]{2,3}[a-z]?$"}}}}},
+        {"if": {"properties": {"backend": {"const": "hip"}}, "required": ["backend"]}, "then": {"required": ["rocm"], "properties": {"gpu_arch": {"items": {"pattern": "^gfx[0-9]{1,2}[0-9a-f]{2}$"}}}}},
+        {"if": {"properties": {"backend": {"const": "metal"}}, "required": ["backend"]}, "then": {"required": ["metal"], "properties": {"gpu_arch": {"items": {"pattern": "^apple[0-9]{1,2}$"}}}}},
+        {"if": {"properties": {"backend": {"const": "vulkan"}}, "required": ["backend"]}, "then": {"required": ["vulkan"], "properties": {"gpu_arch": {"items": {"pattern": "^[a-z][a-z0-9_.-]*$"}}}}}
+      ]
     },
     "build": {
       "type": "object", "additionalProperties": false, "required": ["command"],

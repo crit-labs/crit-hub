@@ -348,12 +348,21 @@ def short(revision):
     return revision[:8]
 
 
+# requirements.backend -> (version field, label); cuda when the card names no backend.
+TOOLKITS = {"cuda": ("cuda", "CUDA"), "hip": ("rocm", "ROCm"), "metal": ("metal", "Metal"), "vulkan": ("vulkan", "Vulkan")}
+
+
+def toolkit(requirements):
+    field, label = TOOLKITS.get(requirements.get("backend", "cuda"), TOOLKITS["cuda"])
+    return f"{label} {requirements.get(field)}"
+
+
 def facts(card):
     lines = measured(card.get("results") or [])
     r = card.get("requirements") or {}
     if r:
         parts = [", ".join(PLATFORMS.get(p, p) for p in r.get("platforms", [])), ", ".join(r.get("gpu_arch", [])),
-                 f"{r.get('gpu_memory_gb')} GB GPU memory", f"CUDA {r.get('cuda')}", r.get("runtime")]
+                 f"{r.get('gpu_memory_gb')} GB GPU memory", toolkit(r), r.get("runtime")]
         lines.append("- **Requires:** " + " · ".join(p for p in parts if p))
     for model, c in (card.get("checkpoints") or {}).items():
         lines.append(f"- **Checkpoint** (`{model}`): [`{c['repository']}`](https://huggingface.co/{c['repository']}/tree/{c['revision']}) "

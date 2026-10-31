@@ -51,9 +51,15 @@ BUILT_FIELDS = {"hours", "agent_tokens", "api_usd", "agent", "candidates"}
 RESULT_FIELDS = {"gpu", "model", "measured_with", "measured_on", "quality_mode", "sampling", "hardware", "stats", "more", "evidence"}
 MODE = re.compile(r"[a-z][a-z0-9_]*")
 PLATFORMS = {"linux", "wsl2", "windows", "macos"}
-GPU_ARCH = re.compile(r"sm_[0-9]{2,3}[a-z]?")
-CUDA = re.compile(r"[0-9]+\.[0-9]+")
-REQUIREMENT_FIELDS = {"platforms", "gpu_arch", "gpu_memory_gb", "cuda", "runtime"}
+VERSION = re.compile(r"[0-9]+\.[0-9]+")
+# requirements.backend (cuda when absent): the architecture names gpu_arch takes and the field naming the toolkit or
+# API version it builds with: (gpu_arch pattern, version field, toolkit, example arch, example version).
+BACKENDS = {"cuda": (re.compile(r"sm_[0-9]{2,3}[a-z]?"), "cuda", "CUDA toolkit", "sm_120a", "13.1"),
+            "hip": (re.compile(r"gfx[0-9]{1,2}[0-9a-f]{2}"), "rocm", "ROCm", "gfx1201", "6.4"),
+            "metal": (re.compile(r"apple[0-9]{1,2}"), "metal", "Metal", "apple9", "3.2"),
+            "vulkan": (re.compile(r"[a-z][a-z0-9_.-]*"), "vulkan", "Vulkan API", "rdna4", "1.3")}
+VERSION_FIELDS = {version for _, version, _, _, _ in BACKENDS.values()}
+REQUIREMENT_FIELDS = {"platforms", "backend", "gpu_arch", "gpu_memory_gb", "runtime"} | VERSION_FIELDS
 DOWNLOAD_KINDS = {"drafter", "artifact"}
 DOWNLOAD_FIELDS = {"kind", "repository", "revision", "path", "file", "sha256", "size_gb", "note"}
 CRIT_EVAL_FILE = re.compile(r"evidence/crit-eval(-[2-9]|-[1-9][0-9]+)?\.json")
@@ -164,20 +170,29 @@ def check_lineage(card):
 def check_requirements(card):
     requirements = card.get("requirements")
     if not isinstance(requirements, dict):
-        return ["card.yaml needs requirements: platforms, gpu_arch, gpu_memory_gb, cuda and an optional runtime"]
+        return ["card.yaml needs requirements: platforms, gpu_arch, gpu_memory_gb, the toolkit version (cuda, or rocm, metal "
+                "or vulkan beside backend) and an optional runtime"]
     problems = []
     if set(requirements) - REQUIREMENT_FIELDS:
         problems.append(f"card.yaml requirements: unknown field(s) {', '.join(sorted(set(requirements) - REQUIREMENT_FIELDS))}")
     platforms = requirements.get("platforms")
     if not (isinstance(platforms, list) and platforms and set(platforms) <= PLATFORMS and len(set(platforms)) == len(platforms)):
         problems.append(f"card.yaml requirements.platforms lists any of {', '.join(sorted(PLATFORMS))}")
+    backend = requirements.get("backend", "cuda")
+    if backend not in BACKENDS:
+        problems.append(f"card.yaml requirements.backend is one of {', '.join(sorted(BACKENDS))} (cuda when left out)")
+        return problems
+    pattern, version, toolkit, example_arch, example_version = BACKENDS[backend]
     arch = requirements.get("gpu_arch")
-    if not (isinstance(arch, list) and arch and all(GPU_ARCH.fullmatch(str(a)) for a in arch)):
-        problems.append("card.yaml requirements.gpu_arch lists the compute capabilities it is built for, like sm_120a")
+    if not (isinstance(arch, list) and arch and all(pattern.fullmatch(str(a)) for a in arch)):
+        problems.append(f"card.yaml requirements.gpu_arch lists the {backend} architectures it is built for, like {example_arch}")
     if not positive(requirements.get("gpu_memory_gb")):
         problems.append("card.yaml requirements.gpu_memory_gb is the GPU memory the engine needs, in GB")
-    if not CUDA.fullmatch(str(requirements.get("cuda"))):
-        problems.append('card.yaml requirements.cuda is the CUDA toolkit version it builds with, quoted, like "13.1"')
+    if not VERSION.fullmatch(str(requirements.get(version))):
+        problems.append(f'card.yaml requirements.{version} is the {toolkit} version it builds with, quoted, like "{example_version}"')
+    others = sorted((VERSION_FIELDS - {version}) & set(requirements))
+    if others:
+        problems.append(f"card.yaml requirements: {', '.join(others)} belong(s) to another backend than {backend}")
     if "runtime" in requirements and not (isinstance(requirements["runtime"], str) and requirements["runtime"].strip()):
         problems.append("card.yaml requirements.runtime names what the engine links, like crit Core 0.5.0")
     return problems

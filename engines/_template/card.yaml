@@ -44,10 +44,11 @@ source:
 requirements:
   platforms:          # any of linux, wsl2, windows, macos: what you built and ran it on
   - linux
-  gpu_arch:           # compute capabilities it is compiled for
+  # backend: cuda     # optional: cuda (default), hip, metal or vulkan
+  gpu_arch:           # architectures it is compiled for: sm_120a (cuda), gfx1201 (hip), apple9 (metal)
   - sm_120a
   gpu_memory_gb: 32   # GPU memory it needs
-  cuda: "13.1"        # CUDA toolkit it builds with (quoted)
+  cuda: "13.1"        # CUDA toolkit it builds with (quoted); rocm, metal or vulkan instead for those backends
   # runtime: crit Core 0.5.0      # optional: what it links
 
 # Optional, crit engines only: how `crit pull` builds the source, as literal arguments run in its
