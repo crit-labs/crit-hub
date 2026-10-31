@@ -115,6 +115,38 @@ def split_readme(text):
 # ---------------------------------------------------------------------------------------------
 # Rendering
 
+# A card's sections hold no prose: only tables, bullet or numbered lists, code blocks, headings, images and rules.
+LIST_ITEM = re.compile(r"(?:[-*+]|[0-9]+[.)])(?: |$)")
+NOT_PROSE = re.compile(r"\||#{1,6}(?: |$)|!\[[^\]]*\]\([^)]*\)$|(?:-{3,}|\*{3,}|_{3,})$")
+
+
+def prose(text):
+    """The lines of a card section's markdown that are prose: any line outside a table, a list, a code block, a
+    heading, an image or a rule. A list item may run on over lines indented under it, and hold a code block."""
+    found, fence, listed = [], None, False
+    for line in text.splitlines():
+        bare = line.strip()
+        if fence:
+            if bare.startswith(fence):
+                fence = None
+            continue
+        if bare.startswith(("```", "~~~")):
+            fence = bare[:3]
+            continue
+        if not bare:
+            continue
+        if LIST_ITEM.match(bare) and (line == line.lstrip() or listed):
+            listed = True
+        elif listed and line[:2] == "  ":
+            pass
+        elif line == line.lstrip() and NOT_PROSE.match(bare):
+            listed = False
+        else:
+            found.append(bare)
+            listed = False
+    return found
+
+
 def number(value):
     return f"{value:,}"
 
@@ -580,6 +612,137 @@ def result_charts(data):
     return charts
 
 
+def _num(value):
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
+def _ms(value):
+    return f"{value / 1000:,.1f} s" if value >= 1000 else f"{value:,.0f} ms"
+
+
+def _tps(value):
+    return f"{value:,.1f} tok/s" if value < 1000 else f"{value:,.0f} tok/s"
+
+
+def _table(head, align, rows):
+    return "\n".join(["| " + " | ".join(head) + " |", "| " + " | ".join(align) + " |",
+                      *("| " + " | ".join(row) + " |" for row in rows)])
+
+
+def measurement_tables(data):
+    """Every figure one crit Eval result file holds, as markdown tables: the measurements, then the speed cases
+    and the context points. A figure the file lacks (an older protocol, a part not run) leaves its row out."""
+    g = lambda *keys: _dig(data, keys)
+    kpis = g("status", "kpis") or {}
+    sampled = g("sampled_speed") or {}
+    speculative = bool(g("engine", "speculative"))
+    rows = []
+
+    def row(name, value, *keys, fmt=None):
+        v = _dig(value, keys) if keys else value
+        if _num(v):
+            rows.append((name, fmt(v) if fmt else str(v)))
+
+    settings = sampled.get("sampling") or {}
+    how = ", ".join(f"{k.replace('_', '-')} {v}" for k, v in settings.items())
+    row(f"Decode, sampled ({how})" if how else "Decode, sampled", sampled, "decode_score", fmt=_tps)
+    row("Decode, greedy", kpis, "decode_greedy", "score", fmt=_tps)
+    if speculative:
+        row("Tokens per decode round, sampled", sampled, "tokens_per_round", fmt=lambda v: f"{v:.1f}")
+    prefill = kpis.get("prefill") or {}
+    if _num(prefill.get("score")):
+        share = prefill.get("fraction_of_ceiling")
+        rows.append(("Prefill", _tps(prefill["score"]) + (f", {share * 100:.0f}% of its ceiling" if _num(share) else "")))
+    row("Time to first token", kpis, "ttft", "score_ms", fmt=_ms)
+    row("Whole requests, end to end", kpis, "end_to_end", "score", fmt=_tps)
+    row("Held-out prompts, decode", kpis, "heldout", "decode_score", fmt=_tps)
+    row("Long context, decode", data, "headroom", "context", "decode", "score", fmt=_tps)
+    row("Long context, first token", data, "headroom", "context", "ttft", "score_ms", fmt=_ms)
+    row("Follow-up turn, first token", kpis, "followup", "ttft_ms", fmt=_ms)
+    ppl, kld = kpis.get("perplexity") or {}, kpis.get("kl_divergence") or {}
+    on = lambda name: f" ({name})" if name else ""
+    if _num(ppl.get("worst_ratio")):
+        rows.append(("Perplexity vs reference, worst path", f"{(ppl['worst_ratio'] - 1) * 100:+.1f}%{on(ppl.get('worst_set'))}"))
+    if _num(kld.get("worst_mean")):
+        p99 = f", p99 {kld['worst_p99']:.2f}" if _num(kld.get("worst_p99")) else ""
+        rows.append(("KL divergence, worst path", f"mean {kld['worst_mean']:.3f}{p99}{on(kld.get('worst_mean_set'))}"))
+    if _num(kld.get("lowest_top1")):
+        rows.append(("Top-1 agreement, lowest", f"{kld['lowest_top1'] * 100:.1f}%{on(kld.get('lowest_top1_set'))}"))
+    budget = g("requirements", "quality_budget") or {}
+    limits = [f"PPL ×{budget['ppl_ratio_max']}" if _num(budget.get("ppl_ratio_max")) else None,
+              f"KLD mean {budget['kld_mean_max']}" if _num(budget.get("kld_mean_max")) else None,
+              f"p99 {budget['kld_p99_max']}" if _num(budget.get("kld_p99_max")) else None]
+    if _num(kld.get("budget_used")):
+        rows.append(("Quality budget used", f"{kld['budget_used'] * 100:.0f}%{on(kld.get('budget_used_set'))}"))
+    if any(limits):
+        rows.append(("Quality budget", ", ".join(x for x in limits if x)))
+    headroom = g("headroom") or {}
+    if _num(headroom.get("step_ms")) and _num(headroom.get("pass_floor_ms")):
+        share = f" ({headroom['pass_efficiency'] * 100:.0f}%)" if _num(headroom.get("pass_efficiency")) else ""
+        rows.append(("Verify pass" if speculative else "Decode step",
+                     f"{headroom['step_ms']:.1f} ms, against {headroom['pass_floor_ms']:.1f} ms of reads{share}"))
+    draft, floor = _dig(headroom, ("projection", "draft_ms")), _dig(headroom, ("projection", "draft_floor_ms"))
+    if speculative and _num(draft) and _num(floor):
+        rows.append(("Draft step", f"{draft:.2f} ms, against {floor:.2f} ms of reads"))
+    row("Context", data, "context", "tokens", fmt=lambda v: f"{v:,} tokens")
+    row("VRAM free at the full context", data, "context", "device_memory", "free_bytes", fmt=lambda v: f"{v / 1e9:.2f} GB")
+    row("Load time", data, "load_ms", fmt=_ms)
+    tables = [_table(["Measurement", "Value"], [":---", "---:"], rows)] if rows else []
+
+    greedy = g("speed", "cases") or {}
+    cases = [(name, c) for name, c in (sampled.get("cases") or greedy).items() if isinstance(c, dict) and _num(c.get("decode_tps"))]
+    if cases:
+        kind = "sampled" if sampled.get("cases") else "greedy"
+        both = kind == "sampled" and greedy
+        head = ["Speed case", "Prompt tokens", f"Decode, {kind}"] + (["Decode, greedy"] if both else []) \
+            + (["Tokens per round"] if speculative else []) + ["First token"]
+        cell = lambda v, f: f(v) if _num(v) else "–"
+        tables.append(_table(head, [":---"] + ["---:"] * (len(head) - 1), [
+            [name, cell(c.get("prompt_tokens"), lambda v: f"{v:,}"), _tps(c["decode_tps"])]
+            + ([cell(_dig(greedy, (name, "decode_tps")), _tps)] if both else [])
+            + ([cell(c.get("tokens_per_round"), lambda v: f"{v:.1f}")] if speculative else [])
+            + [cell(c.get("ttft_ms"), _ms)] for name, c in cases]))
+
+    points = g("context", "points") or _dig(kpis, ("context", "points")) or {}
+    points = sorted((p for p in points.values() if isinstance(p, dict) and isinstance(p.get("context"), int)), key=lambda p: p["context"])
+    if points:
+        cell = lambda v, f: f(v) if _num(v) else "–"
+        head = ["Context", "Decode", "First token", "Prefill"] + (["Tokens per round"] if speculative else [])
+        tables.append(_table(head, [":---"] + ["---:"] * (len(head) - 1), [
+            [f"{p['context']:,}", cell(p.get("decode_tps"), _tps), cell(p.get("ttft_ms"), _ms), cell(p.get("prefill_tps"), _tps)]
+            + ([cell(p.get("tokens_per_round"), lambda v: f"{v:.1f}")] if speculative else []) for p in points]))
+    return tables
+
+
+def _dig(value, keys):
+    for key in keys:
+        value = value.get(key) if isinstance(value, dict) else None
+    return value
+
+
+def eval_files(folder, card):
+    """{result index: its first crit Eval result file, parsed} for each result measured with crit Eval."""
+    found = {}
+    for i, result in enumerate(card.get("results") or []):
+        files = [e.get("file") for e in result.get("evidence") or [] if re.fullmatch(r"evidence/crit-eval[^/]*\.json", str(e.get("file")))]
+        path = Path(folder) / files[0] if files else None
+        if crit_eval(result.get("measured_with")) and path and path.is_file():
+            found[i] = json.loads(path.read_text(encoding="utf-8"))
+    return found
+
+
+def measurements(folder, card):
+    """The Measured section's tables: every figure of each result's crit Eval file, headed by its GPU and model
+    when the engine has several results."""
+    results = card.get("results") or []
+    blocks = []
+    for i, data in eval_files(folder, card).items():
+        if len(results) > 1:
+            blocks.append(f"### {pair(results[i])}")
+        blocks += measurement_tables(data)
+    return blocks
+
+
 def charts(folder, card):
     """Every chart an engine's README shows, as {path under the folder: SVG}: for each result measured with
     crit Eval, from its first result file; under charts/<gpu>_<model>/ when the engine has several results."""
@@ -599,13 +762,14 @@ def charts(folder, card):
 
 
 CHART_ALT = {"decode-by-context.svg": "Decode by context", "decode-by-workload.svg": "Decode by workload"}
-# The charts that close the Measured section, after its prose; the others open it.
+# The charts that close the Measured section, after its tables and notes; the others open it.
 CHARTS_AFTER = {"decode-by-workload.svg"}
 
 
-def render(card, figures=()):
+def render(card, figures=(), tables=()):
     """README.md for a card: the engine's name, the GPUs and models it was measured on as a subheader, the
-    credit, the stats table, the facts, then the prose, with its charts (paths) in the Measured section."""
+    credit, the stats table, the facts, then the sections, with its charts (paths) and the tables of every
+    measurement (measurements()) opening the Measured section, before the card's own notes."""
     parts = [HEADER, "", f"# {card['title']}", ""]
     if card.get("results"):
         parts += ["### " + ", ".join(pair(r) for r in card["results"]), ""]
@@ -616,7 +780,7 @@ def render(card, figures=()):
     readme = {**(card.get("readme") or {})}
     readme.setdefault("benchmark", benchmark(card))
     for key, heading in SECTIONS:
-        if not readme.get(key):
+        if not readme.get(key) and not (key == "measured" and tables):
             continue
         if heading:
             # A rule between sections, as crit-hub's own README has: GitHub's headings alone leave little room.
@@ -624,7 +788,9 @@ def render(card, figures=()):
         images = [f"![{CHART_ALT.get(Path(f).name, Path(f).stem)}]({f})" for f in figures] if key == "measured" else []
         before = [i for i, f in zip(images, figures) if Path(f).name not in CHARTS_AFTER]
         after = [i for i, f in zip(images, figures) if Path(f).name in CHARTS_AFTER]
-        parts += (before + [""] if before else []) + [readme[key].rstrip("\n"), ""] + (after + [""] if after else [])
+        blocks = [*tables] if key == "measured" else []
+        blocks += [readme[key].rstrip("\n")] if readme.get(key) else []
+        parts += (before + [""] if before else []) + [b for block in blocks for b in (block, "")] + (after + [""] if after else [])
     return "\n".join(parts).rstrip("\n") + "\n"
 
 
@@ -634,29 +800,25 @@ def benchmark(card):
     # engines/<contributor>/<title>/ (tools/check_engines.py checks both)
     engine = f"{(card.get('contributor') or {}).get('name', '<owner>')}/{card.get('title', '<name>')}"
     if card.get("origin") == "crit":
-        return f"""Measure this engine on your machine and add the result to this card:
-
-```sh
+        return f"""```sh
 crit pull {engine}
 crit bench {engine} --data <a folder for crit Eval's data> --out result.json
 crit hub report {engine} result.json --hub <your crit-hub checkout> --by <your GitHub account>
 ```
 
-`crit bench` prepares crit Eval's data from the checkpoint `crit pull` installed, runs its speed suite (and quality
-where the data holds the reference's scores) and prints this card's stats beside yours. `crit hub report` adds your
-result file under `evidence/` and to this card, as a reproduction of the GPU and model it measured or as a new result,
-for a pull request to crit-hub.
+- `crit bench` prepares crit Eval's data from the checkpoint `crit pull` installed, runs its speed suite (and quality
+  where the data holds the reference's scores) and prints this card's stats beside yours
+- `crit hub report` adds your result file under `evidence/` and to this card, as a reproduction of the GPU and model
+  it measured or as a new result, for a pull request to crit-hub
 """
-    return f"""Measure this engine on your machine with crit Eval, which measures any engine behind an OpenAI-compatible
-server, and add the result to this card:
-
-```sh
+    return f"""```sh
 crit eval run --url http://127.0.0.1:8000/v1 --model <the checkpoint> --data <prepared crit Eval data> --context <the server's context> --out result.json
 python -B tools/add_result.py engines/{engine} result.json --by <your GitHub account>
 ```
 
-`tools/add_result.py` adds your result file under `evidence/` and to this card, as a reproduction of the GPU and model
-it measured or as a new result, for a pull request to crit-hub.
+- crit Eval measures any engine behind an OpenAI-compatible server
+- `tools/add_result.py` adds your result file under `evidence/` and to this card, as a reproduction of the GPU and
+  model it measured or as a new result, for a pull request to crit-hub
 """
 
 
@@ -689,7 +851,7 @@ def main(folders, check):
     for folder in folders:
         card = load(folder)
         drawn = charts(folder, card)
-        text = render(card, list(drawn))
+        text = render(card, list(drawn), measurements(folder, card))
         path = Path(folder) / "README.md"
         if check:
             if not path.is_file() or path.read_text(encoding="utf-8") != text:

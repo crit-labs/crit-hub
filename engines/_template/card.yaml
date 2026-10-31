@@ -156,34 +156,32 @@ results:
   - file: evidence/crit-eval.json
     sha256: <64-character sha256>
 
-# The README's prose, rendered in this order under the header (title, credit, stats, facts). Say each
+# The README's sections, rendered in this order under the header (title, credit, stats, facts). Say each
 # thing once: what the header already shows (contributor, source, requirements, checkpoint, the six
 # stats and further figures) is not repeated here.
+# No prose: every section is tables, bullet lists and code blocks only (tools/check_engines.py rejects
+# a paragraph). A bullet may run on over lines indented under it.
 # Markdown in block scalars: everything indented under the key, no escaping.
 # Keep the whole README to about 100 lines; put long history or design notes next to the source.
 readme:
   intro: |
-    One short paragraph: what the engine is (written from scratch or adapted; crit Core version, or
-    the toolkit or runtime of an external engine) and what makes it different. The platform, GPU,
-    CUDA and context are already in the header.
+    - What the engine is: written from scratch or adapted; crit Core version, or the toolkit or
+      runtime of an external engine
+    - What makes it different, a bullet each. The platform, GPU, CUDA and context are already in the header
   # No model section: the checkpoint and downloads above link Hugging Face. How the engine uses the
   # weights (as stored, or what is re-encoded and why) is the Weights row of the design table.
   design: |
     | Part | How |
     | --- | --- |
     | Weights | ... |
-    | ... | ... |
-
-    At most one short paragraph on how decoding and prompts run.
+    | Decode | ... |
+    | Prefill | ... |
+  # For a crit Eval result, tools/card.py opens Measured with tables of every figure its result file
+  # holds (the measurements, the speed cases, the context points); these bullets follow them. A
+  # self-reported result writes its own table of every figure it measured first.
   measured: |
-    | Metric | Result |
-    | --- | ---: |
-    | Decode | ... tok/s |
-    | Prefill | ... tok/s |
-    | Time to first token (geomean) | ... |
-
-    One short paragraph: measurement conditions (crit Eval version, repetitions, greedy or sampled,
-    free memory) and what sets the speed.
+    - The conditions behind the numbers: crit Eval version, the candidate, the context
+    - What sets the speed, and anything a figure needs to be read right
   checks: |
     - **Arithmetic:** ...
     - **Functional:** ...
@@ -191,14 +189,15 @@ readme:
   limits: |
     - Known issues first, then platform, memory and feature limits.
   build_and_chat: |
-    A clone of the pinned source, then the build commands, the checkpoint check
-    (`python -B tools/verify_model.py <engine folder> <model folder>`), how to serve it and, when the
-    engine ships one, its standalone chat command:
-
     ```sh
     git clone https://github.com/<your account>/<your repository> && git -C <your repository> checkout <40-character commit>
     ```
+
+    - The build commands and what they need
+    - Check the checkpoint: `python -B tools/verify_model.py <engine folder> <model folder>`
+    - How to serve it and, when the engine ships one, its standalone chat command
   # benchmark: |                   # optional: left out, the README gets the standard Benchmark your machine
-  #   How to run it and how to share results.   (crit bench and crit hub report, or tools/add_result.py)
+  #   - How to run it and how to share results.   (crit bench and crit hub report, or tools/add_result.py)
   credits: |
-    The source's license, linked at the pinned commit, and the credits for what the engine uses.
+    - The source's license, linked at the pinned commit
+    - The credits for what the engine uses

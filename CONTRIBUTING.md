@@ -67,11 +67,13 @@ and SPEC's base and peak do. The website shows the closed track by default.
    [template](engines/_template/card.yaml): an intro, then `## Design`, `## Measured`,
    `## Checks`, `## Limits`, `## Build and chat`, optionally `## Benchmark your machine` (left out, the
    README gets the standard one: how to measure the engine with `crit bench` and add the result), and
-   `## Credits`. Build and chat starts from
+   `## Credits`, each as tables, bullet lists and code blocks, no prose paragraphs. Measured opens
+   with tables of every figure of the crit Eval result, so its bullets only add what a figure needs
+   to be read right. Build and chat starts from
    `git clone https://github.com/crit-labs/crit-engines && git -C crit-engines checkout <crit-engines commit>`;
    the exporter fills in the commit.
 3. **Export the entry.** `python -B tools/export_engine.py entry` writes the folder: card.yaml with
-   your README's sections as its prose, pinned to the crit-engines commit; card.lock.json with the
+   your README's sections, pinned to the crit-engines commit; card.lock.json with the
    checkpoint's files and the sealed run's provenance; and, for each `--eval attempt-N`, the
    candidate's sealed crit Eval result in `evidence/`, from which it fills the six stats, further
    figures and throughput by concurrency.
@@ -97,9 +99,11 @@ crit-hub records where it is, what it targets and what it measured.
 1. Copy [`engines/_template/`](engines/_template/) to `engines/<your account>/<name>/` and set
    `origin: external`.
 2. Pin your source to the full 40-character commit you built and measured, under `source`.
-3. Fill in every key of card.yaml: its comments say what each one means. The prose goes under
-   `readme`; in **measured**, state the hardware, OS, toolchain, workload and protocol behind each
-   number, and in **credits**, the source's license, linked at the pinned commit.
+3. Fill in every key of card.yaml: its comments say what each one means. The README's sections go
+   under `readme`, as tables, bullet lists and code blocks only, never prose paragraphs; in
+   **measured**, state the hardware, OS, toolchain, workload and protocol behind each number (a
+   self-reported result also tables every figure it measured; crit Eval's are tabled for you), and in
+   **credits**, the source's license, linked at the pinned commit.
 4. In card.lock.json, list every file of each measured checkpoint with its size and SHA-256, and
    your toolchain and runtime prerequisites under `provenance`.
 5. Add your evidence: `evidence/crit-eval.json` for crit Eval figures, or

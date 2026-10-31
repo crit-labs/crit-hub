@@ -22,11 +22,11 @@
 - **Built:** 4.74 h · 6 candidates · 128.1M agent tokens · $36.11 API-equivalent · by Claude Code (Claude Opus 5.5)
 - **License:** Apache-2.0
 
-A Python engine on crit Core's engine interface, written in six candidates, that runs
-Nanbeige4.3-33B, a dense 52-layer Llama, from its NVFP4 weights as stored. Decode is one token per pass,
-one CUDA graph per step, on its own CUDA NVFP4 GEMV; the KV cache is INT8 with a scale per position and KV
-head, which fits 86,016 tokens of context on the 32 GB GPU. Judged in crit Eval's default `preserve`
-quality mode.
+- A Python engine on crit Core's engine interface, written in six candidates
+- Runs Nanbeige4.3-33B, a dense 52-layer Llama, from its NVFP4 weights as stored
+- Decode is one token per pass, one CUDA graph per step, on its own CUDA NVFP4 GEMV
+- The KV cache is INT8 with a scale per position and KV head, which fits 86,016 tokens of context on the 32 GB GPU
+- Judged in crit Eval's default `preserve` quality mode
 
 ---
 
@@ -46,20 +46,46 @@ quality mode.
 
 ![Decode by context](charts/decode-by-context.svg)
 
-crit Eval of sealed candidate-0006, six speed cases at the required context of 86,016 tokens (the
-largest whose KV cache fits the device):
+| Measurement | Value |
+| :--- | ---: |
+| Decode, sampled (temperature 1.0) | 64.2 tok/s |
+| Decode, greedy | 66.6 tok/s |
+| Prefill | 3,357 tok/s, 116% of its ceiling |
+| Time to first token | 404 ms |
+| Whole requests, end to end | 52.7 tok/s |
+| Held-out prompts, decode | 65.3 tok/s |
+| Long context, decode | 49.6 tok/s |
+| Long context, first token | 28.3 s |
+| Follow-up turn, first token | 2.5 s |
+| Perplexity vs reference, worst path | +0.5% (long-32768/served) |
+| KL divergence, worst path | mean 0.019, p99 0.34 (long-32768/prompt) |
+| Top-1 agreement, lowest | 96.2% (long-4096/prompt) |
+| Quality budget used | 67% (long-32768/prompt) |
+| Quality budget | PPL ×1.05, KLD mean 0.05, p99 0.5 |
+| Decode step | 15.1 ms, against 13.7 ms of reads (91%) |
+| Context | 86,016 tokens |
+| VRAM free at the full context | 1.72 GB |
+| Load time | 6.8 s |
 
-| Metric | Result |
-| --- | ---: |
-| Whole requests (end to end) | 52.7 tok/s |
-| Long-context first token (32K to 86K; 51.7 s at 86K) | 28.3 s |
-| Quality, worst path (32,768-token prompts) | 67% of the budget: KLD mean 0.019, p99 0.34 (budget: PPL ×1.05, KLD mean 0.05, p99 0.5) |
+| Speed case | Prompt tokens | Decode, sampled | Decode, greedy | First token |
+| :--- | ---: | ---: | ---: | ---: |
+| chat | 107 | 67.9 tok/s | 67.7 tok/s | 97 ms |
+| code | 124 | 69.2 tok/s | 70.6 tok/s | 96 ms |
+| math | 236 | 64.6 tok/s | 68.2 tok/s | 129 ms |
+| tool-call | 2,184 | 61.6 tok/s | 64.7 tok/s | 688 ms |
+| long-summary | 3,584 | 61.6 tok/s | 63.7 tok/s | 1.0 s |
+| agent-long | 14,336 | 60.5 tok/s | 64.9 tok/s | 4.7 s |
 
-Sampled decode by case: chat 68, code 69, math 65, tool call 62, long summary 62, agent 61 tok/s, one
-token per pass. A step takes 15.1 ms against the 13.7 ms its weight and cache reads need (90% of the
-one-token-per-pass ceiling of 71.7 tok/s). Prefill shows 116% of the ceiling Eval prices for 16-bit
-prompt activations: Eval's device probe had no rate for FP16-accumulating GEMMs, so it cannot price the
-mix this engine runs.
+| Context | Decode | First token | Prefill |
+| :--- | ---: | ---: | ---: |
+| 32,768 | 54.7 tok/s | 12.8 s | 2,532 tok/s |
+| 65,536 | 49.3 tok/s | 34.0 s | 1,920 tok/s |
+| 86,016 | 45.2 tok/s | 51.7 s | 1,658 tok/s |
+
+- crit Eval of sealed candidate-0006, six speed cases at the required context of 86,016 tokens, the largest whose KV cache fits the device
+- The one-token-per-pass ceiling is 71.7 tok/s; decode reaches 90% of it
+- Prefill shows 116% of the ceiling Eval prices for 16-bit prompt activations: Eval's device probe had no rate for FP16-accumulating GEMMs, so it cannot price the mix this engine runs
+- The long-context figures are the geometric mean of the context table's points
 
 ![Decode by workload](charts/decode-by-workload.svg)
 
@@ -107,22 +133,17 @@ nvcc -O3 -gencode arch=compute_120a,code=sm_120a -shared -Xcompiler -fPIC -cudar
   -o libnvfp4_gemv.so nvfp4_gemv.cu
 ```
 
-`kernels.py` loads `libnvfp4_gemv.so` from its own folder. Run it in a Python environment with crit
-installed, torch 2.14.1+cu130 and Triton 3.8.0. Check the checkpoint from a crit-hub checkout with
-`python -B tools/verify_model.py engines/crit-labs/nvfp4-gemv-int8kv /path/to/checkpoint`. Loading takes
-about 7 s.
-
-To chat, register `engine/` as a crit run candidate following crit's
-[Building engines](https://github.com/crit-labs/crit/blob/main/docs/BUILDING_ENGINES.md) and serve it with
-[`crit serve`](https://github.com/crit-labs/crit/blob/main/docs/SERVING.md), which answers OpenAI-compatible
-chat requests at `http://127.0.0.1:8000/v1`. `engine/configuration.json` has the applied settings, with
-thinking off by default (`enable_thinking: false`).
+- `kernels.py` loads `libnvfp4_gemv.so` from its own folder
+- Needs a Python environment with crit installed, torch 2.14.1+cu130 and Triton 3.8.0
+- Check the checkpoint from a crit-hub checkout: `python -B tools/verify_model.py engines/crit-labs/nvfp4-gemv-int8kv /path/to/checkpoint`
+- Loading takes about 7 s
+- To chat, register `engine/` as a crit run candidate ([Building engines](https://github.com/crit-labs/crit/blob/main/docs/BUILDING_ENGINES.md)) and serve it
+  with [`crit serve`](https://github.com/crit-labs/crit/blob/main/docs/SERVING.md): OpenAI-compatible chat requests at `http://127.0.0.1:8000/v1`
+- `engine/configuration.json` has the applied settings; thinking is off by default (`enable_thinking: false`)
 
 ---
 
 ## Benchmark your machine
-
-Measure this engine on your machine and add the result to this card:
 
 ```sh
 crit pull crit-labs/nvfp4-gemv-int8kv
@@ -130,15 +151,13 @@ crit bench crit-labs/nvfp4-gemv-int8kv --data <a folder for crit Eval's data> --
 crit hub report crit-labs/nvfp4-gemv-int8kv result.json --hub <your crit-hub checkout> --by <your GitHub account>
 ```
 
-`crit bench` prepares crit Eval's data from the checkpoint `crit pull` installed, runs its speed suite (and quality
-where the data holds the reference's scores) and prints this card's stats beside yours. `crit hub report` adds your
-result file under `evidence/` and to this card, as a reproduction of the GPU and model it measured or as a new result,
-for a pull request to crit-hub.
+- `crit bench` prepares crit Eval's data from the checkpoint `crit pull` installed, runs its speed suite (and quality
+  where the data holds the reference's scores) and prints this card's stats beside yours
+- `crit hub report` adds your result file under `evidence/` and to this card, as a reproduction of the GPU and model
+  it measured or as a new result, for a pull request to crit-hub
 
 ---
 
 ## Credits
 
-Credits and licenses are in [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/2fe7df08acf9a81e82c9f27266b6f56e4fc0913b/nvfp4-gemv-int8kv/THIRD_PARTY.md)
-and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/2fe7df08acf9a81e82c9f27266b6f56e4fc0913b/nvfp4-gemv-int8kv/LICENSES.txt), next to
-the source.
+- Credits and licenses: [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/2fe7df08acf9a81e82c9f27266b6f56e4fc0913b/nvfp4-gemv-int8kv/THIRD_PARTY.md) and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/2fe7df08acf9a81e82c9f27266b6f56e4fc0913b/nvfp4-gemv-int8kv/LICENSES.txt), next to the source

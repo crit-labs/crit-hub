@@ -21,9 +21,9 @@
 - **Source:** [<your account>/<your repository> @ `<40-char`](https://github.com/<your account>/<your repository>/tree/<40-character commit>)
 - **License:** Apache-2.0
 
-One short paragraph: what the engine is (written from scratch or adapted; crit Core version, or
-the toolkit or runtime of an external engine) and what makes it different. The platform, GPU,
-CUDA and context are already in the header.
+- What the engine is: written from scratch or adapted; crit Core version, or the toolkit or
+  runtime of an external engine
+- What makes it different, a bullet each. The platform, GPU, CUDA and context are already in the header
 
 ---
 
@@ -32,22 +32,15 @@ CUDA and context are already in the header.
 | Part | How |
 | --- | --- |
 | Weights | ... |
-| ... | ... |
-
-At most one short paragraph on how decoding and prompts run.
+| Decode | ... |
+| Prefill | ... |
 
 ---
 
 ## Measured
 
-| Metric | Result |
-| --- | ---: |
-| Decode | ... tok/s |
-| Prefill | ... tok/s |
-| Time to first token (geomean) | ... |
-
-One short paragraph: measurement conditions (crit Eval version, repetitions, greedy or sampled,
-free memory) and what sets the speed.
+- The conditions behind the numbers: crit Eval version, the candidate, the context
+- What sets the speed, and anything a figure needs to be read right
 
 ---
 
@@ -67,16 +60,17 @@ free memory) and what sets the speed.
 
 ## Build and chat
 
-A clone of the pinned source, then the build commands, the checkpoint check
-(`python -B tools/verify_model.py <engine folder> <model folder>`), how to serve it and, when the
-engine ships one, its standalone chat command:
-
 ```sh
 git clone https://github.com/<your account>/<your repository> && git -C <your repository> checkout <40-character commit>
 ```
+
+- The build commands and what they need
+- Check the checkpoint: `python -B tools/verify_model.py <engine folder> <model folder>`
+- How to serve it and, when the engine ships one, its standalone chat command
 
 ---
 
 ## Credits
 
-The source's license, linked at the pinned commit, and the credits for what the engine uses.
+- The source's license, linked at the pinned commit
+- The credits for what the engine uses

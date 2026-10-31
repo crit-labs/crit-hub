@@ -56,8 +56,9 @@ A stat nobody measured is `null` and shows as `–`; decode is required. Decode,
 may be `[low, high]` across runs. The README names the GPU and model under the engine's name and shows
 the stats as one table (a row per GPU and model when there are several), with decode as two columns,
 sampled and greedy. For a crit Eval result, `tools/card.py` also draws charts from its result file into
-`charts/` and shows them in Measured: decode by context above its prose, decode by workload below it;
-never edit them by hand. Under the table, the facts say how each result was measured
+`charts/` and shows them in Measured: decode by context at its top, decode by workload at its bottom;
+never edit them by hand. Between them, Measured holds tables of every figure the result file holds (the
+measurements, the speed cases and the context points), then the card's own `measured` bullets. Under the table, the facts say how each result was measured
 and from which evidence, the quality mode it was judged in, the `hardware` it ran on, and its further figures. Further figures go under
 `more`: `greedy_decode_tok_s` (shown in the table), `long_context_decode_tok_s`,
 `heldout_decode_tok_s`, `host_ram_gib` and `quality_budget_pct`.
@@ -171,12 +172,14 @@ people read. [`_template/card.yaml`](_template/card.yaml) documents every key; i
   not the contributor; and optional `reproductions`: the same GPU and model measured again with crit Eval
   on someone else's machine, each with its `by`, `measured_with`, `measured_on`, `hardware`, `stats` and
   its own `evidence` files, which its figures must be (`tools/add_result.py` adds both).
-- **`readme`**: the README's prose as markdown blocks, rendered in this order: `intro`,
+- **`readme`**: the README's sections as markdown blocks, rendered in this order: `intro`,
   `design`, `measured`, `checks`, `limits`, `build_and_chat`, the optional `benchmark` (left out, the
   standard Benchmark your machine: `crit pull`, `crit bench` and `crit hub report` for a crit engine,
   `crit eval run --url` and `tools/add_result.py` for an external one) and `credits`. The renderer adds the title, the credit (a note for a crit engine, a warning for an
   external one), the stats table and the facts: how each result was measured, its hardware and further figures,
-  then requirements, checkpoints, downloads, source and license.
+  then requirements, checkpoints, downloads, source and license. The sections hold no prose: tables,
+  bullet lists and code blocks only (a bullet may run on over lines indented under it), which
+  `tools/check_engines.py` enforces.
 
 A GPU id is the card in lowercase, such as `rtx5090`; a model id is the model in lowercase and its
 encoding, such as `qwen3.8-27b@NVFP4`. Reuse the ids other engines here already use so an engine

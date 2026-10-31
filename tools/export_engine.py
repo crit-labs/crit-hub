@@ -5,7 +5,7 @@ and the applicable license texts into <name>/ of a crit-engines checkout; never 
 candidate records or executable packages, which stay in the run. Commit that folder in crit-engines.
 entry then writes engines/<contributor>/<name>/ in crit-hub, pinned to the crit-engines commit that
 holds the source (the checkout's HEAD, which must contain <name>/ with no uncommitted changes):
-card.yaml with the supplied README's sections as its prose, card.lock.json with the exact checkpoint
+card.yaml with the supplied README's sections, card.lock.json with the exact checkpoint
 and the sealed run's provenance, and README.md rendered from the card. The supplied README writes the
 commit as <crit-engines commit>, which entry fills in. --eval names the candidate's sealed crit Eval
 attempts (attempt-0003): entry copies each result into evidence/ as crit-eval.json (then
@@ -334,7 +334,7 @@ def export_entry(args):
     cardlib.write(target, card, {"checkpoints": {args.model: locked}, "provenance": provenance})
     drawn = cardlib.charts(target, card)
     cardlib.write_charts(target, drawn)
-    (target / "README.md").write_text(cardlib.render(card, list(drawn)), encoding="utf-8", newline="\n")
+    (target / "README.md").write_text(cardlib.render(card, list(drawn), cardlib.measurements(target, card)), encoding="utf-8", newline="\n")
     print(json.dumps({"export": str(target), "source": f"{args.source_repo}/tree/{revision}/{args.name}", "verified_seal_files": len(seal["files"]),
                       "next": "fill in summary, license, features and requirements in card.yaml, then python -B tools/card.py on the folder"}))
 

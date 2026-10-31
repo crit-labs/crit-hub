@@ -750,12 +750,18 @@ def check_readme(folder, card, drawn):
     keys = [key for key, _ in cardlib.SECTIONS]
     if not isinstance(readme, dict) or set(readme) - set(keys) or not cardlib.REQUIRED_SECTIONS <= set(readme) \
             or not all(isinstance(v, str) and v.strip() for v in readme.values()):
-        return [f"card.yaml readme holds the README's prose as markdown blocks: {', '.join(sorted(cardlib.REQUIRED_SECTIONS))}"
+        return [f"card.yaml readme holds the README's sections as markdown blocks: {', '.join(sorted(cardlib.REQUIRED_SECTIONS))}"
                 f", and optionally benchmark"]
+    # A card is tables, lists and code blocks, never prose (cardlib.prose): bullets say it as well and read faster.
+    problems = [f"readme.{key} holds prose ({lines[0][:60]!r}{f' and {len(lines) - 1} more line(s)' if len(lines) > 1 else ''}): "
+                "write it as a table, a bullet list or a code block" for key, text in readme.items()
+                for lines in [cardlib.prose(text)] if lines]
+    if problems:
+        return problems
     path = folder / "README.md"
     try:
-        rendered = cardlib.render(card, list(drawn))
-    except (KeyError, TypeError, AttributeError, IndexError) as e:
+        rendered = cardlib.render(card, list(drawn), cardlib.measurements(folder, card))
+    except (KeyError, TypeError, AttributeError, IndexError, ValueError) as e:
         return [f"README.md cannot be rendered from card.yaml: {e!r}"]
     if not path.is_file() or path.read_text(encoding="utf-8") != rendered:
         return [f"README.md is not the rendered card; run python -B tools/card.py {folder.as_posix()}"]

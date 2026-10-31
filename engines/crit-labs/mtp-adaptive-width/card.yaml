@@ -62,11 +62,11 @@ results:
     sha256: e6deb72d70e4ed71dba719090d31d0f3e1e92fbaaf52bca3d962c29dc3a6ffe8
 readme:
   intro: |
-    A Python engine on crit Core's engine interface, written from scratch in five candidates, that keeps the
-    checkpoint's own arithmetic: weights as stored, prompt activations in 16 bits except where quality showed
-    8 bits hold. Each decode round drafts with the model's own MTP layer and verifies in one pass, with
-    rejection sampling on the GPU; the draft width moves between 2 and 8 with the previous round's acceptance.
-    Judged in crit Eval's default `preserve` quality mode.
+    - A Python engine on crit Core's engine interface, written from scratch in five candidates
+    - Keeps the checkpoint's own arithmetic: weights as stored, prompt activations in 16 bits except where quality showed 8 bits hold
+    - Each decode round drafts with the model's own MTP layer and verifies in one pass, with rejection sampling on the GPU
+    - The draft width moves between 2 and 8 with the previous round's acceptance
+    - Judged in crit Eval's default `preserve` quality mode
   design: |
     | Part | How |
     | --- | --- |
@@ -77,17 +77,9 @@ readme:
     | GEMVs | Its own Triton GEMVs on the stored FP8 and NVFP4 encodings (hardware E2M1 conversion, 91-95% of bandwidth), column invariant with a deterministic split along K |
     | Prefill | 4,096-token chunks: 16-bit GEMMs over exactly widened NVFP4 weights, FP8 per-token activations on the gated-delta and FP8 MLP projections, flash-linear-attention's chunked gated delta rule, PyTorch's flash attention, a Triton convolution |
   measured: |
-    crit Eval of sealed candidate-0005, six speed cases at the full context:
-
-    | Metric | Result |
-    | --- | ---: |
-    | Whole requests (end to end) | 118.3 tok/s |
-    | Long-context first token (32K to 262K; 147.1 s at 262K) | 36.5 s |
-    | Quality, worst path (4,096-token prompts) | 57% of the budget: KLD mean 0.022, p99 0.29 (budget: PPL ×1.05, KLD mean 0.05, p99 0.5) |
-
-    Sampled decode by case: chat 126, code 184, math 197, tool call 228, long summary 146, agent 265 tok/s,
-    4.5 tokens per round on average. A verify pass takes 15.7 ms against the 13.3 ms its weight reads need;
-    prefill runs at 77% of the ceiling Eval prices for 16-bit prompt activations.
+    - crit Eval of sealed candidate-0005, six speed cases at the full context
+    - Prefill's ceiling is the one Eval prices for 16-bit prompt activations
+    - The long-context figures are the geometric mean of the context table's points
   checks: |
     - **Functional:** every Eval gate passed: coverage, repeatable, request history, prompt cache, quality,
       sampling (1,208 tokens, z -1.29), capacity, retrieval at 4K to 262,144 tokens, lower context and
@@ -108,17 +100,12 @@ readme:
     bash "$ENGINE/native/build.sh"
     ```
 
-    The build compiles `libq38sampling.so` with nvcc (set `NVCC` for another toolkit path). Run it in a Python
-    environment with crit installed, torch 2.14.1+cu130 and Triton 3.8.0; flash-linear-attention and einops are
-    vendored. Check the checkpoint from a crit-hub checkout with
-    `python -B tools/verify_model.py engines/crit-labs/mtp-adaptive-width /path/to/checkpoint`. Loading takes about 33 s.
-
-    To chat, register `engine/` as a crit run candidate following crit's
-    [Building engines](https://github.com/crit-labs/crit/blob/main/docs/BUILDING_ENGINES.md) and serve it with
-    [`crit serve`](https://github.com/crit-labs/crit/blob/main/docs/SERVING.md), which answers OpenAI-compatible
-    chat requests at `http://127.0.0.1:8000/v1`. `engine/configuration.json` has the applied settings, with
-    thinking off by default (`enable_thinking: false`).
+    - The build compiles `libq38sampling.so` with nvcc; set `NVCC` for another toolkit path
+    - Needs a Python environment with crit installed, torch 2.14.1+cu130 and Triton 3.8.0; flash-linear-attention and einops are vendored
+    - Check the checkpoint from a crit-hub checkout: `python -B tools/verify_model.py engines/crit-labs/mtp-adaptive-width /path/to/checkpoint`
+    - Loading takes about 33 s
+    - To chat, register `engine/` as a crit run candidate ([Building engines](https://github.com/crit-labs/crit/blob/main/docs/BUILDING_ENGINES.md)) and serve it
+      with [`crit serve`](https://github.com/crit-labs/crit/blob/main/docs/SERVING.md): OpenAI-compatible chat requests at `http://127.0.0.1:8000/v1`
+    - `engine/configuration.json` has the applied settings; thinking is off by default (`enable_thinking: false`)
   credits: |
-    Credits and licenses are in [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/53e4423ba6f0704a0d8862e2c15add650edef6a9/mtp-adaptive-width/THIRD_PARTY.md)
-    and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/53e4423ba6f0704a0d8862e2c15add650edef6a9/mtp-adaptive-width/LICENSES.txt), next to
-    the source.
+    - Credits and licenses: [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/53e4423ba6f0704a0d8862e2c15add650edef6a9/mtp-adaptive-width/THIRD_PARTY.md) and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/53e4423ba6f0704a0d8862e2c15add650edef6a9/mtp-adaptive-width/LICENSES.txt), next to the source

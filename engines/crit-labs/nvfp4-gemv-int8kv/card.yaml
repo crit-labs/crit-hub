@@ -75,11 +75,11 @@ results:
     sha256: 27652268b1429ff549fac245f06aee17a79ceca7dce9085b9f3f0a526d97a022
 readme:
   intro: |
-    A Python engine on crit Core's engine interface, written in six candidates, that runs
-    Nanbeige4.3-33B, a dense 52-layer Llama, from its NVFP4 weights as stored. Decode is one token per pass,
-    one CUDA graph per step, on its own CUDA NVFP4 GEMV; the KV cache is INT8 with a scale per position and KV
-    head, which fits 86,016 tokens of context on the 32 GB GPU. Judged in crit Eval's default `preserve`
-    quality mode.
+    - A Python engine on crit Core's engine interface, written in six candidates
+    - Runs Nanbeige4.3-33B, a dense 52-layer Llama, from its NVFP4 weights as stored
+    - Decode is one token per pass, one CUDA graph per step, on its own CUDA NVFP4 GEMV
+    - The KV cache is INT8 with a scale per position and KV head, which fits 86,016 tokens of context on the 32 GB GPU
+    - Judged in crit Eval's default `preserve` quality mode
   design: |
     | Part | How |
     | --- | --- |
@@ -89,20 +89,10 @@ readme:
     | KV cache | INT8 per token and KV head with an FP32 scale (an FP8 E4M3 cache used 114% of the quality budget on 32K-token prompts) |
     | Prefill | 2,048-token chunks. Attention and down projections: NVFP4 decoded to FP16 per chunk, cuBLAS with FP16 accumulation; gate and up projections: FP8 weights and per-row FP8 activations through `torch._scaled_mm`. INT8 Q.K^T prompt attention on tensor cores; prompts of up to 64 tokens multiply the stored codes directly |
   measured: |
-    crit Eval of sealed candidate-0006, six speed cases at the required context of 86,016 tokens (the
-    largest whose KV cache fits the device):
-
-    | Metric | Result |
-    | --- | ---: |
-    | Whole requests (end to end) | 52.7 tok/s |
-    | Long-context first token (32K to 86K; 51.7 s at 86K) | 28.3 s |
-    | Quality, worst path (32,768-token prompts) | 67% of the budget: KLD mean 0.019, p99 0.34 (budget: PPL ×1.05, KLD mean 0.05, p99 0.5) |
-
-    Sampled decode by case: chat 68, code 69, math 65, tool call 62, long summary 62, agent 61 tok/s, one
-    token per pass. A step takes 15.1 ms against the 13.7 ms its weight and cache reads need (90% of the
-    one-token-per-pass ceiling of 71.7 tok/s). Prefill shows 116% of the ceiling Eval prices for 16-bit
-    prompt activations: Eval's device probe had no rate for FP16-accumulating GEMMs, so it cannot price the
-    mix this engine runs.
+    - crit Eval of sealed candidate-0006, six speed cases at the required context of 86,016 tokens, the largest whose KV cache fits the device
+    - The one-token-per-pass ceiling is 71.7 tok/s; decode reaches 90% of it
+    - Prefill shows 116% of the ceiling Eval prices for 16-bit prompt activations: Eval's device probe had no rate for FP16-accumulating GEMMs, so it cannot price the mix this engine runs
+    - The long-context figures are the geometric mean of the context table's points
   checks: |
     - **Eval attempts:** two Eval runs of the same sealed package. The first (attempt-0002) failed the
       lower-context gate: at 21,504 tokens the tool-call and long-summary cases decoded 9.2% and 8.7% slower
@@ -136,17 +126,12 @@ readme:
       -o libnvfp4_gemv.so nvfp4_gemv.cu
     ```
 
-    `kernels.py` loads `libnvfp4_gemv.so` from its own folder. Run it in a Python environment with crit
-    installed, torch 2.14.1+cu130 and Triton 3.8.0. Check the checkpoint from a crit-hub checkout with
-    `python -B tools/verify_model.py engines/crit-labs/nvfp4-gemv-int8kv /path/to/checkpoint`. Loading takes
-    about 7 s.
-
-    To chat, register `engine/` as a crit run candidate following crit's
-    [Building engines](https://github.com/crit-labs/crit/blob/main/docs/BUILDING_ENGINES.md) and serve it with
-    [`crit serve`](https://github.com/crit-labs/crit/blob/main/docs/SERVING.md), which answers OpenAI-compatible
-    chat requests at `http://127.0.0.1:8000/v1`. `engine/configuration.json` has the applied settings, with
-    thinking off by default (`enable_thinking: false`).
+    - `kernels.py` loads `libnvfp4_gemv.so` from its own folder
+    - Needs a Python environment with crit installed, torch 2.14.1+cu130 and Triton 3.8.0
+    - Check the checkpoint from a crit-hub checkout: `python -B tools/verify_model.py engines/crit-labs/nvfp4-gemv-int8kv /path/to/checkpoint`
+    - Loading takes about 7 s
+    - To chat, register `engine/` as a crit run candidate ([Building engines](https://github.com/crit-labs/crit/blob/main/docs/BUILDING_ENGINES.md)) and serve it
+      with [`crit serve`](https://github.com/crit-labs/crit/blob/main/docs/SERVING.md): OpenAI-compatible chat requests at `http://127.0.0.1:8000/v1`
+    - `engine/configuration.json` has the applied settings; thinking is off by default (`enable_thinking: false`)
   credits: |
-    Credits and licenses are in [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/2fe7df08acf9a81e82c9f27266b6f56e4fc0913b/nvfp4-gemv-int8kv/THIRD_PARTY.md)
-    and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/2fe7df08acf9a81e82c9f27266b6f56e4fc0913b/nvfp4-gemv-int8kv/LICENSES.txt), next to
-    the source.
+    - Credits and licenses: [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/2fe7df08acf9a81e82c9f27266b6f56e4fc0913b/nvfp4-gemv-int8kv/THIRD_PARTY.md) and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/2fe7df08acf9a81e82c9f27266b6f56e4fc0913b/nvfp4-gemv-int8kv/LICENSES.txt), next to the source

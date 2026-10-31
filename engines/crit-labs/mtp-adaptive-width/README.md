@@ -22,11 +22,11 @@
 - **Built:** 3.34 h · 5 candidates · 127.2M agent tokens · $36.81 API-equivalent · by Claude Code (Claude Opus 5.5)
 - **License:** Apache-2.0
 
-A Python engine on crit Core's engine interface, written from scratch in five candidates, that keeps the
-checkpoint's own arithmetic: weights as stored, prompt activations in 16 bits except where quality showed
-8 bits hold. Each decode round drafts with the model's own MTP layer and verifies in one pass, with
-rejection sampling on the GPU; the draft width moves between 2 and 8 with the previous round's acceptance.
-Judged in crit Eval's default `preserve` quality mode.
+- A Python engine on crit Core's engine interface, written from scratch in five candidates
+- Keeps the checkpoint's own arithmetic: weights as stored, prompt activations in 16 bits except where quality showed 8 bits hold
+- Each decode round drafts with the model's own MTP layer and verifies in one pass, with rejection sampling on the GPU
+- The draft width moves between 2 and 8 with the previous round's acceptance
+- Judged in crit Eval's default `preserve` quality mode
 
 ---
 
@@ -47,17 +47,48 @@ Judged in crit Eval's default `preserve` quality mode.
 
 ![Decode by context](charts/decode-by-context.svg)
 
-crit Eval of sealed candidate-0005, six speed cases at the full context:
+| Measurement | Value |
+| :--- | ---: |
+| Decode, sampled (temperature 1.0, top-p 0.95, top-k 20) | 185.3 tok/s |
+| Decode, greedy | 195.5 tok/s |
+| Tokens per decode round, sampled | 4.5 |
+| Prefill | 3,580 tok/s, 77% of its ceiling |
+| Time to first token | 337 ms |
+| Whole requests, end to end | 118.3 tok/s |
+| Held-out prompts, decode | 126.3 tok/s |
+| Long context, decode | 112.5 tok/s |
+| Long context, first token | 36.5 s |
+| Follow-up turn, first token | 2.3 s |
+| Perplexity vs reference, worst path | +0.4% (long-4096/served) |
+| KL divergence, worst path | mean 0.022, p99 0.29 (long-4096/prompt) |
+| Top-1 agreement, lowest | 96.7% (long-4096/prompt) |
+| Quality budget used | 57% (long-4096/prompt) |
+| Quality budget | PPL ×1.05, KLD mean 0.05, p99 0.5 |
+| Verify pass | 15.7 ms, against 13.3 ms of reads (85%) |
+| Draft step | 1.12 ms, against 1.18 ms of reads |
+| Context | 262,144 tokens |
+| VRAM free at the full context | 1.09 GB |
+| Load time | 33.3 s |
 
-| Metric | Result |
-| --- | ---: |
-| Whole requests (end to end) | 118.3 tok/s |
-| Long-context first token (32K to 262K; 147.1 s at 262K) | 36.5 s |
-| Quality, worst path (4,096-token prompts) | 57% of the budget: KLD mean 0.022, p99 0.29 (budget: PPL ×1.05, KLD mean 0.05, p99 0.5) |
+| Speed case | Prompt tokens | Decode, sampled | Decode, greedy | Tokens per round | First token |
+| :--- | ---: | ---: | ---: | ---: | ---: |
+| chat | 87 | 126.4 tok/s | 120.2 tok/s | 2.6 | 78 ms |
+| code | 97 | 184.1 tok/s | 207.2 tok/s | 4.5 | 79 ms |
+| math | 213 | 197.3 tok/s | 200.8 tok/s | 5.0 | 100 ms |
+| tool-call | 2,052 | 228.1 tok/s | 282.7 tok/s | 5.8 | 602 ms |
+| long-summary | 3,584 | 145.9 tok/s | 131.3 tok/s | 3.3 | 982 ms |
+| agent-long | 14,336 | 265.1 tok/s | 300.9 tok/s | 7.3 | 4.2 s |
 
-Sampled decode by case: chat 126, code 184, math 197, tool call 228, long summary 146, agent 265 tok/s,
-4.5 tokens per round on average. A verify pass takes 15.7 ms against the 13.3 ms its weight reads need;
-prefill runs at 77% of the ceiling Eval prices for 16-bit prompt activations.
+| Context | Decode | First token | Prefill | Tokens per round |
+| :--- | ---: | ---: | ---: | ---: |
+| 32,768 | 145.9 tok/s | 10.0 s | 3,263 tok/s | 3.9 |
+| 65,536 | 130.6 tok/s | 22.3 s | 2,923 tok/s | 3.7 |
+| 131,072 | 106.3 tok/s | 54.5 s | 2,402 tok/s | 3.5 |
+| 262,144 | 79.2 tok/s | 147.1 s | 1,780 tok/s | 3.2 |
+
+- crit Eval of sealed candidate-0005, six speed cases at the full context
+- Prefill's ceiling is the one Eval prices for 16-bit prompt activations
+- The long-context figures are the geometric mean of the context table's points
 
 ![Decode by workload](charts/decode-by-workload.svg)
 
@@ -92,22 +123,17 @@ ENGINE=crit-engines/mtp-adaptive-width/engine
 bash "$ENGINE/native/build.sh"
 ```
 
-The build compiles `libq38sampling.so` with nvcc (set `NVCC` for another toolkit path). Run it in a Python
-environment with crit installed, torch 2.14.1+cu130 and Triton 3.8.0; flash-linear-attention and einops are
-vendored. Check the checkpoint from a crit-hub checkout with
-`python -B tools/verify_model.py engines/crit-labs/mtp-adaptive-width /path/to/checkpoint`. Loading takes about 33 s.
-
-To chat, register `engine/` as a crit run candidate following crit's
-[Building engines](https://github.com/crit-labs/crit/blob/main/docs/BUILDING_ENGINES.md) and serve it with
-[`crit serve`](https://github.com/crit-labs/crit/blob/main/docs/SERVING.md), which answers OpenAI-compatible
-chat requests at `http://127.0.0.1:8000/v1`. `engine/configuration.json` has the applied settings, with
-thinking off by default (`enable_thinking: false`).
+- The build compiles `libq38sampling.so` with nvcc; set `NVCC` for another toolkit path
+- Needs a Python environment with crit installed, torch 2.14.1+cu130 and Triton 3.8.0; flash-linear-attention and einops are vendored
+- Check the checkpoint from a crit-hub checkout: `python -B tools/verify_model.py engines/crit-labs/mtp-adaptive-width /path/to/checkpoint`
+- Loading takes about 33 s
+- To chat, register `engine/` as a crit run candidate ([Building engines](https://github.com/crit-labs/crit/blob/main/docs/BUILDING_ENGINES.md)) and serve it
+  with [`crit serve`](https://github.com/crit-labs/crit/blob/main/docs/SERVING.md): OpenAI-compatible chat requests at `http://127.0.0.1:8000/v1`
+- `engine/configuration.json` has the applied settings; thinking is off by default (`enable_thinking: false`)
 
 ---
 
 ## Benchmark your machine
-
-Measure this engine on your machine and add the result to this card:
 
 ```sh
 crit pull crit-labs/mtp-adaptive-width
@@ -115,15 +141,13 @@ crit bench crit-labs/mtp-adaptive-width --data <a folder for crit Eval's data> -
 crit hub report crit-labs/mtp-adaptive-width result.json --hub <your crit-hub checkout> --by <your GitHub account>
 ```
 
-`crit bench` prepares crit Eval's data from the checkpoint `crit pull` installed, runs its speed suite (and quality
-where the data holds the reference's scores) and prints this card's stats beside yours. `crit hub report` adds your
-result file under `evidence/` and to this card, as a reproduction of the GPU and model it measured or as a new result,
-for a pull request to crit-hub.
+- `crit bench` prepares crit Eval's data from the checkpoint `crit pull` installed, runs its speed suite (and quality
+  where the data holds the reference's scores) and prints this card's stats beside yours
+- `crit hub report` adds your result file under `evidence/` and to this card, as a reproduction of the GPU and model
+  it measured or as a new result, for a pull request to crit-hub
 
 ---
 
 ## Credits
 
-Credits and licenses are in [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/53e4423ba6f0704a0d8862e2c15add650edef6a9/mtp-adaptive-width/THIRD_PARTY.md)
-and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/53e4423ba6f0704a0d8862e2c15add650edef6a9/mtp-adaptive-width/LICENSES.txt), next to
-the source.
+- Credits and licenses: [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/53e4423ba6f0704a0d8862e2c15add650edef6a9/mtp-adaptive-width/THIRD_PARTY.md) and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/53e4423ba6f0704a0d8862e2c15add650edef6a9/mtp-adaptive-width/LICENSES.txt), next to the source
