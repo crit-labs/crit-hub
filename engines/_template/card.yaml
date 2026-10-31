@@ -124,6 +124,13 @@ results:
     # heldout_decode_tok_s: 160.0
     # host_ram_gib: 64             # when the engine keeps weights in host memory
     # quality_budget_pct: 5.8      # share of crit Eval's quality budget the worst path uses
+  # Optional: throughput with several requests at once, one entry per concurrency, ascending: the requests'
+  # completion tokens per second together. crit Eval from crit-eval-v0.6.1: the levels of the result file's
+  # concurrency part that qualified (concurrency.levels.<N>.aggregate_tps), as tools/export_engine.py writes them;
+  # otherwise your own report, shown as self-reported.
+  # throughput:
+  # - {concurrency: 4, tok_s: 812.3}
+  # - {concurrency: 8, tok_s: 1520.4}
   # The files behind these figures, with their SHA-256 (sha256sum evidence/<file>):
   # evidence/crit-eval.json as crit eval run wrote it, unchanged; or, for your own report,
   # optionally evidence/self-reported.json: for each GPU and model, the measurements behind the

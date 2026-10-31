@@ -9,8 +9,9 @@ Each engine lives in engines/<owner>/<name>/, where <owner> is its contributor:
   README.md        rendered from card.yaml by tools/card.py, never edited by hand
 
 Every result states the six headline stats (decode, prefill, time to first token, perplexity,
-mean KL divergence, context; null when not measured). A result measured with crit Eval ("crit-eval-v7") lists its
-result files with their SHA-256, and every stat and further figure must be what those files hold;
+mean KL divergence, context; null when not measured) and may state its throughput by concurrency. A result measured
+with crit Eval ("crit-eval-v7") lists its result files with their SHA-256, and every stat, further figure and
+throughput level must be what those files hold;
 any other result is the contributor's own report, and when evidence/self-reported.json is given
 every figure it states must be one that file records. A crit Eval result was judged in the quality mode its
 result files record (schemas/quality-modes.yaml lists the modes; the default when they record none), which the
@@ -48,7 +49,8 @@ CARD_FIELDS = {"title", "summary", "origin", "contributor", "license", "features
                "checkpoints", "supports", "derived_from", "built", "results", "readme"}
 ENGINE_ID = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
 BUILT_FIELDS = {"hours", "agent_tokens", "api_usd", "agent", "candidates"}
-RESULT_FIELDS = {"gpu", "model", "measured_with", "measured_on", "quality_mode", "sampling", "hardware", "stats", "more", "evidence"}
+RESULT_FIELDS = {"gpu", "model", "measured_with", "measured_on", "quality_mode", "sampling", "hardware", "stats", "more", "throughput",
+                 "evidence"}
 MODE = re.compile(r"[a-z][a-z0-9_]*")
 PLATFORMS = {"linux", "wsl2", "windows", "macos"}
 VERSION = re.compile(r"[0-9]+\.[0-9]+")
@@ -66,6 +68,8 @@ CRIT_EVAL_FILE = re.compile(r"evidence/crit-eval(-[2-9]|-[1-9][0-9]+)?\.json")
 SELF_REPORTED = "evidence/self-reported.json"
 EVIDENCE_BYTES = 16 * 1024 * 1024
 FIGURES = cardlib.STATS + cardlib.MORE
+# What a self-reported measurement's figures may record: the stats, further figures and the throughput by concurrency.
+SELF_REPORTED_FIGURES = FIGURES + ("throughput",)
 # Figures a crit Eval result gives directly, and where (ranges across result files allowed).
 SCORES = {"decode_tok_s": ("speed", "decode_score"), "prefill_tok_s": ("speed", "prefill_score"),
           "ttft_ms": ("speed", "ttft_score_ms"), "heldout_decode_tok_s": ("heldout", "decode_score")}
@@ -345,6 +349,21 @@ def check_stats(name, stats, more):
     return problems
 
 
+def check_throughput(name, throughput):
+    """throughput: one {concurrency, tok_s} per number of requests at once, concurrency ascending, each once."""
+    if not (isinstance(throughput, list) and throughput
+            and all(isinstance(t, dict) and set(t) == set(cardlib.THROUGHPUT) for t in throughput)):
+        return [f"{name}: throughput lists {{concurrency: <requests at once>, tok_s: <their tokens per second together>}}"]
+    problems = []
+    levels = [t["concurrency"] for t in throughput]
+    if not all(type(n) is int and n >= 1 for n in levels) or levels != sorted(set(levels)):
+        problems.append(f"{name}: throughput's concurrency is a whole number of requests at once, each once, ascending")
+    for t in throughput:
+        if numbers(t["tok_s"]) is None:
+            problems.append(f"{name}: throughput at concurrency {t['concurrency']}: tok_s is a positive number or [low, high]")
+    return problems
+
+
 def read_evidence(folder, name, entries, allowed):
     """The listed evidence files, verified against their hashes: [(file, data)] and problems."""
     problems, loaded = [], []
@@ -432,6 +451,20 @@ def check_crit_eval(name, result, loaded):
             problems.append(f"{name}: {key} {value} is not its result files' worst served {field}")
     if stats["ppl"] and "absolute" in stats["ppl"]:
         problems.append(f"{name}: a crit Eval result gives perplexity against the reference, ppl: {{vs_reference: ...}}")
+    # Throughput by concurrency: the levels of crit Eval's concurrency part that qualified (crit-eval-v0.6.1 on).
+    for level in result.get("throughput") or []:
+        clients, value = level["concurrency"], level["tok_s"]
+        scores = [cardlib.throughput_score(data, clients) for _, data in loaded]
+        if all(s is None for s in scores):
+            problems.append(f"{name}: throughput at concurrency {clients}: its result files measured no qualified level of "
+                            f"{clients} clients (crit Eval's concurrency part, from crit-eval-v0.6.1)")
+        elif isinstance(value, list):
+            if len(loaded) < 2 or None in scores or not (matches(value[0], min(scores)) and matches(value[1], max(scores))):
+                problems.append(f"{name}: throughput {value} at concurrency {clients} is not the range of its result files' "
+                                f"aggregate_tps at {clients} clients, {scores}")
+        elif len(loaded) != 1 or not matches(value, scores[0]):
+            problems.append(f"{name}: throughput {value} at concurrency {clients} is not its result file's aggregate_tps at "
+                            f"{clients} clients, {scores}")
     if "greedy_decode_tok_s" in more and not sampled:
         problems.append(f"{name}: greedy_decode_tok_s is for crit-eval-v7 results; through v6 decode itself is greedy")
     if "long_context_decode_tok_s" in more:
@@ -475,13 +508,17 @@ def check_self_reported(name, result, data):
             problems.append(f"{where}: link is the https URL of the run, leaderboard or card")
         if "settings" in m and not (isinstance(m["settings"], str) and m["settings"].strip()):
             problems.append(f"{where}: settings describe the configuration measured")
-        if not isinstance(m.get("figures"), dict) or not m["figures"] or set(m["figures"]) - set(FIGURES):
-            problems.append(f"{where}: figures records any of {', '.join(FIGURES)} as measured")
+        if not isinstance(m.get("figures"), dict) or not m["figures"] or set(m["figures"]) - set(SELF_REPORTED_FIGURES):
+            problems.append(f"{where}: figures records any of {', '.join(SELF_REPORTED_FIGURES)} as measured")
     recorded = [m["figures"] for m in measurements if isinstance(m, dict) and isinstance(m.get("figures"), dict)]
     figures = {**result["stats"], **(result.get("more") or {})}
     for key, value in figures.items():
         if value is not None and not any(f.get(key) == value for f in recorded):
             problems.append(f"{name}: {key} {value} is not a figure {SELF_REPORTED} records")
+    for level in result.get("throughput") or []:
+        if not any(isinstance(f.get("throughput"), list) and level in f["throughput"] for f in recorded):
+            problems.append(f"{name}: throughput {level['tok_s']} at concurrency {level['concurrency']} is not one "
+                            f"{SELF_REPORTED} records")
     return problems
 
 
@@ -520,6 +557,8 @@ def check_results(folder, card):
         if "hardware" in result and not (isinstance(result["hardware"], str) and result["hardware"].strip() and "\n" not in result["hardware"]):
             problems.append(f"{name}: hardware is one line naming the machine it ran on")
         stat_problems = check_stats(name, result.get("stats"), result.get("more", {}))
+        if "throughput" in result:
+            stat_problems += check_throughput(name, result["throughput"])
         problems += stat_problems
         evidence = result.get("evidence", [])
         if not isinstance(evidence, list) or not all(isinstance(e, dict) and set(e) == {"file", "sha256"} for e in evidence):

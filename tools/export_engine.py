@@ -169,8 +169,8 @@ def committed(engines, name):
 
 
 def measured(args, seal, candidate, target):
-    """The result for --gpu and --model: its six stats and further figures from the candidate's
-    sealed crit Eval attempts, copied into evidence/, or left for the contributor to fill in.
+    """The result for --gpu and --model: its six stats, further figures and throughput by concurrency from
+    the candidate's sealed crit Eval attempts, copied into evidence/, or left for the contributor to fill in.
     Creates the destination."""
     sealed_files = {entry["path"] for entry in seal["files"]}
     attempts, results = [], []
@@ -224,6 +224,10 @@ def measured(args, seal, candidate, target):
         more["heldout_decode_tok_s"] = figure(heldout, 1)
     if budget is not None:
         more["quality_budget_pct"] = round(budget * 100, 1)
+    # crit Eval's concurrency part (crit-eval-v0.6.1 on): every level that qualified in each attempt, by its clients.
+    levels = sorted({int(n) for r in results for n in ((r.get("concurrency") or {}).get("levels") or {})})
+    throughput = [{"concurrency": n, "tok_s": figure([cardlib.throughput_score(r, n) for r in results], 1)}
+                  for n in levels if all(isinstance(cardlib.throughput_score(r, n), (int, float)) for r in results)]
     entry = {"gpu": args.gpu, "model": args.model, "measured_with": results[0]["protocol"],
              "measured_on": max(str(r.get("started_at", ""))[:10] for r in results)}
     # The machine the result file records (crit Eval records hardware from v7 on).
@@ -238,7 +242,7 @@ def measured(args, seal, candidate, target):
     source = (results[0].get("sampled_speed") or {}).get("sampling_source") or "generation_config"
     if sampled and source != "generation_config":
         entry["sampling"] = {"source": source, "settings": results[0]["sampled_speed"]["sampling"]}
-    return {**entry, "stats": stats, "more": more, "evidence": evidence}
+    return {**entry, "stats": stats, "more": more, **({"throughput": throughput} if throughput else {}), "evidence": evidence}
 
 
 def export_entry(args):

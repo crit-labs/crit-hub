@@ -34,6 +34,9 @@ REQUIRED_SECTIONS = {"intro", "design", "measured", "checks", "limits", "build_a
 STATS = ("decode_tok_s", "prefill_tok_s", "ttft_ms", "ppl", "kld_mean", "context_tokens")
 # Further figures a result may give, shown after the stats.
 MORE = ("greedy_decode_tok_s", "long_context_decode_tok_s", "heldout_decode_tok_s", "host_ram_gib", "quality_budget_pct")
+# A result's throughput with several requests at once: per concurrency, the requests' completion tokens per second
+# together (results[].throughput, concurrency ascending).
+THROUGHPUT = ("concurrency", "tok_s")
 
 HEADER = "<!-- Rendered by tools/card.py from card.yaml: edit card.yaml, then run python -B tools/card.py on this folder. -->"
 PLATFORMS = {"linux": "Linux", "wsl2": "WSL2", "windows": "Windows", "macos": "macOS"}
@@ -253,6 +256,14 @@ def evidence_mode(data):
     return ((data.get("requirements") or {}) if isinstance(data, dict) else {}).get("quality_mode") or default_mode()
 
 
+def throughput_score(data, clients):
+    """A crit Eval result file's aggregate tokens per second at `clients` requests at once: its concurrency part's
+    level (from crit-eval-v0.6.1), None when it measured none or the level did not qualify."""
+    levels = ((data.get("concurrency") or {}).get("levels") or {}) if isinstance(data, dict) else {}
+    level = levels.get(str(clients)) if isinstance(levels, dict) else None
+    return level.get("aggregate_tps") if isinstance(level, dict) and level.get("qualified") else None
+
+
 def worst_quality(data, field):
     """The worst path's figure in a crit Eval result's quality section. Perplexity counts only the served paths
     when the result has them: from crit-eval-v0.2.1 prompt positions report a perplexity ratio that KLD judges."""
@@ -286,10 +297,19 @@ def sampled_text(sampling):
     return f"decode sampled at {settings}: {why}"
 
 
+def throughput_text(result):
+    """A result's throughput by concurrency and where it came from: 812.3 tok/s at concurrency 4 · 1,520.4 tok/s
+    at concurrency 8 (aggregate of the concurrent requests; crit Eval). A result not measured with crit Eval is the
+    contributor's own report, so its throughput is self-reported."""
+    levels = " · ".join(f"{figure(t['tok_s'], ' tok/s')} at concurrency {t['concurrency']}" for t in result["throughput"])
+    source = "crit Eval" if crit_eval(result["measured_with"]) else "self-reported"
+    return f"{levels} (aggregate of the concurrent requests; {source})"
+
+
 def measured(results):
     """The facts each result adds under the stats table: how it was measured and from which evidence, the
-    quality mode it was judged in, the hardware it ran on, and its further figures. With several results,
-    each names its GPU and model."""
+    quality mode it was judged in, the hardware it ran on, its further figures and its throughput by concurrency.
+    With several results, each names its GPU and model."""
     lines = []
     for result in results:
         named = f" ({pair(result)})" if len(results) > 1 else ""
@@ -313,6 +333,8 @@ def measured(results):
         more = more_text(result.get("more") or {})
         if more:
             lines.append(label("Further figures") + more)
+        if result.get("throughput"):
+            lines.append(label("Throughput") + throughput_text(result))
     return lines
 
 

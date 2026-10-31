@@ -62,6 +62,15 @@ and from which evidence, the quality mode it was judged in, the `hardware` it ra
 `more`: `greedy_decode_tok_s` (shown in the table), `long_context_decode_tok_s`,
 `heldout_decode_tok_s`, `host_ram_gib` and `quality_budget_pct`.
 
+A result may also state its **throughput** with several requests at once, under `throughput`: one
+entry per `concurrency`, the number of requests running together, with `tok_s`, their completion
+tokens per second together, concurrency ascending. For a crit Eval result these are the levels of
+its result file's concurrency part that qualified (`concurrency.levels`, from crit-eval-v0.6.1, which
+measures a server that runs several requests at once); for any other result they are the
+contributor's own report. The facts under the stats table list them by concurrency and say which:
+`812.3 tok/s at concurrency 4 · 1,520.4 tok/s at concurrency 8 (aggregate of the concurrent requests; crit Eval)`,
+or `self-reported`.
+
 Real requests sample, so from crit-eval-v7 decode is the sampled decode, measured on the speed cases
 at the model's `generation_config.json` sampling (`sampled_speed.decode_score` in the evidence), and
 the greedy decode goes under `more` as `greedy_decode_tok_s` (`speed.decode_score`). A crit-eval-v6
@@ -86,7 +95,8 @@ contributed the engine.
   `tools/check_engines.py` reads it and requires the protocol, the GPU, a complete speed run with no
   failed gate, and every stat and figure the card states: decode, prefill, first token and held-out
   decode from the speed scores, context from the measured context, perplexity and KL divergence from
-  the worst served path of the quality section, the quality budget share and long-context decode.
+  the worst served path of the quality section, the quality budget share, long-context decode and
+  each throughput level from its concurrency part.
   Figures under the same series of the protocol are comparable across engines: one major version of
   the ids up to v7 (`crit-eval-v7` and `crit-eval-v7.1`), and from `crit-eval-v0.1.0`, whose ids follow
   crit-eval's version, one minor before 1.0 (`crit-eval-v0.2.0` and `crit-eval-v0.2.1`) and one major
@@ -106,7 +116,8 @@ contributed the engine.
 - Any other `measured_with`, such as a leaderboard or your own benchmark, is shown as your own
   report. Its evidence can go in `evidence/self-reported.json` (optional): for each GPU and model,
   the measurements behind its figures, each with its `method`, a `link` to the run, leaderboard or
-  card, the `settings` measured, and the `figures` as measured. Each stat and figure the card states
+  card, the `settings` measured, and the `figures` as measured (`throughput` there is a list of
+  `{concurrency, tok_s}`, as on the card). Each stat, figure and throughput level the card states
   must then be one the file records:
 
 ```json
@@ -145,7 +156,8 @@ people read. [`_template/card.yaml`](_template/card.yaml) documents every key; i
 - **`built`** (optional, written by the exporter from the run's `cost.json`): what building the engine
   took, as `hours`, `candidates`, `agent_tokens`, `api_usd` and the `agent`.
 - **`results`**: for each GPU and model it was measured on, `measured_with`, `measured_on`, the
-  `quality_mode` it was judged in, the `hardware` it ran on, the six `stats`, optional `more` and its `evidence`.
+  `quality_mode` it was judged in, the `hardware` it ran on, the six `stats`, optional `more`, an optional
+  `throughput` by concurrency and its `evidence`.
 - **`readme`**: the README's prose as markdown blocks, rendered in this order: `intro`,
   `design`, `measured`, `checks`, `limits`, `build_and_chat`, the optional `benchmark` and
   `credits`. The renderer adds the title, the credit (a note for a crit engine, a warning for an

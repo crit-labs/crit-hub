@@ -187,6 +187,17 @@
             "quality_budget_pct": {"type": "number", "exclusiveMinimum": 0}
           }
         },
+        "throughput": {
+          "type": "array", "minItems": 1,
+          "description": "Throughput with several requests at once, concurrency ascending: per concurrency, the requests' completion tokens per second together. crit Eval (from crit-eval-v0.6.1): its concurrency part's levels that qualified (concurrency.levels.<N>.aggregate_tps); otherwise the contributor's own report, shown as self-reported.",
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["concurrency", "tok_s"],
+            "properties": {
+              "concurrency": {"type": "integer", "minimum": 1, "description": "The requests running at once."},
+              "tok_s": {"$ref": "#/$defs/figure", "description": "Their completion tokens per second together; [low, high] across runs."}
+            }
+          }
+        },
         "evidence": {
           "type": "array", "description": "evidence/crit-eval.json (and -2, -3 ...) for a crit Eval result; optionally evidence/self-reported.json otherwise.",
           "items": {

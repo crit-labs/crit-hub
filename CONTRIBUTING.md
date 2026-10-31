@@ -26,7 +26,9 @@ token, perplexity against the reference, mean KL divergence and context. Figures
 compared with every other engine's on the same protocol, provided the result file `crit eval run`
 wrote sits unchanged in the folder as `evidence/crit-eval.json`. Anything else, such as your own
 benchmark or a leaderboard run, is shown as your own report, with its method, link and settings in
-`evidence/self-reported.json` if you add it.
+`evidence/self-reported.json` if you add it. A result may also state its throughput with several
+requests at once, by concurrency (`throughput`): from crit Eval's concurrency part, which measures a
+server that runs several requests at once, or as your own report.
 
 crit Eval needs no crit engine:
 [`crit eval run --url`](https://github.com/crit-labs/crit/blob/main/docs/eval/README.md#engines-behind-a-server)
@@ -57,8 +59,8 @@ or the result carries no quality figures. Then copy `result.json` to `evidence/c
 3. **Export the entry.** `python -B tools/export_engine.py entry` writes the folder: card.yaml with
    your README's sections as its prose, pinned to the crit-engines commit; card.lock.json with the
    checkpoint's files and the sealed run's provenance; and, for each `--eval attempt-N`, the
-   candidate's sealed crit Eval result in `evidence/`, from which it fills the six stats and further
-   figures.
+   candidate's sealed crit Eval result in `evidence/`, from which it fills the six stats, further
+   figures and throughput by concurrency.
 4. **Fill in the card**: summary, license, features and requirements, the `build` command when the
    source needs one (what `crit pull` runs in `engine/`), and any downloads.
 5. **Render and check:** `python -B tools/card.py engines/<owner>/<name>` writes README.md;
