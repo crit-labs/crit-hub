@@ -67,7 +67,7 @@ and SPEC's base and peak do. The website shows the closed track by default.
    [template](engines/_template/card.yaml): an intro, then `## Design`, `## Measured`,
    `## Checks`, `## Limits`, `## Build and chat`, optionally `## Benchmark your machine` (left out, the
    README gets the standard one: how to measure the engine with `crit bench` and add the result), and
-   `## Credits`, each as tables, bullet lists and code blocks, no prose paragraphs. Measured opens
+   `## Credits`, each but Credits as tables, bullet lists and code blocks, no prose paragraphs. Measured opens
    with tables of every figure of the crit Eval result, so its bullets only add what a figure needs
    to be read right. Build and chat starts from
    `git clone https://github.com/crit-labs/crit-engines && git -C crit-engines checkout <crit-engines commit>`;
@@ -100,7 +100,7 @@ crit-hub records where it is, what it targets and what it measured.
    `origin: external`.
 2. Pin your source to the full 40-character commit you built and measured, under `source`.
 3. Fill in every key of card.yaml: its comments say what each one means. The README's sections go
-   under `readme`, as tables, bullet lists and code blocks only, never prose paragraphs; in
+   under `readme`, as tables, bullet lists and code blocks only, never prose paragraphs (Credits may be plain text); in
    **measured**, state the hardware, OS, toolchain, workload and protocol behind each number (a
    self-reported result also tables every figure it measured; crit Eval's are tabled for you), and in
    **credits**, the source's license, linked at the pinned commit.

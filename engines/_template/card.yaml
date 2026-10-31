@@ -159,8 +159,8 @@ results:
 # The README's sections, rendered in this order under the header (title, credit, stats, facts). Say each
 # thing once: what the header already shows (contributor, source, requirements, checkpoint, the six
 # stats and further figures) is not repeated here.
-# No prose: every section is tables, bullet lists and code blocks only (tools/check_engines.py rejects
-# a paragraph). A bullet may run on over lines indented under it.
+# No prose: every section but credits is tables, bullet lists and code blocks only (tools/check_engines.py
+# rejects a paragraph). A bullet may run on over lines indented under it.
 # Markdown in block scalars: everything indented under the key, no escaping.
 # Keep the whole README to about 100 lines; put long history or design notes next to the source.
 readme:
@@ -199,5 +199,4 @@ readme:
   # benchmark: |                   # optional: left out, the README gets the standard Benchmark your machine
   #   - How to run it and how to share results.   (crit bench and crit hub report, or tools/add_result.py)
   credits: |
-    - The source's license, linked at the pinned commit
-    - The credits for what the engine uses
+    The source's license, linked at the pinned commit, and the credits for what the engine uses.

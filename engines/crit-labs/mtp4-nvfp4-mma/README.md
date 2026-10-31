@@ -152,4 +152,4 @@ crit hub report crit-labs/mtp4-nvfp4-mma result.json --hub <your crit-hub checko
 
 ## Credits
 
-- Credits and licenses: [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/53e4423ba6f0704a0d8862e2c15add650edef6a9/mtp4-nvfp4-mma/THIRD_PARTY.md) and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/53e4423ba6f0704a0d8862e2c15add650edef6a9/mtp4-nvfp4-mma/LICENSES.txt), next to the source
+Credits and licenses are in [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/53e4423ba6f0704a0d8862e2c15add650edef6a9/mtp4-nvfp4-mma/THIRD_PARTY.md) and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/53e4423ba6f0704a0d8862e2c15add650edef6a9/mtp4-nvfp4-mma/LICENSES.txt), next to the source.

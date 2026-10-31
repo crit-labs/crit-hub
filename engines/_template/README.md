@@ -72,5 +72,4 @@ git clone https://github.com/<your account>/<your repository> && git -C <your re
 
 ## Credits
 
-- The source's license, linked at the pinned commit
-- The credits for what the engine uses
+The source's license, linked at the pinned commit, and the credits for what the engine uses.

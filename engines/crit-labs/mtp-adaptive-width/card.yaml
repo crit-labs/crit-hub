@@ -108,4 +108,4 @@ readme:
       with [`crit serve`](https://github.com/crit-labs/crit/blob/main/docs/SERVING.md): OpenAI-compatible chat requests at `http://127.0.0.1:8000/v1`
     - `engine/configuration.json` has the applied settings; thinking is off by default (`enable_thinking: false`)
   credits: |
-    - Credits and licenses: [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/53e4423ba6f0704a0d8862e2c15add650edef6a9/mtp-adaptive-width/THIRD_PARTY.md) and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/53e4423ba6f0704a0d8862e2c15add650edef6a9/mtp-adaptive-width/LICENSES.txt), next to the source
+    Credits and licenses are in [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/53e4423ba6f0704a0d8862e2c15add650edef6a9/mtp-adaptive-width/THIRD_PARTY.md) and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/53e4423ba6f0704a0d8862e2c15add650edef6a9/mtp-adaptive-width/LICENSES.txt), next to the source.

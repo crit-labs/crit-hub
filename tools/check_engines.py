@@ -753,9 +753,10 @@ def check_readme(folder, card, drawn):
         return [f"card.yaml readme holds the README's sections as markdown blocks: {', '.join(sorted(cardlib.REQUIRED_SECTIONS))}"
                 f", and optionally benchmark"]
     # A card is tables, lists and code blocks, never prose (cardlib.prose): bullets say it as well and read faster.
+    # Only credits may be plain text.
     problems = [f"readme.{key} holds prose ({lines[0][:60]!r}{f' and {len(lines) - 1} more line(s)' if len(lines) > 1 else ''}): "
                 "write it as a table, a bullet list or a code block" for key, text in readme.items()
-                for lines in [cardlib.prose(text)] if lines]
+                if key not in cardlib.PROSE_SECTIONS for lines in [cardlib.prose(text)] if lines]
     if problems:
         return problems
     path = folder / "README.md"

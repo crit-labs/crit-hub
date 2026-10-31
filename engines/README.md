@@ -177,7 +177,7 @@ people read. [`_template/card.yaml`](_template/card.yaml) documents every key; i
   standard Benchmark your machine: `crit pull`, `crit bench` and `crit hub report` for a crit engine,
   `crit eval run --url` and `tools/add_result.py` for an external one) and `credits`. The renderer adds the title, the credit (a note for a crit engine, a warning for an
   external one), the stats table and the facts: how each result was measured, its hardware and further figures,
-  then requirements, checkpoints, downloads, source and license. The sections hold no prose: tables,
+  then requirements, checkpoints, downloads, source and license. The sections but `credits` hold no prose: tables,
   bullet lists and code blocks only (a bullet may run on over lines indented under it), which
   `tools/check_engines.py` enforces.
 

@@ -116,6 +116,8 @@ def split_readme(text):
 # Rendering
 
 # A card's sections hold no prose: only tables, bullet or numbered lists, code blocks, headings, images and rules.
+# Credits, a line or two of links, may be plain text.
+PROSE_SECTIONS = {"credits"}
 LIST_ITEM = re.compile(r"(?:[-*+]|[0-9]+[.)])(?: |$)")
 NOT_PROSE = re.compile(r"\||#{1,6}(?: |$)|!\[[^\]]*\]\([^)]*\)$|(?:-{3,}|\*{3,}|_{3,})$")
 

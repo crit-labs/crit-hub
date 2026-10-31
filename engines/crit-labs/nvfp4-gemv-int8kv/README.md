@@ -160,4 +160,4 @@ crit hub report crit-labs/nvfp4-gemv-int8kv result.json --hub <your crit-hub che
 
 ## Credits
 
-- Credits and licenses: [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/2fe7df08acf9a81e82c9f27266b6f56e4fc0913b/nvfp4-gemv-int8kv/THIRD_PARTY.md) and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/2fe7df08acf9a81e82c9f27266b6f56e4fc0913b/nvfp4-gemv-int8kv/LICENSES.txt), next to the source
+Credits and licenses are in [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/2fe7df08acf9a81e82c9f27266b6f56e4fc0913b/nvfp4-gemv-int8kv/THIRD_PARTY.md) and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/2fe7df08acf9a81e82c9f27266b6f56e4fc0913b/nvfp4-gemv-int8kv/LICENSES.txt), next to the source.
