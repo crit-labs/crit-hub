@@ -3,7 +3,7 @@
 Each engine lives in engines/<owner>/<name>/, where <owner> is its contributor:
 
   card.yaml        what the engine is, what it measured and the README's prose (tools/card.py)
-  card.lock.json   what tools write: the exact checkpoint files and how the engine was built
+  card.lock.json   what tools write: the exact checkpoint files (and a drafter download's) and how the engine was built
   evidence/        crit-eval.json (and -2, -3 ...) behind crit Eval results, self-reported.json
                    behind the contributor's own
   README.md        rendered from card.yaml by tools/card.py, never edited by hand
@@ -63,7 +63,9 @@ BACKENDS = {"cuda": (re.compile(r"sm_[0-9]{2,3}[a-z]?"), "cuda", "CUDA toolkit",
 VERSION_FIELDS = {version for _, version, _, _, _ in BACKENDS.values()}
 REQUIREMENT_FIELDS = {"platforms", "backend", "gpu_arch", "gpu_memory_gb", "runtime"} | VERSION_FIELDS
 DOWNLOAD_KINDS = {"drafter", "artifact"}
-DOWNLOAD_FIELDS = {"kind", "repository", "revision", "path", "file", "sha256", "size_gb", "note"}
+DOWNLOAD_FIELDS = {"kind", "repository", "revision", "path", "file", "sha256", "size_gb", "note", "toolchain"}
+TOOLCHAIN_FIELDS = {"platforms", "backend", "gpu_arch", "cuda", "rocm", "python"}
+PYTHON = re.compile(r"3\.[0-9]+")
 CRIT_EVAL_FILE = re.compile(r"evidence/crit-eval(-[2-9]|-[1-9][0-9]+)?\.json")
 SELF_REPORTED = "evidence/self-reported.json"
 EVIDENCE_BYTES = 16 * 1024 * 1024
@@ -217,7 +219,37 @@ def check_build(card):
     return []
 
 
-def check_downloads(card):
+def check_toolchain(name, toolchain):
+    """An artifact's toolchain: the platforms, backend and architectures it is built for, the CUDA or ROCm version it
+    was compiled with and the Python its extension modules are built for, which crit pull matches against a machine."""
+    if not isinstance(toolchain, dict):
+        return [f"{name}: an artifact names the toolchain it was built with: platforms, gpu_arch and cuda (or rocm), "
+                "and python when it holds extension modules"]
+    problems = []
+    if set(toolchain) - TOOLCHAIN_FIELDS:
+        problems.append(f"{name}: toolchain: unknown field(s) {', '.join(sorted(set(toolchain) - TOOLCHAIN_FIELDS))}")
+    platforms = toolchain.get("platforms")
+    if not (isinstance(platforms, list) and platforms and set(platforms) <= PLATFORMS and len(set(platforms)) == len(platforms)):
+        problems.append(f"{name}: toolchain.platforms lists any of {', '.join(sorted(PLATFORMS))}")
+    backend = toolchain.get("backend", "cuda")
+    if backend not in ("cuda", "hip"):
+        return problems + [f"{name}: toolchain.backend is cuda or hip, the backends crit pull matches artifacts for"]
+    pattern, version, toolkit, example_arch, example_version = BACKENDS[backend]
+    arch = toolchain.get("gpu_arch")
+    if not (isinstance(arch, list) and arch and all(pattern.fullmatch(str(a)) for a in arch)):
+        problems.append(f"{name}: toolchain.gpu_arch lists the {backend} architectures it is compiled for, like {example_arch}")
+    if not VERSION.fullmatch(str(toolchain.get(version))):
+        problems.append(f'{name}: toolchain.{version} is the {toolkit} version it was compiled with, quoted, like "{example_version}"')
+    if ({"cuda", "rocm"} - {version}) & set(toolchain):
+        problems.append(f"{name}: toolchain: {', '.join(sorted(({'cuda', 'rocm'} - {version}) & set(toolchain)))} belongs to another backend")
+    if "python" in toolchain and not PYTHON.fullmatch(str(toolchain["python"])):
+        problems.append(f'{name}: toolchain.python is the Python its extension modules are built for, quoted, like "3.12"')
+    return problems
+
+
+def check_downloads(card, lock=None):
+    """Every download pinned by a revision or the sha256 of its file. An artifact names its file, sha256 and toolchain;
+    a drafter pinned by revision lists its files in card.lock.json downloads, as checkpoints do."""
     downloads = card.get("downloads", [])
     if not isinstance(downloads, list):
         return ["card.yaml downloads lists what to fetch besides the checkpoint"]
@@ -247,6 +279,41 @@ def check_downloads(card):
             problems.append(f"{name}: size_gb is a positive number")
         if "note" in item and not (isinstance(item["note"], str) and item["note"].strip() and "\n" not in item["note"]):
             problems.append(f"{name}: note is one line")
+        if item.get("kind") == "artifact":
+            if "file" not in item or "sha256" not in item:
+                problems.append(f"{name}: an artifact is one file, named by file and checked by its sha256")
+            if card.get("origin") != "crit":
+                problems.append(f"{name}: artifacts are for crit engines (origin: crit), which crit pull installs")
+            problems += check_toolchain(name, item.get("toolchain"))
+        elif "toolchain" in item:
+            problems.append(f"{name}: only an artifact names a toolchain")
+    locked = (lock or {}).get("downloads") or []
+    if not isinstance(locked, list):
+        return problems + ["card.lock.json downloads lists the files of each drafter pinned by revision"]
+    drafters = [(i.get("repository"), i.get("revision"), i.get("path")) for i in downloads
+                if isinstance(i, dict) and i.get("kind") == "drafter" and "revision" in i]
+    for number, entry in enumerate(locked, 1):
+        name = f"card.lock.json downloads[{number}]"
+        if not isinstance(entry, dict) or set(entry) - {"repository", "revision", "path", "files"}:
+            problems.append(f"{name} is {{repository, revision, path, files}} of a drafter download")
+            continue
+        if (entry.get("repository"), entry.get("revision"), entry.get("path")) not in drafters:
+            problems.append(f"{name} lists the files of {entry.get('repository')}, which card.yaml downloads as no drafter "
+                            "at that revision and path")
+        rows = entry.get("files")
+        if not isinstance(rows, list) or not rows:
+            problems.append(f"{name} lists no files")
+        for row in rows or []:
+            if not (isinstance(row, dict) and isinstance(row.get("path"), str) and isinstance(row.get("bytes"), int)
+                    and SHA256.fullmatch(str(row.get("sha256")))):
+                problems.append(f"{name} file entry needs path, bytes and sha256")
+    listed = {(e.get("repository"), e.get("revision"), e.get("path")) for e in locked if isinstance(e, dict)}
+    for item in downloads if lock is not None else []:
+        if (isinstance(item, dict) and item.get("kind") == "drafter" and "revision" in item and "sha256" not in item
+                and (item.get("repository"), item.get("revision"), item.get("path")) not in listed):
+            problems.append(f"card.lock.json downloads needs the files of the drafter {item.get('repository')} at "
+                            f"{str(item.get('revision'))[:12]}" + (f" ({item['path']})" if item.get("path") else "")
+                            + ", each with its path, bytes and sha256 (python -B tools/lock_download.py writes them)")
     return problems
 
 
@@ -303,8 +370,9 @@ def check_checkpoints(card, lock):
 def check_lock(card, lock):
     if lock is None:
         return ["missing card.lock.json: the exact checkpoint files and how the engine was built"]
-    if not isinstance(lock, dict) or set(lock) != {"checkpoints", "provenance"} or not isinstance(lock["provenance"], dict):
-        return ['card.lock.json is {"checkpoints": {...}, "provenance": {...}}']
+    if (not isinstance(lock, dict) or set(lock) - {"downloads"} != {"checkpoints", "provenance"}
+            or not isinstance(lock["provenance"], dict)):
+        return ['card.lock.json is {"checkpoints": {...}, "provenance": {...}}, with "downloads": [...] for drafters']
     provenance = lock["provenance"]
     problems = []
     if card.get("origin") == "crit":
@@ -635,8 +703,8 @@ def check(folder):
         lock = cardlib.load_lock(folder)
     except json.JSONDecodeError as e:
         return [f"card.lock.json is not JSON: {e}"]
-    problems = (check_schema(card) + check_identity(folder, card) + check_requirements(card) + check_build(card) + check_downloads(card)
-                + check_supports(card) + check_lineage(card))
+    problems = (check_schema(card) + check_identity(folder, card) + check_requirements(card) + check_build(card)
+                + check_downloads(card, lock) + check_supports(card) + check_lineage(card))
     result_problems, listed = check_results(folder, card)
     problems += result_problems + check_checkpoints(card, lock) + check_lock(card, lock)
     files = {p.relative_to(folder).as_posix() for p in folder.rglob("*") if p.is_file()}

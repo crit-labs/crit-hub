@@ -393,7 +393,11 @@ def facts(card):
         where = f"https://huggingface.co/{d['repository']}/tree/{d.get('revision', 'main')}" + (f"/{d['path']}" if d.get("path") else "")
         size = f", about {d['size_gb']} GB" if d.get("size_gb") else ""
         note = f": {d['note']}" if d.get("note") else ""
-        lines.append(f"- **Download** ({d['kind']}): [`{d['repository']}" + (f"/{d['path']}" if d.get("path") else "") + f"`]({where}){size}{note}")
+        built = d.get("toolchain")
+        kind = d["kind"] if not built else f"{d['kind']}, built for " + " · ".join(p for p in (
+            ", ".join(PLATFORMS.get(p, p) for p in built.get("platforms", [])), ", ".join(built.get("gpu_arch", [])),
+            toolkit(built), f"Python {built['python']}" if built.get("python") else None) if p)
+        lines.append(f"- **Download** ({kind}): [`{d['repository']}" + (f"/{d['path']}" if d.get("path") else "") + f"`]({where}){size}{note}")
     s = card["source"]
     at = f"/{s['path']}" if s.get("path") else ""
     shown = s["repository"].split("://", 1)[1].split("/", 1)[1].rstrip("/")

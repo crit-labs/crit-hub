@@ -143,8 +143,17 @@ people read. [`_template/card.yaml`](_template/card.yaml) documents every key; i
 - **`build`** (optional, crit engines): the `command` that builds the source, as literal arguments
   run in its `engine/` folder (a first argument `python` is the Python crit runs in). `crit pull`
   runs it when it installs the engine; leave it out when the source runs as it is.
-- **`downloads`** (optional): what to fetch besides the checkpoint, such as a `drafter` or a
-  converted `artifact`, pinned by `revision` or the `sha256` of its `file`.
+- **`downloads`** (optional): what to fetch besides the checkpoint, pinned by `revision` or the
+  `sha256` of its `file`. A `drafter` is weights the engine loads beside the checkpoint: `crit pull`
+  fetches it into its store, checks it file by file against card.lock.json's `downloads` (which
+  `python -B tools/lock_download.py` writes from a local copy; a drafter pinned by the `sha256` of
+  one `file` needs no lock rows) and hands its folder to the engine as `context.drafters`, in card
+  order. An `artifact` (crit engines) is a prebuilt tar archive of what the build adds to `engine/`,
+  one `file` checked by its `sha256`, with the `toolchain` it was built with and for: `platforms`,
+  `gpu_arch`, the `cuda` (or, with `backend: hip`, `rocm`) version it was compiled with, and the
+  `python` its extension modules are built for. `crit pull` unpacks the first artifact whose
+  toolchain this machine matches (a driver that runs that CUDA version or a newer one, nvcc not
+  needed) instead of running the build.
 - **`checkpoints`**: the Hugging Face `repository` and `revision` of every model the engine measures
   or supports, keyed by model id; card.lock.json lists every file of each measured one with its size
   and SHA-256. The website reads the checkpoint's base model, lab and quantization from Hugging Face,

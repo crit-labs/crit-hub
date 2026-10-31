@@ -57,11 +57,25 @@ requirements:
 #   command: [python, csrc/build.py]
 
 # Optional: what to fetch besides the checkpoint, each pinned by revision or by the sha256 of its file.
+# A drafter pinned by revision lists its files in card.lock.json (python -B tools/lock_download.py); the
+# engine gets its folder as context.drafters. An artifact (crit engines) is a prebuilt tar archive of what
+# the build adds to engine/, which crit pull unpacks instead of building on a machine its toolchain matches.
 # downloads:
 # - kind: drafter                 # drafter or artifact
 #   repository: <owner>/<name>    # Hugging Face repository
 #   revision: <40-character commit>
+#   # path: <folder in that repository, when the drafter is not at its root>
 #   note: <one line: when it is needed>
+# - kind: artifact
+#   repository: <owner>/<name>
+#   revision: <40-character commit>
+#   file: <archive>.tar.gz
+#   sha256: <64-character SHA-256 of the file>
+#   toolchain:                    # what it was built with and for
+#     platforms: [linux, wsl2]
+#     gpu_arch: [sm_120a]
+#     cuda: "13.1"                # compiled with; the driver must run it (rocm with backend: hip)
+#     python: "3.12"              # when it holds Python extension modules
 
 # The Hugging Face checkpoint of every model the engine was measured on or supports, keyed by
 # model id: the model in lowercase and its encoding. Reuse the ids other engines already use.

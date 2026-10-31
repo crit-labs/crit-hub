@@ -63,15 +63,28 @@
       "items": {
         "type": "object", "additionalProperties": false, "required": ["kind", "repository"],
         "anyOf": [{"required": ["revision"]}, {"required": ["sha256"]}],
+        "allOf": [{"if": {"properties": {"kind": {"const": "artifact"}}}, "then": {"required": ["file", "sha256", "toolchain"]}}],
         "properties": {
-          "kind": {"enum": ["drafter", "artifact"]},
+          "kind": {"enum": ["drafter", "artifact"], "description": "drafter: weights the engine loads beside the checkpoint, given to it as context.drafters; artifact: a prebuilt tar archive of what the build adds to engine/, unpacked instead of building where its toolchain matches."},
           "repository": {"$ref": "#/$defs/hf_repository"},
           "revision": {"$ref": "#/$defs/commit"},
           "path": {"type": "string"},
           "file": {"type": "string"},
           "sha256": {"$ref": "#/$defs/sha256"},
           "size_gb": {"type": "number", "exclusiveMinimum": 0},
-          "note": {"type": "string", "pattern": "^[^\\n]+$"}
+          "note": {"type": "string", "pattern": "^[^\\n]+$"},
+          "toolchain": {
+            "type": "object", "additionalProperties": false, "required": ["platforms", "gpu_arch"],
+            "description": "An artifact's: what it was built with and for. crit pull unpacks it instead of building on a machine that matches all of it.",
+            "properties": {
+              "platforms": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["linux", "wsl2", "windows", "macos"]}},
+              "backend": {"enum": ["cuda", "hip", "metal", "vulkan"], "description": "cuda when left out."},
+              "gpu_arch": {"type": "array", "minItems": 1, "items": {"type": "string"}, "description": "Architectures its device code is compiled for, as requirements.gpu_arch."},
+              "cuda": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+$", "description": "CUDA version it was compiled with: the driver must run this version or a newer one."},
+              "rocm": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+$", "description": "ROCm version it was compiled with (backend hip)."},
+              "python": {"type": "string", "pattern": "^3\\.[0-9]+$", "description": "Python its extension modules are built for, like \"3.12\"; leave it out when it has none."}
+            }
+          }
         }
       }
     },
