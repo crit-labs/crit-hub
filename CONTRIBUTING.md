@@ -44,6 +44,19 @@ Prepare the Eval data and score the reference first (`crit eval prepare` and `cr
 as crit's [Eval guide](https://github.com/crit-labs/crit/blob/main/docs/eval/README.md) describes),
 or the result carries no quality figures. Then copy `result.json` to `evidence/crit-eval.json`.
 
+## Closed and open tracks
+
+Every result names its `track`, so a reader compares like with like, as MLPerf's closed and open divisions
+and SPEC's base and peak do. The website shows the closed track by default.
+
+- **closed**: measured with crit Eval in quality mode `preserve`; one configuration for every workload,
+  loaded once for the run, with no settings per case or prompt length; and the checkpoint's own draft
+  layers (its MTP head) as the only drafter where it has them, no drafter trained or picked elsewhere. A
+  crit Eval result file from crit-eval-v0.7.2 on checks what it can of this (`track.closed`: the quality
+  mode, one engine load, a draft step no bigger than the checkpoint's own draft layers), and
+  `tools/check_engines.py` refuses a closed result whose files do not qualify; the rest is your declaration.
+- **open**: anything else the protocol allows: `as_quantized`, other drafters, settings per case.
+
 ## Add a crit engine
 
 1. **Export the source.** `python -B tools/export_engine.py source` verifies the candidate's seal

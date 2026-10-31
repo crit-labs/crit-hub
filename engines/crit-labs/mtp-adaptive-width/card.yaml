@@ -38,6 +38,7 @@ built:
   candidates: 5
 results:
 - gpu: rtx5090
+  track: closed
   model: qwen3.8-27b@NVFP4
   measured_with: crit-eval-v0.2.1
   measured_on: '2026-10-28'

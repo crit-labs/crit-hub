@@ -192,6 +192,12 @@ def more_text(more):
     return " · ".join(parts)
 
 
+# What each track fixes (CONTRIBUTING.md, Closed and open tracks).
+TRACK_TEXT = {"closed": "closed: quality judged in preserve, one configuration for every workload, and the checkpoint's "
+                        "own draft layers as its only drafter",
+              "open": "open: any choice the protocol allows (quality mode, drafter, settings per case)"}
+
+
 def reproductions(result):
     """A result's reproductions as results of its GPU and model, each labelled by who measured it."""
     return [{**rep, "gpu": result["gpu"], "model": result["model"]} for rep in result.get("reproductions") or []]
@@ -328,6 +334,8 @@ def measured(results):
         files = [f"[{Path(e['file']).name}]({e['file']})" for e in result.get("evidence") or []]
         by = f"by [{result['by']}](https://github.com/{result['by']}), " if result.get("by") else ""
         lines.append(label("Measured with") + by + " · ".join([how] + files))
+        if result.get("track"):
+            lines.append(label("Track") + TRACK_TEXT[result["track"]])
         mode = quality_mode(result)
         budget = (result.get("more") or {}).get("quality_budget_pct")
         # Perplexity and KL divergence are judged against the mode's own budget (as_quantized's is wider, and raised

@@ -144,6 +144,7 @@ def add(folder, files, by, gpu=None, model=None, checkpoint=None):
         if not cardlib.crit_eval(existing.get("measured_with")):
             raise SystemExit(f"The card's {gpu} · {model} result is self-reported: a reproduction is of a crit Eval result")
         kind, target = "reproduction", existing.setdefault("reproductions", [])
+        entry.pop("track")   # a reproduction is of its result's track, which its files are checked against
         record = {"by": by, **entry}
     else:
         if not (lock.get("checkpoints") or {}).get(model):

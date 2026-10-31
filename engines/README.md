@@ -164,7 +164,8 @@ people read. [`_template/card.yaml`](_template/card.yaml) documents every key; i
   improved, ported or adapted engine says where it came from.
 - **`built`** (optional, written by the exporter from the run's `cost.json`): what building the engine
   took, as `hours`, `candidates`, `agent_tokens`, `api_usd` and the `agent`.
-- **`results`**: for each GPU and model it was measured on, `measured_with`, `measured_on`, the
+- **`results`**: for each GPU and model it was measured on, its `track` (`closed` or `open`,
+  [CONTRIBUTING.md](../CONTRIBUTING.md#closed-and-open-tracks)), `measured_with`, `measured_on`, the
   `quality_mode` it was judged in, the `hardware` it ran on, the six `stats`, optional `more`, an optional
   `throughput` by concurrency and its `evidence`; `by`, the GitHub account that measured it when that is
   not the contributor; and optional `reproductions`: the same GPU and model measured again with crit Eval

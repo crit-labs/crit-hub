@@ -187,7 +187,7 @@ def measured(args, seal, candidate, target):
         raise ValueError("The --eval attempts were judged in different quality modes")
     target.mkdir(parents=True)
     if not args.eval:
-        return {"gpu": args.gpu, "model": args.model, "measured_with": None, "measured_on": None,
+        return {"gpu": args.gpu, "model": args.model, "track": "open", "measured_with": None, "measured_on": None,
                 "stats": {key: None for key in cardlib.STATS}, "evidence": []}
     evidence = []
     for number, path in enumerate(attempts, 1):
@@ -195,6 +195,14 @@ def measured(args, seal, candidate, target):
         copy(path, target / name)
         evidence.append({"file": name, "sha256": digest(target / name)})
     return {"gpu": args.gpu, "model": args.model, **result_entry(results), "evidence": evidence}
+
+
+def track(results):
+    """The track crit Eval result files qualify for: closed when every file records crit Eval's closed-track checks
+    passing (crit-eval-v0.7.2 on), else open; a contributor whose engine keeps the closed track's rules may set closed
+    for files from before those checks, judged in preserve."""
+    closed = [((r.get("track") or {}).get("closed") or {}).get("qualifies") for r in results]
+    return "closed" if closed and all(q is True for q in closed) else "open"
 
 
 def result_entry(results):
@@ -235,7 +243,7 @@ def result_entry(results):
     levels = sorted({int(n) for r in results for n in ((r.get("concurrency") or {}).get("levels") or {})})
     throughput = [{"concurrency": n, "tok_s": figure([cardlib.throughput_score(r, n) for r in results], 1)}
                   for n in levels if all(isinstance(cardlib.throughput_score(r, n), (int, float)) for r in results)]
-    entry = {"measured_with": results[0]["protocol"],
+    entry = {"track": track(results), "measured_with": results[0]["protocol"],
              "measured_on": max(str(r.get("started_at", ""))[:10] for r in results)}
     # The machine the result file records (crit Eval records hardware from v7 on).
     # The quality mode it was judged in, as the result file records it (crit-eval 0.2.0 on).

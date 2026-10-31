@@ -52,7 +52,8 @@ BUILT_FIELDS = {"hours", "agent_tokens", "api_usd", "agent", "candidates"}
 ACCOUNT = re.compile(r"[A-Za-z0-9][A-Za-z0-9-]{0,38}")
 REPRODUCTION_FIELDS = {"by", "measured_with", "measured_on", "quality_mode", "sampling", "hardware", "stats", "more",
                        "throughput", "evidence"}
-RESULT_FIELDS = {"gpu", "model", "by", "reproductions", "measured_with", "measured_on", "quality_mode", "sampling", "hardware", "stats", "more", "throughput",
+TRACKS = {"closed", "open"}
+RESULT_FIELDS = {"gpu", "model", "track", "by", "reproductions", "measured_with", "measured_on", "quality_mode", "sampling", "hardware", "stats", "more", "throughput",
                  "evidence"}
 MODE = re.compile(r"[a-z][a-z0-9_]*")
 PLATFORMS = {"linux", "wsl2", "windows", "macos"}
@@ -594,7 +595,25 @@ def check_reproductions(folder, name, result, listed):
         problems += missing
         if len(loaded) == len(evidence):
             problems += check_crit_eval(label, {"gpu": result["gpu"], **rep}, loaded)
+            if result.get("track") == "closed":
+                problems += check_closed(label, loaded)
     return problems, files
+
+
+def check_closed(name, loaded):
+    """A closed-track result's files: judged in preserve, and where they record crit Eval's closed-track checks
+    (crit-eval-v0.7.2 on: one engine load for the run, no drafter beyond the checkpoint's own draft layers), every
+    check passed. What the files cannot show, one configuration for every case and prompt length, the card declares."""
+    problems = []
+    for file, data in loaded:
+        if cardlib.evidence_mode(data) != "preserve":
+            problems.append(f"{name}: {file} was judged in {cardlib.evidence_mode(data)}; the closed track judges in preserve")
+        closed = ((data.get("track") or {}).get("closed") or {}) if isinstance(data, dict) else {}
+        if closed and closed.get("qualifies") is not True:
+            failed = [f"{check} {row.get('state')}" for check, row in (closed.get("checks") or {}).items()
+                      if isinstance(row, dict) and row.get("state") != "pass"]
+            problems.append(f"{name}: {file} does not qualify for the closed track ({', '.join(failed) or 'unmeasured'})")
+    return problems
 
 
 def check_self_reported(name, result, data):
@@ -680,6 +699,10 @@ def check_results(folder, card):
         listed |= {e["file"] for e in evidence}
         if "by" in result and not ACCOUNT.fullmatch(str(result["by"])):
             problems.append(f"{name}: by is the GitHub account that measured it")
+        if result.get("track") not in TRACKS:
+            problems.append(f"{name}: track is closed or open (CONTRIBUTING.md, Closed and open tracks)")
+        elif result["track"] == "closed" and not cardlib.crit_eval(result["measured_with"]):
+            problems.append(f"{name}: the closed track is for crit Eval results, which check what they can of it")
         if stat_problems:
             continue
         if cardlib.crit_eval(result["measured_with"]):
@@ -693,6 +716,8 @@ def check_results(folder, card):
             problems += found
             if len(loaded) == len(evidence):
                 problems += check_crit_eval(name, result, loaded)
+                if result.get("track") == "closed":
+                    problems += check_closed(name, loaded)
             more, files = check_reproductions(folder, name, result, listed)
             problems += more
             listed |= files
