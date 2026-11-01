@@ -523,13 +523,13 @@ def check_crit_eval(name, result, loaded):
             problems.append(f"{name}: {key} {value} is not its result files' worst served {field}")
     if stats["ppl"] and "absolute" in stats["ppl"]:
         problems.append(f"{name}: a crit Eval result gives perplexity against the reference, ppl: {{vs_reference: ...}}")
-    # Throughput by concurrency: the levels of crit Eval's concurrency part that qualified (crit-eval-v0.6.1 on).
+    # Throughput by concurrency: the levels of crit Eval's concurrency part that qualified (where a result file has one).
     for level in result.get("throughput") or []:
         clients, value = level["concurrency"], level["tok_s"]
         scores = [cardlib.throughput_score(data, clients) for _, data in loaded]
         if all(s is None for s in scores):
             problems.append(f"{name}: throughput at concurrency {clients}: its result files measured no qualified level of "
-                            f"{clients} clients (crit Eval's concurrency part, from crit-eval-v0.6.1)")
+                            f"{clients} clients (crit Eval's concurrency part)")
         elif isinstance(value, list):
             if len(loaded) < 2 or None in scores or not (matches(value[0], min(scores)) and matches(value[1], max(scores))):
                 problems.append(f"{name}: throughput {value} at concurrency {clients} is not the range of its result files' "
@@ -573,7 +573,7 @@ def check_reproductions(folder, name, result, listed):
         if not ACCOUNT.fullmatch(str(rep.get("by"))):
             problems.append(f"{label}: by is the GitHub account that measured it")
         if not cardlib.crit_eval(rep.get("measured_with")):
-            problems.append(f"{label}: a reproduction is measured with crit Eval (measured_with: crit-eval-v0.7.0)")
+            problems.append(f"{label}: a reproduction is measured with crit Eval (measured_with: the protocol id its result file records)")
             continue
         if isinstance(rep.get("measured_on"), datetime.date):
             rep["measured_on"] = rep["measured_on"].isoformat()
@@ -602,7 +602,7 @@ def check_reproductions(folder, name, result, listed):
 
 def check_closed(name, loaded):
     """A closed-track result's files: judged in preserve, and where they record crit Eval's closed-track checks
-    (crit-eval-v0.7.2 on: one engine load for the run, no drafter beyond the checkpoint's own draft layers), every
+    (where the result records track.closed: one engine load for the run, no drafter beyond the checkpoint's own draft layers), every
     check passed. What the files cannot show, one configuration for every case and prompt length, the card declares."""
     problems = []
     for file, data in loaded:

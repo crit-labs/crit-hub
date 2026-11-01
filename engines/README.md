@@ -66,7 +66,7 @@ and from which evidence, the quality mode it was judged in, the `hardware` it ra
 A result may also state its **throughput** with several requests at once, under `throughput`: one
 entry per `concurrency`, the number of requests running together, with `tok_s`, their completion
 tokens per second together, concurrency ascending. For a crit Eval result these are the levels of
-its result file's concurrency part that qualified (`concurrency.levels`, from crit-eval-v0.6.1, which
+its result file's concurrency part that qualified (`concurrency.levels`, which
 measures a server that runs several requests at once); for any other result they are the
 contributor's own report. The facts under the stats table list them by concurrency and say which:
 `812.3 tok/s at concurrency 4 · 1,520.4 tok/s at concurrency 8 (aggregate of the concurrent requests; crit Eval)`,

@@ -199,7 +199,7 @@ def measured(args, seal, candidate, target):
 
 def track(results):
     """The track crit Eval result files qualify for: closed when every file records crit Eval's closed-track checks
-    passing (crit-eval-v0.7.2 on), else open; a contributor whose engine keeps the closed track's rules may set closed
+    passing (where they record it), else open; a contributor whose engine keeps the closed track's rules may set closed
     for files from before those checks, judged in preserve."""
     closed = [((r.get("track") or {}).get("closed") or {}).get("qualifies") for r in results]
     return "closed" if closed and all(q is True for q in closed) else "open"
@@ -239,7 +239,7 @@ def result_entry(results):
         more["heldout_decode_tok_s"] = figure(heldout, 1)
     if budget is not None:
         more["quality_budget_pct"] = round(budget * 100, 1)
-    # crit Eval's concurrency part (crit-eval-v0.6.1 on): every level that qualified in each attempt, by its clients.
+    # crit Eval's concurrency part: every level that qualified in each attempt, by its clients.
     levels = sorted({int(n) for r in results for n in ((r.get("concurrency") or {}).get("levels") or {})})
     throughput = [{"concurrency": n, "tok_s": figure([cardlib.throughput_score(r, n) for r in results], 1)}
                   for n in levels if all(isinstance(cardlib.throughput_score(r, n), (int, float)) for r in results)]

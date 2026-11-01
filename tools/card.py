@@ -306,7 +306,7 @@ def evidence_mode(data):
 
 def throughput_score(data, clients):
     """A crit Eval result file's aggregate tokens per second at `clients` requests at once: its concurrency part's
-    level (from crit-eval-v0.6.1), None when it measured none or the level did not qualify."""
+    level, None when it measured none or the level did not qualify."""
     levels = ((data.get("concurrency") or {}).get("levels") or {}) if isinstance(data, dict) else {}
     level = levels.get(str(clients)) if isinstance(levels, dict) else None
     return level.get("aggregate_tps") if isinstance(level, dict) and level.get("qualified") else None
