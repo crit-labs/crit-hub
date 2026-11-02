@@ -13,7 +13,7 @@
 
 - **Measured with:** crit Eval (crit-eval-v0.2.1, decode sampled at the model's defaults) · [crit-eval.json](evidence/crit-eval.json)
 - **Track:** open: any choice the protocol allows (quality mode, drafter, settings per case)
-- **Quality mode:** as quantized: quality judged against the checkpoint run as quantized, its activations quantized as it declares, with a drift budget of its own; the worst path uses 70.1% of its quality budget
+- **Quality mode:** as quantized: the mode for speed, quality judged with a wider drift budget of its own, so the checkpoint's 4-bit and 8-bit arithmetic as stored fits; the worst path uses 70.1% of its quality budget
 - **Hardware:** Ubuntu 24.04.4 LTS (WSL); AMD Ryzen 5 9600 6-Core Processor (6/12 cores); 82 GiB RAM; NVIDIA GeForce RTX 5090 32 GiB, PCIe 4.0 x16 (GPU supports 5.0)
 - **Further figures:** long-context decode 136.7 tok/s · held-out decode 131.2 tok/s
 - **Requires:** WSL2 · sm_120a · 32 GB GPU memory · CUDA 13.1 · crit Core Python engine, torch 2.14.1+cu130, Triton 3.8.0

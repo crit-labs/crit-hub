@@ -18,4 +18,4 @@ preserve:
   default: true
 as_quantized:
   label: as quantized
-  summary: quality judged against the checkpoint run as quantized, its activations quantized as it declares, with a drift budget of its own
+  summary: the mode for speed, quality judged with a wider drift budget of its own, so the checkpoint's 4-bit and 8-bit arithmetic as stored fits
