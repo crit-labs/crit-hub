@@ -106,12 +106,12 @@ contributed the engine.
   divergence are measured against: `preserve`, the checkpoint's own arithmetic with exact
   activations, or `as_quantized`, the checkpoint run as quantized (its activations quantized as it
   declares, as W4A4 and W8A8 serving stacks run it), with a drift budget of its own. crit Eval
-  records it in the result file (`requirements.quality_mode`, from crit-eval 0.2.0; a file that
-  records none was judged in `preserve`), and the result states it as `quality_mode`, which may be
-  left out when it is the default. An engine that keeps the activations exact is judged in
+  records it in the result file (`requirements.quality_mode`, from crit-eval 0.2.0), and every
+  result states it as `quality_mode`: a result that states none, or a result file that records
+  none, fails the check. An engine that keeps the activations exact is judged in
   `preserve` and one that runs the checkpoint as quantized in `as_quantized`, so the README, the
   website and `/index.json` show every result's mode beside its benchmark, and the website groups
-  each table's crit Eval rows by it. A self-reported result may state the mode it was judged in too.
+  each table's crit Eval rows by it. A self-reported result states the mode it was judged in too.
   [`schemas/quality-modes.yaml`](../schemas/quality-modes.yaml) is the only place modes are named:
   a mode crit Eval adds is listed there, with its label and summary, and nothing else changes.
 - Any other `measured_with`, such as a leaderboard or your own benchmark, is shown as your own

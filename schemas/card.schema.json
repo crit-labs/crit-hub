@@ -155,7 +155,7 @@
       ]
     },
     "result": {
-      "type": "object", "additionalProperties": false, "required": ["gpu", "model", "track", "measured_with", "measured_on", "stats", "evidence"],
+      "type": "object", "additionalProperties": false, "required": ["gpu", "model", "track", "measured_with", "measured_on", "quality_mode", "stats", "evidence"],
       "properties": {
         "gpu": {"$ref": "#/$defs/gpu"},
         "track": {"enum": ["closed", "open"], "description": "closed: crit Eval in quality mode preserve, one configuration for every workload loaded once, and the checkpoint's own draft layers as the only drafter where it has them; its result files' track.closed must qualify where they record it. open: anything else the protocol allows, other drafters, as_quantized, settings per case."},
@@ -165,7 +165,7 @@
         "measured_on": {"description": "The day it was measured, YYYY-MM-DD (quoted); null when unknown, never for crit Eval.",
                         "oneOf": [{"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"}, {"type": "null"}]},
         "quality_mode": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$",
-                         "description": "The quality mode it was judged in, one of schemas/quality-modes.yaml (preserve, as_quantized, ...). crit Eval: what the result file's requirements.quality_mode records, optional when it is the default; otherwise your own statement, left out when not known."},
+                         "description": "The quality mode it was judged in, one of schemas/quality-modes.yaml (preserve, as_quantized, ...). crit Eval: what the result file's requirements.quality_mode records; otherwise your own statement. Every result states it."},
         "hardware": {"type": "string", "minLength": 1, "description": "One line naming the machine it ran on. crit Eval: what the result file's host records (left out when it records none); otherwise your own statement."},
         "sampling": {
           "type": "object", "additionalProperties": false, "required": ["source", "settings"],
@@ -218,7 +218,7 @@
           "type": "array", "minItems": 1,
           "description": "The same GPU and model measured again with crit Eval on someone else's machine (tools/add_result.py, crit hub report), each from its own result files, which its figures must be.",
           "items": {
-            "type": "object", "additionalProperties": false, "required": ["by", "measured_with", "measured_on", "stats", "evidence"],
+            "type": "object", "additionalProperties": false, "required": ["by", "measured_with", "measured_on", "quality_mode", "stats", "evidence"],
             "properties": {
               "by": {"$ref": "#/$defs/account", "description": "Who measured it: their GitHub account."},
               "measured_with": {"type": "string", "description": "The crit Eval protocol its result files ran under."},

@@ -246,10 +246,11 @@ def result_entry(results):
     entry = {"track": track(results), "measured_with": results[0]["protocol"],
              "measured_on": max(str(r.get("started_at", ""))[:10] for r in results)}
     # The machine the result file records (crit Eval records hardware from v7 on).
-    # The quality mode it was judged in, as the result file records it (crit-eval 0.2.0 on).
-    mode = (results[0].get("requirements") or {}).get("quality_mode")
-    if mode:
-        entry["quality_mode"] = mode
+    # The quality mode it was judged in, as every result file records it (crit-eval 0.2.0 on).
+    mode = cardlib.evidence_mode(results[0])
+    if mode is None:
+        raise ValueError("The --eval attempts record no quality mode (requirements.quality_mode)")
+    entry["quality_mode"] = mode
     machine = cardlib.hardware(results[0].get("host"))
     if machine:
         entry["hardware"] = machine

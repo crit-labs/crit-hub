@@ -79,7 +79,7 @@ readme:
     - Runs Nanbeige4.3-33B, a dense 52-layer Llama, from its NVFP4 weights as stored
     - Decode is one token per pass, one CUDA graph per step, on its own CUDA NVFP4 GEMV
     - The KV cache is INT8 with a scale per position and KV head, which fits 86,016 tokens of context on the 32 GB GPU
-    - Judged in crit Eval's default `preserve` quality mode
+    - Judged in crit Eval's `preserve` quality mode
   design: |
     | Part | How |
     | --- | --- |

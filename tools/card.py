@@ -287,21 +287,17 @@ _modes = None
 
 
 def quality_modes():
-    """{mode: {label, summary, default}} from schemas/quality-modes.yaml, the one place modes are named."""
+    """{mode: {label, summary}} from schemas/quality-modes.yaml, the one place modes are named."""
     global _modes
     if _modes is None:
         _modes = yaml.safe_load(MODES_FILE.read_text(encoding="utf-8")) if MODES_FILE.is_file() else {}
     return _modes
 
 
-def default_mode():
-    """The mode a crit Eval result file that records none was judged in."""
-    return next((mode for mode, about in quality_modes().items() if isinstance(about, dict) and about.get("default")), None)
-
-
 def evidence_mode(data):
-    """The quality mode a crit Eval result file was judged in: its requirements.quality_mode, else the default."""
-    return ((data.get("requirements") or {}) if isinstance(data, dict) else {}).get("quality_mode") or default_mode()
+    """The quality mode a crit Eval result file was judged in: its requirements.quality_mode (None when it records
+    none, which tools/check_engines.py refuses)."""
+    return ((data.get("requirements") or {}) if isinstance(data, dict) else {}).get("quality_mode")
 
 
 def throughput_score(data, clients):
@@ -325,9 +321,8 @@ def worst_quality(data, field):
 
 
 def quality_mode(result):
-    """The quality mode a card's result was judged in: its quality_mode; for a crit Eval result that states
-    none, the default; for another result that states none, None (not known)."""
-    return result.get("quality_mode") or (default_mode() if crit_eval(result.get("measured_with")) else None)
+    """The quality mode a card's result was judged in: its quality_mode, which every result states."""
+    return result.get("quality_mode")
 
 
 def mode_text(mode):

@@ -26,7 +26,7 @@
 - Keeps the checkpoint's own arithmetic: weights as stored, prompt activations in 16 bits except where quality showed 8 bits hold
 - Each decode round drafts with the model's own MTP layer and verifies in one pass, with rejection sampling on the GPU
 - The draft width moves between 2 and 8 with the previous round's acceptance
-- Judged in crit Eval's default `preserve` quality mode
+- Judged in crit Eval's `preserve` quality mode
 
 ---
 
