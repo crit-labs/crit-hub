@@ -16,6 +16,6 @@
 preserve:
   label: preserve
   summary: drift from the checkpoint the user selected judged by a budget that keeps the output close to the checkpoint's
-as_quantized:
-  label: as quantized
+speed:
+  label: speed
   summary: the mode for speed, drift from the checkpoint the user selected judged by a budget eight times preserve's, whatever format the checkpoint is stored in

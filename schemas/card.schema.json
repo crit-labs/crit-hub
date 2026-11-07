@@ -165,7 +165,7 @@
         "measured_on": {"description": "The day it was measured, YYYY-MM-DD (quoted); null when unknown, never for crit Eval.",
                         "oneOf": [{"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"}, {"type": "null"}]},
         "quality_mode": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$",
-                         "description": "The quality mode it was judged in, one of schemas/quality-modes.yaml (preserve, as_quantized, ...). crit Eval: what the result file's requirements.quality_mode records; otherwise your own statement. Every result states it."},
+                         "description": "The quality mode it was judged in, one of schemas/quality-modes.yaml (preserve, speed, ...). crit Eval: what the result file's requirements.quality_mode records; otherwise your own statement. Every result states it."},
         "hardware": {"type": "string", "minLength": 1, "description": "One line naming the machine it ran on. crit Eval: what the result file's host records (left out when it records none); otherwise your own statement."},
         "sampling": {
           "type": "object", "additionalProperties": false, "required": ["source", "settings"],

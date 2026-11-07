@@ -13,7 +13,7 @@
 
 - **Measured with:** crit Eval (crit-eval-v0.2.1, decode sampled at the model's defaults) · [crit-eval.json](evidence/crit-eval.json)
 - **Track:** open: any choice the protocol allows (a budget of its own, drafter, settings per case)
-- **Quality mode:** as quantized: the mode for speed, drift from the checkpoint the user selected judged by a budget eight times preserve's, whatever format the checkpoint is stored in; the worst path uses 70.1% of its quality budget
+- **Quality mode:** speed: the mode for speed, drift from the checkpoint the user selected judged by a budget eight times preserve's, whatever format the checkpoint is stored in; the worst path uses 70.1% of its quality budget
 - **Hardware:** Ubuntu 24.04.4 LTS (WSL); AMD Ryzen 5 9600 6-Core Processor (6/12 cores); 82 GiB RAM; NVIDIA GeForce RTX 5090 32 GiB, PCIe 4.0 x16 (GPU supports 5.0)
 - **Further figures:** long-context decode 136.7 tok/s · held-out decode 131.2 tok/s
 - **Requires:** WSL2 · sm_120a · 32 GB GPU memory · CUDA 13.1 · crit Core Python engine, torch 2.14.1+cu130, Triton 3.8.0
@@ -26,7 +26,7 @@
 - Runs the checkpoint the way it was quantized: NVFP4 and FP8 weights as stored, NVFP4 activations for the prompt's NVFP4 matrices
 - Each decode round drafts 4 tokens with the model's own MTP layer and verifies them in one pass
 - Rejection sampling on the GPU, so sampled requests draft too
-- Judged in crit Eval's `as_quantized` quality mode
+- Judged in crit Eval's `speed` quality mode
 
 ---
 
