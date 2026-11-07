@@ -200,7 +200,7 @@ def measured(args, seal, candidate, target):
 def track(results):
     """The track crit Eval result files qualify for: closed when every file records crit Eval's closed-track checks
     passing (where they record it), else open; a contributor whose engine keeps the closed track's rules may set closed
-    for files from before those checks, judged in preserve."""
+    for files from before those checks, judged in preserve at preserve's budget."""
     closed = [((r.get("track") or {}).get("closed") or {}).get("qualifies") for r in results]
     return "closed" if closed and all(q is True for q in closed) else "open"
 

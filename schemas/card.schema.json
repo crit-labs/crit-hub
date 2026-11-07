@@ -158,7 +158,7 @@
       "type": "object", "additionalProperties": false, "required": ["gpu", "model", "track", "measured_with", "measured_on", "quality_mode", "stats", "evidence"],
       "properties": {
         "gpu": {"$ref": "#/$defs/gpu"},
-        "track": {"enum": ["closed", "open"], "description": "closed: crit Eval in quality mode preserve, one configuration for every workload loaded once, and the checkpoint's own draft layers as the only drafter where it has them; its result files' track.closed must qualify where they record it. open: anything else the protocol allows, other drafters, as_quantized, settings per case."},
+        "track": {"enum": ["closed", "open"], "description": "closed: crit Eval in either quality mode at that mode's protocol budget, one configuration for every workload loaded once, and the checkpoint's own draft layers as the only drafter where it has them; its result files' track.closed must qualify where they record it, and files from before those checks were judged in preserve at preserve's budget. open: anything else the protocol allows, a budget of its own, other drafters, settings per case."},
         "model": {"$ref": "#/$defs/model"},
         "by": {"$ref": "#/$defs/account", "description": "Who measured it, when not the contributor: their GitHub account (tools/add_result.py, crit hub report)."},
         "measured_with": {"type": "string", "description": "A crit Eval protocol (crit-eval-v0.2.0, crit-eval-v7) or how else it was measured (LocalMaxxing, your own benchmark)."},

@@ -104,7 +104,8 @@ checkpoints:
 results:
 - gpu: rtx5090                     # the card in lowercase
   model: <model>@<encoding>
-  # closed: crit Eval in preserve, one configuration for every workload, the checkpoint's own drafter only;
+  # closed: crit Eval in either quality mode at its protocol budget, one configuration for every workload, the
+  # checkpoint's own drafter only;
   # open: anything else (CONTRIBUTING.md, Closed and open tracks). tools/export_engine.py fills it from the result.
   track: open
   # The crit Eval protocol when measured with crit Eval (crit eval run --url measures any OpenAI-compatible

@@ -227,9 +227,9 @@ def more_text(more):
 
 
 # What each track fixes (CONTRIBUTING.md, Closed and open tracks).
-TRACK_TEXT = {"closed": "closed: quality judged in preserve, one configuration for every workload, and the checkpoint's "
-                        "own draft layers as its only drafter",
-              "open": "open: any choice the protocol allows (quality mode, drafter, settings per case)"}
+TRACK_TEXT = {"closed": "closed: either quality mode at its protocol budget, one configuration for every workload, and the "
+                        "checkpoint's own draft layers as its only drafter",
+              "open": "open: any choice the protocol allows (a budget of its own, drafter, settings per case)"}
 
 
 def reproductions(result):

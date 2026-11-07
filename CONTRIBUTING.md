@@ -49,13 +49,15 @@ or the result carries no quality figures. Then copy `result.json` to `evidence/c
 Every result names its `track`, so a reader compares like with like, as MLPerf's closed and open divisions
 and SPEC's base and peak do. The website shows the closed track by default.
 
-- **closed**: measured with crit Eval in quality mode `preserve`; one configuration for every workload,
+- **closed**: measured with crit Eval in either quality mode at that mode's own protocol budget (no
+  `--quality-budget` of its own), results compared within one mode; one configuration for every workload,
   loaded once for the run, with no settings per case or prompt length; and the checkpoint's own draft
   layers (its MTP head) as the only drafter where it has them, no drafter trained or picked elsewhere. A
   crit Eval result file that records `track.closed` checks what it can of this (`track.closed`: the quality
-  mode, one engine load, a draft step no bigger than the checkpoint's own draft layers), and
-  `tools/check_engines.py` refuses a closed result whose files do not qualify; the rest is your declaration.
-- **open**: anything else the protocol allows: `as_quantized`, other drafters, settings per case.
+  mode at its budget, one engine load, a draft step no bigger than the checkpoint's own draft layers), and
+  `tools/check_engines.py` refuses a closed result whose files do not qualify; a file from before those
+  checks qualifies in `preserve` at preserve's budget only. The rest is your declaration.
+- **open**: anything else the protocol allows: a budget of its own, other drafters, settings per case.
 
 ## Add a crit engine
 

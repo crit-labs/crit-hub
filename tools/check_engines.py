@@ -602,15 +602,28 @@ def check_reproductions(folder, name, result, listed):
     return problems, files
 
 
+# preserve's drift budget, the same in every crit Eval protocol: a closed-track file judged in preserve was judged by it.
+PRESERVE_BUDGET = {"ppl_ratio_max": 1.05, "kld_mean_max": 0.05, "kld_p99_max": 0.5}
+
+
 def check_closed(name, loaded):
-    """A closed-track result's files: judged in preserve, and where they record crit Eval's closed-track checks
-    (where the result records track.closed: one engine load for the run, no drafter beyond the checkpoint's own draft layers), every
-    check passed. What the files cannot show, one configuration for every case and prompt length, the card declares."""
+    """A closed-track result's files: either quality mode at that mode's own protocol budget, results compared within
+    one mode. A file that records crit Eval's closed-track checks (track.closed: the quality mode at its protocol
+    budget, one engine load for the run, no drafter beyond the checkpoint's own draft layers) qualifies when every check
+    passed; one judged in preserve at preserve's budget too, whatever its protocol. A file from before those checks,
+    whose protocol's budget for the mode for speed crit-hub cannot check, qualifies in preserve at preserve's budget
+    only. What the files cannot show, one configuration for every case and prompt length, the card declares."""
     problems = []
     for file, data in loaded:
-        if cardlib.evidence_mode(data) != "preserve":
-            problems.append(f"{name}: {file} was judged in {cardlib.evidence_mode(data)}; the closed track judges in preserve")
+        mode = cardlib.evidence_mode(data)
+        budget = ((data.get("requirements") or {}) if isinstance(data, dict) else {}).get("quality_budget")
         closed = ((data.get("track") or {}).get("closed") or {}) if isinstance(data, dict) else {}
+        if mode == "preserve" and budget != PRESERVE_BUDGET:
+            problems.append(f"{name}: {file} was judged in preserve by the budget {budget}, not preserve's {PRESERVE_BUDGET}: "
+                            "the closed track judges each mode by its own budget")
+        elif not closed and mode != "preserve":
+            problems.append(f"{name}: {file} records no closed-track checks (track.closed), so it shows no {mode} budget "
+                            "the closed track can check: measure it with a crit Eval that records them")
         if closed and closed.get("qualifies") is not True:
             failed = [f"{check} {row.get('state')}" for check, row in (closed.get("checks") or {}).items()
                       if isinstance(row, dict) and row.get("state") != "pass"]

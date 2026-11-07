@@ -12,7 +12,7 @@
 | **185.3 tok/s** | **195.5 tok/s** | **3,580 tok/s** | **337 ms** | **+0.4% vs reference** | **0.022** | **262,144 tok** |
 
 - **Measured with:** crit Eval (crit-eval-v0.2.1, decode sampled at the model's defaults) · [crit-eval.json](evidence/crit-eval.json)
-- **Track:** closed: quality judged in preserve, one configuration for every workload, and the checkpoint's own draft layers as its only drafter
+- **Track:** closed: either quality mode at its protocol budget, one configuration for every workload, and the checkpoint's own draft layers as its only drafter
 - **Quality mode:** preserve: drift from the checkpoint the user selected judged by a budget that keeps the output close to the checkpoint's; the worst path uses 57.3% of its quality budget
 - **Hardware:** Ubuntu 24.04.4 LTS (WSL); AMD Ryzen 5 9600 6-Core Processor (6/12 cores); 82 GiB RAM; NVIDIA GeForce RTX 5090 32 GiB, PCIe 4.0 x16 (GPU supports 5.0)
 - **Further figures:** long-context decode 112.5 tok/s · held-out decode 126.3 tok/s
