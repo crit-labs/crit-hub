@@ -171,8 +171,9 @@ people read. [`_template/card.yaml`](_template/card.yaml) documents every key; i
   `quality_mode` it was judged in, the `hardware` it ran on, the six `stats`, optional `more`, an optional
   `throughput` by concurrency and its `evidence`; `by`, the GitHub account that measured it when that is
   not the contributor; and optional `reproductions`: the same GPU and model measured again with crit Eval
-  on someone else's machine, each with its `by`, `measured_with`, `measured_on`, `hardware`, `stats` and
-  its own `evidence` files, which its figures must be (`tools/add_result.py` adds both).
+  on someone else's machine in the result's quality mode, each with its `by`, `measured_with`,
+  `measured_on`, `quality_mode`, `hardware`, `stats` and its own `evidence` files, which its figures must
+  be (`tools/add_result.py` adds both).
 - **`readme`**: the README's sections as markdown blocks, rendered in this order: `intro`,
   `design`, `measured`, `checks`, `limits`, `build_and_chat`, the optional `benchmark` (left out, the
   standard Benchmark your machine: `crit pull`, `crit bench` and `crit hub report` for a crit engine,

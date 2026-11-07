@@ -7,9 +7,9 @@
 > [!NOTE]
 > **Contributed by** [crit-labs](https://github.com/crit-labs)
 
-| Decode (sampled) | Decode (greedy) | Prefill | TTFT | Perplexity | Mean KL divergence | Context |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **64.2 tok/s** | **66.6 tok/s** | **3,357 tok/s** | **404 ms** | **+0.5% vs reference** | **0.019** | **86,016 tok** |
+| Quality mode | Decode (sampled) | Decode (greedy) | Prefill | TTFT | Perplexity | Mean KL divergence | Context |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| preserve | **64.2 tok/s** | **66.6 tok/s** | **3,357 tok/s** | **404 ms** | **+0.5% vs reference** | **0.019** | **86,016 tok** |
 
 - **Measured with:** crit Eval (crit-eval-v0.2.1, decode sampled at temperature 1.0: the protocol default) · [crit-eval.json](evidence/crit-eval.json)
 - **Track:** closed: either quality mode at its protocol budget, one configuration for every workload, and the checkpoint's own draft layers as its only drafter

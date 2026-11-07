@@ -216,7 +216,7 @@
         },
         "reproductions": {
           "type": "array", "minItems": 1,
-          "description": "The same GPU and model measured again with crit Eval on someone else's machine (tools/add_result.py, crit hub report), each from its own result files, which its figures must be.",
+          "description": "The same GPU and model measured again with crit Eval on someone else's machine in the result's quality mode (tools/add_result.py, crit hub report), each from its own result files, which its figures must be.",
           "items": {
             "type": "object", "additionalProperties": false, "required": ["by", "measured_with", "measured_on", "quality_mode", "stats", "evidence"],
             "properties": {

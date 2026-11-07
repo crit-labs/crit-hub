@@ -189,20 +189,27 @@ def decodes(result):
     return None, stats.get("decode_tok_s")
 
 
-COLUMNS = ("GPU · model", "Decode (sampled)", "Decode (greedy)", "Prefill", "TTFT", "Perplexity", "Mean KL divergence", "Context")
+COLUMNS = ("GPU · model", "Quality mode", "Decode (sampled)", "Decode (greedy)", "Prefill", "TTFT", "Perplexity", "Mean KL divergence", "Context")
 
 
 def pair(result):
     return f"{result['gpu']} · {result['model']}"
 
 
+def mode_label(mode):
+    """A quality mode as tables show it: its label, or its id alone when the list does not hold it."""
+    return (quality_modes().get(mode) or {}).get("label", str(mode))
+
+
 def stat_cells(result):
-    """One result's row of the stats table: its GPU and model, then the headline stats with both decodes."""
+    """One result's row of the stats table: its GPU and model, the quality mode it was judged in (figures judged
+    in different modes do not compare), then the headline stats with both decodes."""
     stats = result.get("stats") or {}
     sampled, greedy = decodes(result)
     ppl, ppl_label = ppl_cell(stats.get("ppl"))
     return [
         pair(result),
+        mode_label(quality_mode(result)),
         figure(sampled, " tok/s"),
         figure(greedy, " tok/s"),
         figure(stats.get("prefill_tok_s"), " tok/s"),
@@ -238,8 +245,9 @@ def reproductions(result):
 
 
 def stats_table(results):
-    """The stats as one markdown table, the stats in bold. The subheader names the GPU and model, so only
-    an engine measured on several, or reproduced, opens each row with its GPU and model (and who reproduced it)."""
+    """The stats as one markdown table, the stats in bold beside the quality mode each was judged in. The subheader
+    names the GPU and model, so only an engine measured on several, or reproduced, opens each row with its GPU and
+    model (and who reproduced it)."""
     rows = []
     for r in results:
         rows.append(stat_cells(r))
@@ -248,7 +256,8 @@ def stats_table(results):
     return "\n".join([
         "| " + " | ".join(COLUMNS[first:]) + " |",
         "|" + "|".join(" :--- " if i == 0 else " :---: " for i in range(len(COLUMNS)) if i >= first) + "|",
-        *("| " + " | ".join(([row[0]] if first == 0 else []) + [f"**{v}**" if v != "–" else v for v in row[1:]]) + " |"
+        *("| " + " | ".join(([row[0]] if first == 0 else []) + [row[1]]
+                            + [f"**{v}**" if v != "–" else v for v in row[2:]]) + " |"
           for row in rows),
     ])
 
@@ -383,7 +392,7 @@ def measured(results):
             how = f"crit Eval ({rep['measured_with']}, " + (sampled_text(rep.get("sampling")) if sampled_eval(
                 rep["measured_with"]) else "greedy decode") + ")"
             lines.append(label("Reproduced") + f"by [{rep['by']}](https://github.com/{rep['by']}) on "
-                         f"{rep['measured_on']}, " + " · ".join([how] + files)
+                         f"{rep['measured_on']} in quality mode {mode_label(quality_mode(rep))}, " + " · ".join([how] + files)
                          + (f"; {rep['hardware']}" if rep.get("hardware") else ""))
     return lines
 

@@ -577,6 +577,11 @@ def check_reproductions(folder, name, result, listed):
         if not cardlib.crit_eval(rep.get("measured_with")):
             problems.append(f"{label}: a reproduction is measured with crit Eval (measured_with: the protocol id its result file records)")
             continue
+        # Figures judged in different quality modes do not compare: a reproduction is judged in its result's mode.
+        if rep.get("quality_mode") != cardlib.quality_mode(result):
+            problems.append(f"{label}: judged in quality mode {rep.get('quality_mode')}, its result in "
+                            f"{cardlib.quality_mode(result)}: a reproduction measures the result again in the result's mode")
+            continue
         if isinstance(rep.get("measured_on"), datetime.date):
             rep["measured_on"] = rep["measured_on"].isoformat()
         found = check_stats(label, rep.get("stats"), rep.get("more", {}))

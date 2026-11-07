@@ -7,9 +7,9 @@
 > [!NOTE]
 > **Contributed by** [crit-labs](https://github.com/crit-labs)
 
-| Decode (sampled) | Decode (greedy) | Prefill | TTFT | Perplexity | Mean KL divergence | Context |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **189.0 tok/s** | **194.3 tok/s** | **8,295 tok/s** | **154 ms** | **+3.6% vs reference** | **0.13** | **262,144 tok** |
+| Quality mode | Decode (sampled) | Decode (greedy) | Prefill | TTFT | Perplexity | Mean KL divergence | Context |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| speed | **189.0 tok/s** | **194.3 tok/s** | **8,295 tok/s** | **154 ms** | **+3.6% vs reference** | **0.13** | **262,144 tok** |
 
 - **Measured with:** crit Eval (crit-eval-v0.2.1, decode sampled at the model's defaults) · [crit-eval.json](evidence/crit-eval.json)
 - **Track:** open: any choice the protocol allows (a budget of its own, drafter, settings per case)
