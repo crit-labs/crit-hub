@@ -1,5 +1,7 @@
-# The quality modes a result can be judged in: what its perplexity and KL divergence are measured
-# against. crit Eval records a run's mode in its result file (requirements.quality_mode), and every
+# The quality modes a result can be judged in: how much output drift from the checkpoint the user
+# selected the engine may trade for speed, never how that checkpoint is quantized or stored. Every
+# mode measures perplexity and KL divergence against the same reference, the checkpoint's stored
+# weights with exact activations. crit Eval records a run's mode in its result file (requirements.quality_mode), and every
 # card's result states it as quality_mode: a result that states none, or a mode not listed here,
 # fails tools/check_engines.py.
 #
@@ -13,7 +15,7 @@
 
 preserve:
   label: preserve
-  summary: quality judged against the checkpoint's own arithmetic with exact activations, so the drift is what the engine adds
+  summary: drift from the checkpoint the user selected judged by a budget that keeps the output close to the checkpoint's
 as_quantized:
   label: as quantized
-  summary: the mode for speed, quality judged with a wider drift budget of its own, so the checkpoint's 4-bit and 8-bit arithmetic as stored fits
+  summary: the mode for speed, drift from the checkpoint the user selected judged by a budget eight times preserve's, whatever format the checkpoint is stored in

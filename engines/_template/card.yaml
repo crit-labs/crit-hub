@@ -113,8 +113,9 @@ results:
   # Anything else (a leaderboard, your own benchmark) is shown as your own report.
   measured_with: crit-eval-v0.2.0
   measured_on: "2026-10-23"        # the day it was measured; null when unknown (never for crit Eval)
-  # The quality mode it was judged in, one of schemas/quality-modes.yaml: preserve (against the checkpoint's
-  # own arithmetic with exact activations) or as_quantized (against the checkpoint run as quantized). crit Eval:
+  # The quality mode it was judged in, one of schemas/quality-modes.yaml: how much drift from the checkpoint
+  # the engine may trade for speed, preserve (a budget that keeps the output close to the checkpoint's) or
+  # as_quantized (the mode for speed, eight times that budget). crit Eval:
   # what the result file's requirements.quality_mode records; otherwise your own statement of the mode it
   # was judged in. Every result states it.
   quality_mode: preserve

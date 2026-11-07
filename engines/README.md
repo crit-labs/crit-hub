@@ -102,14 +102,15 @@ contributed the engine.
   the ids up to v7 (`crit-eval-v7` and `crit-eval-v7.1`), and from `crit-eval-v0.1.0`, whose ids follow
   crit-eval's version, one minor before 1.0 (`crit-eval-v0.2.0` and `crit-eval-v0.2.1`) and one major
   after.
-- A crit Eval result was judged in a **quality mode**, which sets what its perplexity and KL
-  divergence are measured against: `preserve`, the checkpoint's own arithmetic with exact
-  activations, or `as_quantized`, the checkpoint run as quantized (its activations quantized as it
-  declares, as W4A4 and W8A8 serving stacks run it), with a drift budget of its own. crit Eval
+- A crit Eval result was judged in a **quality mode**: how much output drift from the checkpoint
+  the user selected the engine may trade for speed, never how that checkpoint is quantized or
+  stored. Both modes measure perplexity and KL divergence against the same reference, the
+  checkpoint's stored weights with exact activations: `preserve` by a budget that keeps the
+  output close to the checkpoint's, `as_quantized`, the mode for speed, by one eight times wider
+  that only keeps out a broken engine, whatever format the checkpoint is stored in. crit Eval
   records it in the result file (`requirements.quality_mode`, from crit-eval 0.2.0), and every
   result states it as `quality_mode`: a result that states none, or a result file that records
-  none, fails the check. An engine that keeps the activations exact is judged in
-  `preserve` and one that runs the checkpoint as quantized in `as_quantized`, so the README, the
+  none, fails the check. The run chooses the mode, not the engine's arithmetic, so the README, the
   website and `/index.json` show every result's mode beside its benchmark, and the website groups
   each table's crit Eval rows by it. A self-reported result states the mode it was judged in too.
   [`schemas/quality-modes.yaml`](../schemas/quality-modes.yaml) is the only place modes are named:
