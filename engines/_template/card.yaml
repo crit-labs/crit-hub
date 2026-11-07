@@ -116,10 +116,10 @@ results:
   measured_on: "2026-10-23"        # the day it was measured; null when unknown (never for crit Eval)
   # The quality mode it was judged in, one of schemas/quality-modes.yaml: how much drift from the checkpoint
   # the engine may trade for speed, preserve (a budget that keeps the output close to the checkpoint's) or
-  # speed (eight times that budget). crit Eval:
+  # speed (a wider budget of its own that only keeps out a broken engine). crit Eval:
   # what the result file's requirements.quality_mode records; otherwise your own statement of the mode it
   # was judged in. Every result states it.
-  quality_mode: preserve
+  quality_mode: speed
   # The machine it ran on, in one line. crit Eval: exactly what the result file's host records, as
   # tools/export_engine.py writes it (left out for a result file that records none); otherwise your own.
   hardware: <OS>; <CPU> (<physical>/<logical> cores); <RAM> GiB RAM; <GPU> <VRAM> GiB, PCIe <generation>.0 x<width>

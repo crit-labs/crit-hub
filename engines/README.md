@@ -106,8 +106,8 @@ contributed the engine.
   the user selected the engine may trade for speed, never how that checkpoint is quantized or
   stored. Both modes measure perplexity and KL divergence against the same reference, the
   checkpoint's stored weights with exact activations: `preserve` by a budget that keeps the
-  output close to the checkpoint's, `speed` by one eight times wider
-  that only keeps out a broken engine, whatever format the checkpoint is stored in. crit Eval
+  output close to the checkpoint's, `speed` by a wider budget of its own that only keeps out a
+  broken engine, whatever format the checkpoint is stored in. crit Eval
   records it in the result file (`requirements.quality_mode`, from crit-eval 0.2.0), and every
   result states it as `quality_mode`: a result that states none, or a result file that records
   none, fails the check. The run chooses the mode, not the engine's arithmetic, so the README, the

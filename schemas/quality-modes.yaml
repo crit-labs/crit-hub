@@ -11,11 +11,11 @@
 #
 #   <id>:            as crit Eval records it, lowercase letters, digits and _
 #     label:         how pages show it, a word or two
-#     summary:       one line: what quality is judged against
+#     summary:       one line: the drift budget the mode judges by
 
 preserve:
   label: preserve
   summary: drift from the checkpoint the user selected judged by a budget that keeps the output close to the checkpoint's
 speed:
   label: speed
-  summary: the mode for speed, drift from the checkpoint the user selected judged by a budget eight times preserve's, whatever format the checkpoint is stored in
+  summary: drift from the checkpoint the user selected traded for speed, judged by a wider budget of its own that only keeps out a broken engine, whatever format the checkpoint is stored in

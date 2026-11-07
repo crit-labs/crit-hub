@@ -370,10 +370,7 @@ def measured(results):
         # Perplexity and KL divergence are judged against the mode's own budget (speed's is wider, and raised
         # per text to the reference's spread), so the share of it the worst path uses says whether they are in it.
         used = f"; the worst path uses {budget}% of its quality budget" if budget is not None else ""
-        if mode:
-            lines.append(label("Quality mode") + mode_text(mode) + used)
-        elif used:
-            lines.append(label("Quality budget") + f"the worst path uses {budget}%")
+        lines.append(label("Quality mode") + mode_text(mode) + used)
         if result.get("hardware"):
             lines.append(label("Hardware") + result["hardware"])
         more = more_text(result.get("more") or {})

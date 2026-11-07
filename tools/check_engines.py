@@ -621,7 +621,7 @@ def check_closed(name, loaded):
         if mode == "preserve" and budget != PRESERVE_BUDGET:
             problems.append(f"{name}: {file} was judged in preserve by the budget {budget}, not preserve's {PRESERVE_BUDGET}: "
                             "the closed track judges each mode by its own budget")
-        elif not closed and mode != "preserve":
+        elif not closed and mode is not None and mode != "preserve":   # None: check_crit_eval reports it
             problems.append(f"{name}: {file} records no closed-track checks (track.closed), so it shows no {mode} budget "
                             "the closed track can check: measure it with a crit Eval that records them")
         if closed and closed.get("qualifies") is not True:
