@@ -2,8 +2,8 @@
 
     python -B -m unittest discover -s tools
 
-Each test works on a copy of a crit-labs engine folder: mtp-adaptive-width's result was judged in preserve,
-mtp4-nvfp4-mma's in speed, and each is reproduced here from its own result file judged in the other mode.
+Each test works on a copy of a fixture engine folder (tools/fixtures/engines/crit-labs/, two engines crit-hub listed before
+the plugin architecture): mtp-adaptive-width's result was judged in preserve, mtp4-nvfp4-mma's in speed, and each is reproduced here from its own result file judged in the other mode.
 """
 import copy
 import json
@@ -14,6 +14,7 @@ import tempfile
 import unittest
 
 HUB = Path(__file__).resolve().parents[1]
+FIXTURES = HUB / "tools" / "fixtures" / "engines" / "crit-labs"
 sys.path.insert(0, str(HUB / "tools"))
 import add_result  # noqa: E402
 import card as cardlib  # noqa: E402
@@ -34,7 +35,7 @@ class ReproductionModeTests(unittest.TestCase):
     def engine(self, name):
         """A copy of the engine's folder at engines/crit-labs/<name> under a temporary root."""
         folder = self.root / "engines" / "crit-labs" / name
-        shutil.copytree(HUB / "engines" / "crit-labs" / name, folder)
+        shutil.copytree(FIXTURES / name, folder)
         return folder
 
     def result_file(self, folder, mode):
@@ -47,7 +48,7 @@ class ReproductionModeTests(unittest.TestCase):
 
     def test_the_cards_state_the_modes_these_tests_rely_on(self):
         for name, mode in ENGINES.items():
-            self.assertEqual({cardlib.quality_mode(r) for r in cardlib.load(HUB / "engines/crit-labs" / name)["results"]},
+            self.assertEqual({cardlib.quality_mode(r) for r in cardlib.load(FIXTURES / name)["results"]},
                              {mode})
 
     def test_add_result_reproduces_a_result_only_in_its_mode(self):
@@ -94,7 +95,7 @@ class StatsTableTests(unittest.TestCase):
     def test_every_row_names_the_quality_mode_its_figures_were_judged_in(self):
         for name, mode in ENGINES.items():
             with self.subTest(engine=name):
-                readme = (HUB / "engines/crit-labs" / name / "README.md").read_text(encoding="utf-8")
+                readme = (FIXTURES / name / "README.md").read_text(encoding="utf-8")
                 header = next(line for line in readme.splitlines() if line.startswith("| ") and "Decode" in line)
                 self.assertTrue(header.startswith("| Quality mode | Decode (sampled) |"), header)
                 row = readme.splitlines()[readme.splitlines().index(header) + 2]

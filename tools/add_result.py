@@ -175,7 +175,7 @@ def add(folder, files, by, gpu=None, model=None, checkpoint=None):
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("engine", help="the engine's folder, e.g. engines/crit-labs/nvfp4-gemv-int8kv")
+    p.add_argument("engine", help="the engine's folder, e.g. engines/<owner>/<name>")
     p.add_argument("results", nargs="+", help="crit Eval result files of one machine")
     p.add_argument("--by", required=True, help="your GitHub account: who measured it")
     p.add_argument("--gpu", help="the GPU id, when the result's device does not name it (e.g. rtx5090)")
