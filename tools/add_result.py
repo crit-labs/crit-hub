@@ -143,6 +143,10 @@ def add(folder, files, by, gpu=None, model=None, checkpoint=None):
                              "result (CONTRIBUTING.md, Update an engine)")
         if not cardlib.crit_eval(existing.get("measured_with")):
             raise SystemExit(f"The card's {gpu} · {model} result is self-reported: a reproduction is of a crit Eval result")
+        if entry["quality_mode"] != cardlib.quality_mode(existing):
+            raise SystemExit(f"The card's {gpu} · {model} result was judged in quality mode "
+                             f"{cardlib.quality_mode(existing)}, these result files in {entry['quality_mode']}: a "
+                             "reproduction measures the result again in the result's mode (crit eval run --quality-mode)")
         kind, target = "reproduction", existing.setdefault("reproductions", [])
         entry.pop("track")   # a reproduction is of its result's track, which its files are checked against
         record = {"by": by, **entry}
@@ -171,7 +175,7 @@ def add(folder, files, by, gpu=None, model=None, checkpoint=None):
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("engine", help="the engine's folder, e.g. engines/crit-labs/nvfp4-gemv-int8kv")
+    p.add_argument("engine", help="the engine's folder, e.g. engines/<owner>/<name>")
     p.add_argument("results", nargs="+", help="crit Eval result files of one machine")
     p.add_argument("--by", required=True, help="your GitHub account: who measured it")
     p.add_argument("--gpu", help="the GPU id, when the result's device does not name it (e.g. rtx5090)")

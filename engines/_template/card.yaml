@@ -104,7 +104,8 @@ checkpoints:
 results:
 - gpu: rtx5090                     # the card in lowercase
   model: <model>@<encoding>
-  # closed: crit Eval in preserve, one configuration for every workload, the checkpoint's own drafter only;
+  # closed: crit Eval in either quality mode at its protocol budget, one configuration for every workload, the
+  # checkpoint's own drafter only;
   # open: anything else (CONTRIBUTING.md, Closed and open tracks). tools/export_engine.py fills it from the result.
   track: open
   # The crit Eval protocol when measured with crit Eval (crit eval run --url measures any OpenAI-compatible
@@ -113,11 +114,12 @@ results:
   # Anything else (a leaderboard, your own benchmark) is shown as your own report.
   measured_with: crit-eval-v0.2.0
   measured_on: "2026-10-23"        # the day it was measured; null when unknown (never for crit Eval)
-  # The quality mode it was judged in, one of schemas/quality-modes.yaml: preserve (against the checkpoint's
-  # own arithmetic with exact activations) or as_quantized (against the checkpoint run as quantized). crit Eval:
-  # what the result file's requirements.quality_mode records; may be left out when it is the default, preserve.
-  # Otherwise your own statement, left out when you do not know it.
-  quality_mode: preserve
+  # The quality mode it was judged in, one of schemas/quality-modes.yaml: how much drift from the checkpoint
+  # the engine may trade for speed, preserve (a budget that keeps the output close to the checkpoint's) or
+  # speed (a wider budget of its own that only keeps out a broken engine). crit Eval:
+  # what the result file's requirements.quality_mode records; otherwise your own statement of the mode it
+  # was judged in. Every result states it.
+  quality_mode: speed
   # The machine it ran on, in one line. crit Eval: exactly what the result file's host records, as
   # tools/export_engine.py writes it (left out for a result file that records none); otherwise your own.
   hardware: <OS>; <CPU> (<physical>/<logical> cores); <RAM> GiB RAM; <GPU> <VRAM> GiB, PCIe <generation>.0 x<width>
@@ -142,7 +144,7 @@ results:
     # host_ram_gib: 64             # when the engine keeps weights in host memory
     # quality_budget_pct: 5.8      # share of crit Eval's quality budget the worst path uses
   # Optional: throughput with several requests at once, one entry per concurrency, ascending: the requests'
-  # completion tokens per second together. crit Eval from crit-eval-v0.6.1: the levels of the result file's
+  # completion tokens per second together. crit Eval: the levels of the result file's
   # concurrency part that qualified (concurrency.levels.<N>.aggregate_tps), as tools/export_engine.py writes them;
   # otherwise your own report, shown as self-reported.
   # throughput:

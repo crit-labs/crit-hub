@@ -189,20 +189,27 @@ def decodes(result):
     return None, stats.get("decode_tok_s")
 
 
-COLUMNS = ("GPU · model", "Decode (sampled)", "Decode (greedy)", "Prefill", "TTFT", "Perplexity", "Mean KL divergence", "Context")
+COLUMNS = ("GPU · model", "Quality mode", "Decode (sampled)", "Decode (greedy)", "Prefill", "TTFT", "Perplexity", "Mean KL divergence", "Context")
 
 
 def pair(result):
     return f"{result['gpu']} · {result['model']}"
 
 
+def mode_label(mode):
+    """A quality mode as tables show it: its label, or its id alone when the list does not hold it."""
+    return (quality_modes().get(mode) or {}).get("label", str(mode))
+
+
 def stat_cells(result):
-    """One result's row of the stats table: its GPU and model, then the headline stats with both decodes."""
+    """One result's row of the stats table: its GPU and model, the quality mode it was judged in (figures judged
+    in different modes do not compare), then the headline stats with both decodes."""
     stats = result.get("stats") or {}
     sampled, greedy = decodes(result)
     ppl, ppl_label = ppl_cell(stats.get("ppl"))
     return [
         pair(result),
+        mode_label(quality_mode(result)),
         figure(sampled, " tok/s"),
         figure(greedy, " tok/s"),
         figure(stats.get("prefill_tok_s"), " tok/s"),
@@ -227,9 +234,9 @@ def more_text(more):
 
 
 # What each track fixes (CONTRIBUTING.md, Closed and open tracks).
-TRACK_TEXT = {"closed": "closed: quality judged in preserve, one configuration for every workload, and the checkpoint's "
-                        "own draft layers as its only drafter",
-              "open": "open: any choice the protocol allows (quality mode, drafter, settings per case)"}
+TRACK_TEXT = {"closed": "closed: either quality mode at its protocol budget, one configuration for every workload, and the "
+                        "checkpoint's own draft layers as its only drafter",
+              "open": "open: any choice the protocol allows (a budget of its own, drafter, settings per case)"}
 
 
 def reproductions(result):
@@ -238,8 +245,9 @@ def reproductions(result):
 
 
 def stats_table(results):
-    """The stats as one markdown table, the stats in bold. The subheader names the GPU and model, so only
-    an engine measured on several, or reproduced, opens each row with its GPU and model (and who reproduced it)."""
+    """The stats as one markdown table, the stats in bold beside the quality mode each was judged in. The subheader
+    names the GPU and model, so only an engine measured on several, or reproduced, opens each row with its GPU and
+    model (and who reproduced it)."""
     rows = []
     for r in results:
         rows.append(stat_cells(r))
@@ -248,7 +256,8 @@ def stats_table(results):
     return "\n".join([
         "| " + " | ".join(COLUMNS[first:]) + " |",
         "|" + "|".join(" :--- " if i == 0 else " :---: " for i in range(len(COLUMNS)) if i >= first) + "|",
-        *("| " + " | ".join(([row[0]] if first == 0 else []) + [f"**{v}**" if v != "–" else v for v in row[1:]]) + " |"
+        *("| " + " | ".join(([row[0]] if first == 0 else []) + [row[1]]
+                            + [f"**{v}**" if v != "–" else v for v in row[2:]]) + " |"
           for row in rows),
     ])
 
@@ -287,26 +296,22 @@ _modes = None
 
 
 def quality_modes():
-    """{mode: {label, summary, default}} from schemas/quality-modes.yaml, the one place modes are named."""
+    """{mode: {label, summary}} from schemas/quality-modes.yaml, the one place modes are named."""
     global _modes
     if _modes is None:
         _modes = yaml.safe_load(MODES_FILE.read_text(encoding="utf-8")) if MODES_FILE.is_file() else {}
     return _modes
 
 
-def default_mode():
-    """The mode a crit Eval result file that records none was judged in."""
-    return next((mode for mode, about in quality_modes().items() if isinstance(about, dict) and about.get("default")), None)
-
-
 def evidence_mode(data):
-    """The quality mode a crit Eval result file was judged in: its requirements.quality_mode, else the default."""
-    return ((data.get("requirements") or {}) if isinstance(data, dict) else {}).get("quality_mode") or default_mode()
+    """The quality mode a crit Eval result file was judged in: its requirements.quality_mode (None when it records
+    none, which tools/check_engines.py refuses)."""
+    return ((data.get("requirements") or {}) if isinstance(data, dict) else {}).get("quality_mode")
 
 
 def throughput_score(data, clients):
     """A crit Eval result file's aggregate tokens per second at `clients` requests at once: its concurrency part's
-    level (from crit-eval-v0.6.1), None when it measured none or the level did not qualify."""
+    level, None when it measured none or the level did not qualify."""
     levels = ((data.get("concurrency") or {}).get("levels") or {}) if isinstance(data, dict) else {}
     level = levels.get(str(clients)) if isinstance(levels, dict) else None
     return level.get("aggregate_tps") if isinstance(level, dict) and level.get("qualified") else None
@@ -325,9 +330,8 @@ def worst_quality(data, field):
 
 
 def quality_mode(result):
-    """The quality mode a card's result was judged in: its quality_mode; for a crit Eval result that states
-    none, the default; for another result that states none, None (not known)."""
-    return result.get("quality_mode") or (default_mode() if crit_eval(result.get("measured_with")) else None)
+    """The quality mode a card's result was judged in: its quality_mode, which every result states."""
+    return result.get("quality_mode")
 
 
 def mode_text(mode):
@@ -372,13 +376,10 @@ def measured(results):
             lines.append(label("Track") + TRACK_TEXT[result["track"]])
         mode = quality_mode(result)
         budget = (result.get("more") or {}).get("quality_budget_pct")
-        # Perplexity and KL divergence are judged against the mode's own budget (as_quantized's is wider, and raised
+        # Perplexity and KL divergence are judged against the mode's own budget (speed's is wider, and raised
         # per text to the reference's spread), so the share of it the worst path uses says whether they are in it.
         used = f"; the worst path uses {budget}% of its quality budget" if budget is not None else ""
-        if mode:
-            lines.append(label("Quality mode") + mode_text(mode) + used)
-        elif used:
-            lines.append(label("Quality budget") + f"the worst path uses {budget}%")
+        lines.append(label("Quality mode") + mode_text(mode) + used)
         if result.get("hardware"):
             lines.append(label("Hardware") + result["hardware"])
         more = more_text(result.get("more") or {})
@@ -391,7 +392,7 @@ def measured(results):
             how = f"crit Eval ({rep['measured_with']}, " + (sampled_text(rep.get("sampling")) if sampled_eval(
                 rep["measured_with"]) else "greedy decode") + ")"
             lines.append(label("Reproduced") + f"by [{rep['by']}](https://github.com/{rep['by']}) on "
-                         f"{rep['measured_on']}, " + " · ".join([how] + files)
+                         f"{rep['measured_on']} in quality mode {mode_label(quality_mode(rep))}, " + " · ".join([how] + files)
                          + (f"; {rep['hardware']}" if rep.get("hardware") else ""))
     return lines
 

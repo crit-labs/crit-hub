@@ -144,7 +144,7 @@
    "kld_p99_max": 1.0
   },
   "exactness": "reported",
-  "quality_mode": "as_quantized"
+  "quality_mode": "speed"
  },
  "context": {
   "tokens": 262144,
@@ -13817,7 +13817,7 @@
       "floor_ms": 833.2870792478834
      }
     },
-    "quality_mode": "as_quantized",
+    "quality_mode": "speed",
     "stored_ceiling": 17841.23488610688,
     "ceiling_activations": "stored"
    },

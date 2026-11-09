@@ -56,7 +56,7 @@ def lock(engine, folder, repository, revision, path=None):
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("engine", help="the engine's folder, e.g. engines/crit-labs/mtp7-device-confidence")
+    p.add_argument("engine", help="the engine's folder, e.g. engines/<owner>/<name>")
     p.add_argument("folder", help="local copy of the drafter: the folder the engine loads")
     p.add_argument("--repository", required=True, help="the download's Hugging Face repository, as card.yaml names it")
     p.add_argument("--revision", required=True, help="the download's full 40-character revision, as card.yaml pins it")

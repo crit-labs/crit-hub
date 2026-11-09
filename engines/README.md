@@ -66,7 +66,7 @@ and from which evidence, the quality mode it was judged in, the `hardware` it ra
 A result may also state its **throughput** with several requests at once, under `throughput`: one
 entry per `concurrency`, the number of requests running together, with `tok_s`, their completion
 tokens per second together, concurrency ascending. For a crit Eval result these are the levels of
-its result file's concurrency part that qualified (`concurrency.levels`, from crit-eval-v0.6.1, which
+its result file's concurrency part that qualified (`concurrency.levels`, which
 measures a server that runs several requests at once); for any other result they are the
 contributor's own report. The facts under the stats table list them by concurrency and say which:
 `812.3 tok/s at concurrency 4 · 1,520.4 tok/s at concurrency 8 (aggregate of the concurrent requests; crit Eval)`,
@@ -102,16 +102,17 @@ contributed the engine.
   the ids up to v7 (`crit-eval-v7` and `crit-eval-v7.1`), and from `crit-eval-v0.1.0`, whose ids follow
   crit-eval's version, one minor before 1.0 (`crit-eval-v0.2.0` and `crit-eval-v0.2.1`) and one major
   after.
-- A crit Eval result was judged in a **quality mode**, which sets what its perplexity and KL
-  divergence are measured against: `preserve`, the checkpoint's own arithmetic with exact
-  activations, or `as_quantized`, the checkpoint run as quantized (its activations quantized as it
-  declares, as W4A4 and W8A8 serving stacks run it), with a drift budget of its own. crit Eval
-  records it in the result file (`requirements.quality_mode`, from crit-eval 0.2.0; a file that
-  records none was judged in `preserve`), and the result states it as `quality_mode`, which may be
-  left out when it is the default. An engine that keeps the activations exact is judged in
-  `preserve` and one that runs the checkpoint as quantized in `as_quantized`, so the README, the
+- A crit Eval result was judged in a **quality mode**: how much output drift from the checkpoint
+  the user selected the engine may trade for speed, never how that checkpoint is quantized or
+  stored. Both modes measure perplexity and KL divergence against the same reference, the
+  checkpoint's stored weights with exact activations: `preserve` by a budget that keeps the
+  output close to the checkpoint's, `speed` by a wider budget of its own that only keeps out a
+  broken engine, whatever format the checkpoint is stored in. crit Eval
+  records it in the result file (`requirements.quality_mode`, from crit-eval 0.2.0), and every
+  result states it as `quality_mode`: a result that states none, or a result file that records
+  none, fails the check. The run chooses the mode, not the engine's arithmetic, so the README, the
   website and `/index.json` show every result's mode beside its benchmark, and the website groups
-  each table's crit Eval rows by it. A self-reported result may state the mode it was judged in too.
+  each table's crit Eval rows by it. A self-reported result states the mode it was judged in too.
   [`schemas/quality-modes.yaml`](../schemas/quality-modes.yaml) is the only place modes are named:
   a mode crit Eval adds is listed there, with its label and summary, and nothing else changes.
 - Any other `measured_with`, such as a leaderboard or your own benchmark, is shown as your own
@@ -170,8 +171,9 @@ people read. [`_template/card.yaml`](_template/card.yaml) documents every key; i
   `quality_mode` it was judged in, the `hardware` it ran on, the six `stats`, optional `more`, an optional
   `throughput` by concurrency and its `evidence`; `by`, the GitHub account that measured it when that is
   not the contributor; and optional `reproductions`: the same GPU and model measured again with crit Eval
-  on someone else's machine, each with its `by`, `measured_with`, `measured_on`, `hardware`, `stats` and
-  its own `evidence` files, which its figures must be (`tools/add_result.py` adds both).
+  on someone else's machine in the result's quality mode, each with its `by`, `measured_with`,
+  `measured_on`, `quality_mode`, `hardware`, `stats` and its own `evidence` files, which its figures must
+  be (`tools/add_result.py` adds both).
 - **`readme`**: the README's sections as markdown blocks, rendered in this order: `intro`,
   `design`, `measured`, `checks`, `limits`, `build_and_chat`, the optional `benchmark` (left out, the
   standard Benchmark your machine: `crit pull`, `crit bench` and `crit hub report` for a crit engine,
