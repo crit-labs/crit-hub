@@ -1,0 +1,113 @@
+# yaml-language-server: $schema=../../../schemas/card.schema.json
+title: mtp5-nvfp4-drafts
+summary: Qwen3.8-27B, speed, own model plugin, 5-token MTP drafts from NVFP4 copies of the draft layer and head, 200K tokens
+origin: crit
+contributor:
+  name: crit-labs
+  repository: https://github.com/crit-labs/crit
+license: Apache-2.0
+features:
+- openai-api
+- tool-calls
+- speculative
+source:
+  repository: https://github.com/crit-labs/crit-engines
+  revision: 5d488443c654f521df8d3235eab228ae7fd75088
+  path: mtp5-nvfp4-drafts
+requirements:
+  platforms:
+  - wsl2
+  gpu_arch:
+  - sm_120a
+  gpu_memory_gb: 32
+  cuda: '13.1'
+  runtime: crit Core plugin package, torch 2.14.1+cu130, Triton 3.8.0
+checkpoints:
+  qwen3.8-27b@NVFP4:
+    repository: unsloth/Qwen3.8-27B-NVFP4
+    revision: f0b7c9e722f5565102fff8481c99e4d86ae099c7
+built:
+  hours: 5.46
+  agent_tokens: 93851302
+  api_usd: 33.9773
+  agent: Claude Code (Claude Opus 5.5)
+  candidates: 9
+results:
+- gpu: rtx5090
+  model: qwen3.8-27b@NVFP4
+  track: closed
+  measured_with: crit-eval-v0.6.0
+  measured_on: '2026-11-12'
+  quality_mode: speed
+  hardware: Ubuntu 24.04.4 LTS (WSL); AMD Ryzen 5 9600 6-Core Processor (6/12 cores); 82 GiB RAM; NVIDIA GeForce RTX 5090 32 GiB, PCIe 4.0 x16 (GPU supports 5.0)
+  stats:
+    decode_tok_s: 199.5
+    prefill_tok_s: 7552
+    ttft_ms: 204
+    ppl:
+      vs_reference: 1.008
+    kld_mean: 0.087
+    context_tokens: 200000
+  more:
+    greedy_decode_tok_s: 219.7
+    long_context_decode_tok_s: 137.5
+    heldout_decode_tok_s: 134.9
+    quality_budget_pct: 44.0
+  throughput:
+  - concurrency: 1
+    tok_s: 147.7
+  - concurrency: 2
+    tok_s: 235.8
+  - concurrency: 4
+    tok_s: 250.1
+  evidence:
+  - file: evidence/crit-eval.json
+    sha256: 958be322e241a81e061a6c8c6f1700e197c4067b5ce8b3e80466baa005acba30
+readme:
+  intro: |
+    - A plugin package on crit Core, built on five candidate rungs (nine sealed candidates): crit's library plugins plus its own model plugin for Qwen3.8's hybrid layout (48 gated-delta and 16 gated-attention layers), which crit's library did not have
+    - Runs Qwen3.8-27B from its NVFP4 and FP8 weights as stored, judged in crit Eval's `speed` quality mode
+    - Drafts 5 tokens a round with the checkpoint's own MTP layer inside Core's captured rounds, from NVFP4 copies of that layer and of the output head that only the drafter reads
+    - Sampled requests draft too: the verify pass samples with rejection sampling on the GPU
+    - 200,000 tokens of context on the 32 GB GPU, FP8 KV pages
+  design: |
+    | Slot | Plugin and settings |
+    | --- | --- |
+    | Model | `qwen35-model` (this engine's own): step, score and verify for the hybrid layout, the MTP layer as the device draft head, prompt chunks of 16 rows or fewer padded so a prompt row's bits never depend on the prompt's length |
+    | Projections | `quantized-projections`: the stored NVFP4 (W4A4) and FP8 matrices; prompt GEMMs on crit's pinned-gemm kernel, decode rows on mma-rows and decode-gemv; draft-only NVFP4 re-encodings of the MTP layer and of an output-head copy |
+    | KV cache and attention | `attention-state`: FP8 pages with the checkpoint's static scales, the MTP layer as an extra pool layer, window 6; `softmax-attention`: split-KV reader |
+    | Recurrence | `sequential-recurrence` on crit's recurrent-scans kernels: the exact scan for decode and verify rows, tensor-core chunked scans for prompt rows (`exact_rows: 0`) |
+    | Drafting | `greedy-head-drafter` and `chain-verifier`, width 5; `token-sampling` for rejection sampling in Core's native sampler |
+    | Other | `fused-norms` (+14% decode in the build's ablation), `memory-table-rows` (embedding table in host memory), `device-placement` |
+    | Prefill | 2,048-token chunks; short prompts run from Core's captured prompt graphs (buckets of 16, 64, 128 and 512 tokens) |
+  measured: |
+    - crit Eval (crit-eval-v0.6.0) of sealed candidate-0009, certified, at 200,000 tokens of context
+    - Eval measured with kernel tuning tables from `crit kernels sweep` for this model (`CRIT_KERNEL_TUNING`); the package does not carry them, so it builds crit's default knobs, which measured the same in process
+    - Decode reaches 65% of the 305 tok/s ceiling Eval prices for it; prefill 43% of its 17,577 tok/s
+    - Four clients together reach 250 tok/s: each row runs its full 5-token draft chain
+    - Greedy drafted output is token for token what plain greedy decoding produces
+  checks: |
+    - **Gates:** every gate of the certified Eval passed: coverage, repeatable, request history, prompt cache, quality (44% of the `speed` budget, worst mean KL divergence 0.087), sampling, capacity at 200,000 tokens, retrieval, lower context, concurrency and generality
+    - **Functional:** `crit run serve --check` passed the plugin tests, the serving checks, crit smoke at 200,000 and 49,152 tokens and Eval's pre-check; the model plugin's tests compare scores, greedy choices, batching and drafting against transformers on a small random checkpoint
+    - **Resources:** 0.56 GB of device memory stayed free at 200,000 tokens after the long-context curve
+    - **Switching:** a served A to B to A candidate switch returned identical greedy replies
+  limits: |
+    - The NVFP4 prompt GEMMs run at about 40% of the GPU's FP4 rate on every GEMM structure crit offers
+    - A verify pass at width 5 takes 42.9 ms against a 13.8 ms floor
+    - A prompt that fills 200,000 tokens gets its first token after 100 s, against a 26 s floor
+    - Plain, replayed and constrained requests decode one token a step through `step()`, outside the captured rounds
+    - Kernel tuning is not part of the package (see Measured)
+    - Tested only on WSL2 Ubuntu 24.04 with torch 2.14.1+cu130, Triton 3.8.0 and the CUDA 13.1 toolkit, on one RTX 5090
+  build_and_chat: |
+    ```sh
+    git clone https://github.com/crit-labs/crit-engines && git -C crit-engines checkout 5d488443c654f521df8d3235eab228ae7fd75088
+    crit pull crit-labs/mtp5-nvfp4-drafts
+    crit serve --engine crit-labs/mtp5-nvfp4-drafts
+    ```
+
+    - `engine/` is a plugin package: crit's plugin loader assembles it from `engine/configuration.json`, and crit's kernels compile at load
+    - Needs a Python environment with crit installed, torch 2.14.1+cu130 and Triton 3.8.0
+    - Check the checkpoint from a crit-hub checkout: `python -B tools/verify_model.py engines/crit-labs/mtp5-nvfp4-drafts /path/to/checkpoint`
+    - Chat at `http://127.0.0.1:8000/v1` (OpenAI-compatible); thinking is off by default (`enable_thinking: false`)
+  credits: |
+    Credits and licenses are in [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/5d488443c654f521df8d3235eab228ae7fd75088/mtp5-nvfp4-drafts/THIRD_PARTY.md) and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/5d488443c654f521df8d3235eab228ae7fd75088/mtp5-nvfp4-drafts/LICENSES.txt), next to the source.

@@ -1,0 +1,113 @@
+# yaml-language-server: $schema=../../../schemas/card.schema.json
+title: mtp3-exact-prompt-rows
+summary: Qwen3.8-27B, preserve, own model plugin, prompt rows on the decode arithmetic, 3-token MTP drafts, 200K tokens
+origin: crit
+contributor:
+  name: crit-labs
+  repository: https://github.com/crit-labs/crit
+license: Apache-2.0
+features:
+- openai-api
+- tool-calls
+- speculative
+source:
+  repository: https://github.com/crit-labs/crit-engines
+  revision: 5d488443c654f521df8d3235eab228ae7fd75088
+  path: mtp3-exact-prompt-rows
+requirements:
+  platforms:
+  - wsl2
+  gpu_arch:
+  - sm_120a
+  gpu_memory_gb: 32
+  cuda: '13.1'
+  runtime: crit Core plugin package, torch 2.14.1+cu130, Triton 3.8.0
+checkpoints:
+  qwen3.8-27b@NVFP4:
+    repository: unsloth/Qwen3.8-27B-NVFP4
+    revision: f0b7c9e722f5565102fff8481c99e4d86ae099c7
+built:
+  hours: 3.73
+  agent_tokens: 108341678
+  api_usd: 29.9948
+  agent: Claude Code (Claude Opus 5.5)
+  candidates: 5
+results:
+- gpu: rtx5090
+  model: qwen3.8-27b@NVFP4
+  track: open
+  measured_with: crit-eval-v0.6.0
+  measured_on: '2026-11-12'
+  quality_mode: preserve
+  hardware: Ubuntu 24.04.4 LTS (WSL); AMD Ryzen 5 9600 6-Core Processor (6/12 cores); 82 GiB RAM; NVIDIA GeForce RTX 5090 32 GiB, PCIe 4.0 x16 (GPU supports 5.0)
+  stats:
+    decode_tok_s: 177.2
+    prefill_tok_s: 2371
+    ttft_ms: 423
+    ppl:
+      vs_reference: 1.006
+    kld_mean: 0.018
+    context_tokens: 200000
+  more:
+    greedy_decode_tok_s: 186.7
+    long_context_decode_tok_s: 135.5
+    heldout_decode_tok_s: 134.0
+    quality_budget_pct: 36.8
+  throughput:
+  - concurrency: 1
+    tok_s: 128.7
+  - concurrency: 2
+    tok_s: 223.3
+  - concurrency: 4
+    tok_s: 309.6
+  evidence:
+  - file: evidence/crit-eval.json
+    sha256: 7b22ce9dd092f7fb1a71c525992e5f3d85b02f433ba9df68e529c4e9dc688f48
+readme:
+  intro: |
+    - A plugin package on crit Core, built in five candidates: crit's library plugins plus its own model plugin for Qwen3.8's hybrid layout (48 gated-delta and 16 gated-attention layers), which crit's library did not have
+    - Runs Qwen3.8-27B from its NVFP4 and FP8 weights as stored, with 16-bit activations everywhere, judged in crit Eval's `preserve` quality mode
+    - Prompt rows run on the decode kernels' 16-bit arithmetic, so a served reply scores exactly as the same text scored as a prompt
+    - Drafts 3 tokens a round with the checkpoint's own MTP layer in Core's native captured rounds, from FP8 copies of its matrices and an NVFP4 copy of the output head in 8 row slices
+    - 200,000 tokens of context on the 32 GB GPU, FP8 KV pages
+  design: |
+    | Slot | Plugin and settings |
+    | --- | --- |
+    | Model | `qwen35-model` (this engine's own): matrices stacked by input (q, k and v; qkv and z; b and a; gate and up), the MTP layer as the device draft head with its prompt KV written during prefill, captured prompt chunks of 32 to 512 tokens, cached memory released after long prompts and scores, kernel tuning tables shipped in `tuning/` |
+    | Projections | `quantized-projections`: the stored NVFP4 and FP8 matrices with BF16 activations (W4A16, W8A16) through crit's mma-rows prompt and decode tiles; draft-only FP8 MTP matrices and an NVFP4 head copy |
+    | KV cache and attention | `attention-state`: FP8 pages with the checkpoint's static scales, FP8 pages for the MTP layer; `softmax-attention` with the decode-order prompt reader |
+    | Recurrence | `sequential-recurrence`: the exact recurrent scan, also for prompt chunks of 512 tokens |
+    | Drafting | `greedy-head-drafter`, width 3, verified in Core's native rounds; `token-sampling` for greedy and sampled rounds |
+    | Other | `fused-norms`, `memory-table-rows` (embedding rows in registered host memory), `device-placement`, page-reserving admission |
+  measured: |
+    - crit Eval (crit-eval-v0.6.0) of sealed candidate-0005, certified, at 200,000 tokens of context
+    - Prefill is bound by `preserve`'s honesty rule: prompt rows must sum like decode rows, so they stay on the 16-bit decode tile, the exact recurrent scan and decode-order attention; it reaches 47% of the 5,018 tok/s that arithmetic allows
+    - Decode reaches 74% of the 238.6 tok/s ceiling crit computes with the draft step's cost left out
+    - Plain decoding without the drafter runs at about 67 tok/s against a 72.9 tok/s single-pass floor
+    - Greedy drafted output is token for token what plain greedy decoding produces
+  checks: |
+    - **Gates:** every gate of the certified Eval passed: coverage, repeatable, request history, prompt cache, quality (36.8% of the `preserve` budget, worst mean KL divergence 0.018 on 4,096-token prompts), sampling, capacity at 200,000 tokens, retrieval, lower context, concurrency and generality
+    - **Honesty:** served replies score exactly as the same text scored (difference 0.0)
+    - **Functional:** `crit run serve --check` passed the plugin tests, the serving checks, crit smoke at 200,000 tokens and at a quarter of it, and Eval's pre-check; the model plugin's tests compare scores, greedy choices, batching, honesty and drafting against transformers' Qwen3_5ForCausalLM on a small random checkpoint with a random MTP layer
+    - **Resources:** 1.75 GB of device memory stayed free after the 200,000-token curve
+    - **Track:** open: the engine declares no `draft_bytes_per_step`, so Eval could not compare its draft step with the checkpoint's draft layers
+  limits: |
+    - A prompt that fills 200,000 tokens gets its first token after 205 s
+    - Plain and replayed requests decode through eager `step()` at 44 ms a pass, against a 13.8 ms floor
+    - Follow-up turns reuse no prompt cache: an 8,192-token turn pays 3.4 s each time
+    - Core's native rounds leave 1.4 ms of host time between rounds (a 16.98 ms graph in an 18.41 ms round)
+    - Switching candidates under `crit serve` was not verified in the build
+    - Tested only on WSL2 Ubuntu 24.04 with torch 2.14.1+cu130, Triton 3.8.0 and the CUDA 13.1 toolkit, on one RTX 5090
+  build_and_chat: |
+    ```sh
+    git clone https://github.com/crit-labs/crit-engines && git -C crit-engines checkout 5d488443c654f521df8d3235eab228ae7fd75088
+    crit pull crit-labs/mtp3-exact-prompt-rows
+    crit serve --engine crit-labs/mtp3-exact-prompt-rows
+    ```
+
+    - `engine/` is a plugin package: crit's plugin loader assembles it from `engine/configuration.json`, and crit's kernels compile at load with the tuning tables in `engine/plugins/qwen35-model/tuning/`
+    - Needs a Python environment with crit installed, torch 2.14.1+cu130 and Triton 3.8.0
+    - Check the checkpoint from a crit-hub checkout: `python -B tools/verify_model.py engines/crit-labs/mtp3-exact-prompt-rows /path/to/checkpoint`
+    - Chat at `http://127.0.0.1:8000/v1` (OpenAI-compatible); thinking is off by default (`enable_thinking: false`)
+  credits: |
+    Credits and licenses are in [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/5d488443c654f521df8d3235eab228ae7fd75088/mtp3-exact-prompt-rows/THIRD_PARTY.md) and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/5d488443c654f521df8d3235eab228ae7fd75088/mtp3-exact-prompt-rows/LICENSES.txt), next to the source.
