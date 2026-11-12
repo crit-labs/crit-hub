@@ -12,7 +12,7 @@ features:
 - speculative
 source:
   repository: https://github.com/crit-labs/crit-engines
-  revision: 5d488443c654f521df8d3235eab228ae7fd75088
+  revision: dc41ff0d8f6f2dcbcf54fc87ede71232cc42046e
   path: mtp3-exact-prompt-rows
 requirements:
   platforms:
@@ -100,7 +100,7 @@ readme:
     - Tested only on WSL2 Ubuntu 24.04 with torch 2.14.1+cu130, Triton 3.8.0 and the CUDA 13.1 toolkit, on one RTX 5090
   build_and_chat: |
     ```sh
-    git clone https://github.com/crit-labs/crit-engines && git -C crit-engines checkout 5d488443c654f521df8d3235eab228ae7fd75088
+    git clone https://github.com/crit-labs/crit-engines && git -C crit-engines checkout dc41ff0d8f6f2dcbcf54fc87ede71232cc42046e
     crit pull crit-labs/mtp3-exact-prompt-rows
     crit serve --engine crit-labs/mtp3-exact-prompt-rows
     ```
@@ -110,4 +110,4 @@ readme:
     - Check the checkpoint from a crit-hub checkout: `python -B tools/verify_model.py engines/crit-labs/mtp3-exact-prompt-rows /path/to/checkpoint`
     - Chat at `http://127.0.0.1:8000/v1` (OpenAI-compatible); thinking is off by default (`enable_thinking: false`)
   credits: |
-    Credits and licenses are in [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/5d488443c654f521df8d3235eab228ae7fd75088/mtp3-exact-prompt-rows/THIRD_PARTY.md) and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/5d488443c654f521df8d3235eab228ae7fd75088/mtp3-exact-prompt-rows/LICENSES.txt), next to the source.
+    Credits and licenses are in [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/dc41ff0d8f6f2dcbcf54fc87ede71232cc42046e/mtp3-exact-prompt-rows/THIRD_PARTY.md) and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/dc41ff0d8f6f2dcbcf54fc87ede71232cc42046e/mtp3-exact-prompt-rows/LICENSES.txt), next to the source.
