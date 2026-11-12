@@ -97,7 +97,7 @@ checkpoints:
 #   source: {repository: https://github.com/crit-labs/crit-engines, revision: <40-character commit>, path: <name>}
 
 # Optional, written by tools/export_engine.py from the run's cost.json (crit run cost): what building
-# the engine took, as wall hours, candidates, the agent's tokens, their API-equivalent price and the agent.
+# the engine took, as active hours (wall hours less cost.json's idle stretches), candidates, the agent's tokens, their API-equivalent price and the agent.
 # built: {hours: 4.25, candidates: 7, agent_tokens: 155700000, api_usd: 42.3, agent: Claude Opus 5.5 in Claude Code}
 
 # What it measured: one entry per GPU and model.

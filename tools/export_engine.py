@@ -314,7 +314,9 @@ def export_entry(args):
         cost = read(run / "cost.json")
         if cost.get("record_kind") != "run_cost" or cost.get("run_id") != seal["run_id"]:
             raise ValueError("cost.json is not this run's run_cost record")
-        built = {"hours": cost["run"]["hours"], "agent_tokens": cost["run"]["tokens"]["total"], "api_usd": cost["run"]["usd"],
+        # Active hours where crit run cost --idle recorded idle stretches, else wall hours.
+        built = {"hours": cost["run"].get("active_hours", cost["run"]["hours"]), "agent_tokens": cost["run"]["tokens"]["total"],
+                 "api_usd": cost["run"]["usd"],
                  "agent": cost.get("agent"), "candidates": len(cost["candidates"])}
         lineage["built"] = {k: v for k, v in built.items() if v is not None}
     # The summary, license, features and requirements are the contributor's to fill in.

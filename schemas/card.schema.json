@@ -121,7 +121,7 @@
     },
     "built": {
       "type": "object", "additionalProperties": false,
-      "description": "What the run that built the engine took, from its cost.json (crit run cost): wall hours, candidates, the agent's tokens, their API-equivalent price in USD and the agent; written by tools/export_engine.py.",
+      "description": "What the run that built the engine took, from its cost.json (crit run cost): active hours (wall hours less the idle stretches it records; wall hours where it records none), candidates, the agent's tokens, their API-equivalent price in USD and the agent; written by tools/export_engine.py.",
       "properties": {
         "hours": {"type": "number", "minimum": 0}, "candidates": {"type": "integer", "minimum": 0},
         "agent_tokens": {"type": "integer", "minimum": 0}, "api_usd": {"type": "number", "minimum": 0},
