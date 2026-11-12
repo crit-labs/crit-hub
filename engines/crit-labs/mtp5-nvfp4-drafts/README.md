@@ -19,7 +19,7 @@
 - **Throughput:** 147.7 tok/s at concurrency 1 · 235.8 tok/s at concurrency 2 · 250.1 tok/s at concurrency 4 (aggregate of the concurrent requests; crit Eval)
 - **Requires:** WSL2 · sm_120a · 32 GB GPU memory · CUDA 13.1 · crit Core plugin package, torch 2.14.1+cu130, Triton 3.8.0
 - **Checkpoint** (`qwen3.8-27b@NVFP4`): [`unsloth/Qwen3.8-27B-NVFP4`](https://huggingface.co/unsloth/Qwen3.8-27B-NVFP4/tree/f0b7c9e722f5565102fff8481c99e4d86ae099c7) at `f0b7c9e7`
-- **Source:** [crit-labs/crit-engines/mtp5-nvfp4-drafts @ `5d488443`](https://github.com/crit-labs/crit-engines/tree/5d488443c654f521df8d3235eab228ae7fd75088/mtp5-nvfp4-drafts)
+- **Source:** [crit-labs/crit-engines/mtp5-nvfp4-drafts @ `dc41ff0d`](https://github.com/crit-labs/crit-engines/tree/dc41ff0d8f6f2dcbcf54fc87ede71232cc42046e/mtp5-nvfp4-drafts)
 - **Built:** 5.46 h · 9 candidates · 93.9M agent tokens · $33.98 API-equivalent · by Claude Code (Claude Opus 5.5)
 - **License:** Apache-2.0
 
@@ -119,7 +119,7 @@
 ## Build and chat
 
 ```sh
-git clone https://github.com/crit-labs/crit-engines && git -C crit-engines checkout 5d488443c654f521df8d3235eab228ae7fd75088
+git clone https://github.com/crit-labs/crit-engines && git -C crit-engines checkout dc41ff0d8f6f2dcbcf54fc87ede71232cc42046e
 crit pull crit-labs/mtp5-nvfp4-drafts
 crit serve --engine crit-labs/mtp5-nvfp4-drafts
 ```
@@ -148,4 +148,4 @@ crit hub report crit-labs/mtp5-nvfp4-drafts result.json --hub <your crit-hub che
 
 ## Credits
 
-Credits and licenses are in [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/5d488443c654f521df8d3235eab228ae7fd75088/mtp5-nvfp4-drafts/THIRD_PARTY.md) and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/5d488443c654f521df8d3235eab228ae7fd75088/mtp5-nvfp4-drafts/LICENSES.txt), next to the source.
+Credits and licenses are in [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/dc41ff0d8f6f2dcbcf54fc87ede71232cc42046e/mtp5-nvfp4-drafts/THIRD_PARTY.md) and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/dc41ff0d8f6f2dcbcf54fc87ede71232cc42046e/mtp5-nvfp4-drafts/LICENSES.txt), next to the source.
