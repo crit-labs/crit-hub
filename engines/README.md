@@ -115,6 +115,16 @@ contributed the engine.
   each table's crit Eval rows by it. A self-reported result states the mode it was judged in too.
   [`schemas/quality-modes.yaml`](../schemas/quality-modes.yaml) is the only place modes are named:
   a mode crit Eval adds is listed there, with its label and summary, and nothing else changes.
+- A result may state the **`exactness`** the engine asked of its rows when it was measured,
+  `{decode: LEVEL, prompt: LEVEL}`: what a row's bits may depend on, from the least exact `repeatable`
+  (the same for the same call, but they may follow the row count or a chunk's length), `row-exact`
+  (never the rows beside it, the row count or a chunk's length), `exact` (a prompt row has the bits of
+  the same token decoded; for the decode rows it is written `row-exact`) to `declared` (the kernel's
+  declared order, the same on the CPU tier, in the decode rows and in a prompt GEMM), on
+  [crit's scale](https://github.com/crit-labs/crit/blob/main/kernels/README.md#exactness). A crit
+  engine asks them in its package's configuration and the exporter writes them from there; a result
+  that states none is shown as before. The README shows them beside the quality mode, as
+  "rows: decode row-exact, prompt exact".
 - Any other `measured_with`, such as a leaderboard or your own benchmark, is shown as your own
   report. Its evidence can go in `evidence/self-reported.json` (optional): for each GPU and model,
   the measurements behind its figures, each with its `method`, a `link` to the run, leaderboard or
@@ -168,7 +178,7 @@ people read. [`_template/card.yaml`](_template/card.yaml) documents every key; i
   took, as `hours`, `candidates`, `agent_tokens`, `api_usd` and the `agent`.
 - **`results`**: for each GPU and model it was measured on, its `track` (`closed` or `open`,
   [CONTRIBUTING.md](../CONTRIBUTING.md#closed-and-open-tracks)), `measured_with`, `measured_on`, the
-  `quality_mode` it was judged in, the `hardware` it ran on, the six `stats`, optional `more`, an optional
+  `quality_mode` it was judged in, an optional `exactness`, the `hardware` it ran on, the six `stats`, optional `more`, an optional
   `throughput` by concurrency and its `evidence`; `by`, the GitHub account that measured it when that is
   not the contributor; and optional `reproductions`: the same GPU and model measured again with crit Eval
   on someone else's machine in the result's quality mode, each with its `by`, `measured_with`,

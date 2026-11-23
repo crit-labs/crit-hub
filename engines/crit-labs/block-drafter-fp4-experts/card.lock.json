@@ -1,0 +1,89 @@
+{
+  "checkpoints": {
+    "inkling-2-mini@NVFP4": {
+      "repository": "thinkingmachines/Inkling-2-Mini",
+      "revision": "ed40e7da625f594fc9c4990f5f66be24873c22d7",
+      "files": [
+        {
+          "path": "README.md",
+          "bytes": 54831,
+          "sha256": "02f4cd9085aebde693ba95bfefca487eb6c098fccce6fe826fd8e90dfac56034"
+        },
+        {
+          "path": "chat_template.jinja",
+          "bytes": 6868,
+          "sha256": "53a9035f3255945704b5857657cfb00c1165090c0641c4f782a0cbf268cc16dc"
+        },
+        {
+          "path": "config.json",
+          "bytes": 2722,
+          "sha256": "a7a349601f0984c4abf999c480ef775d8567d21f5f84b4e8a3e035b44f288dc2"
+        },
+        {
+          "path": "generation_config.json",
+          "bytes": 98,
+          "sha256": "a08737c07a65a8fdf69f7cf086576210e5aad4b241437090b26d7b0c4f7905f7"
+        },
+        {
+          "path": "hf_quant_config.json",
+          "bytes": 67924,
+          "sha256": "7c656207d3ce37879c7be209a036b0dde43bf01f78159bff06880b868ed57143"
+        },
+        {
+          "path": "model-00001-of-00001.safetensors",
+          "bytes": 19526019168,
+          "sha256": "65e60f51aa1284d4fb022584908c315270334d991828bb774af60584523539d1"
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "bytes": 109300,
+          "sha256": "c1631065b7b00787993522dddc66a68b3abee869192977fb3dcb796e63bc5838"
+        },
+        {
+          "path": "mtp.safetensors",
+          "bytes": 635801416,
+          "sha256": "7c3b651317f01f73bcf4e1dceba66ef8b7e1a1eac6bc171e882e690a4b10a1d2"
+        },
+        {
+          "path": "processor_config.json",
+          "bytes": 461,
+          "sha256": "d7350adce18c8be4b607f261c8f0f7eabbf720bb7aaf648a43d4f8372bbacc2d"
+        },
+        {
+          "path": "special_tokens_map.json",
+          "bytes": 529,
+          "sha256": "c16f44b3594563d82743ddb0417a2be1bfe3e2000dfad2da4b8f32554593e1a0"
+        },
+        {
+          "path": "tiktoken/tokenizer.model",
+          "bytes": 3386494,
+          "sha256": "f170372dd655728909228220d77cf6b8104a59f38a91262a7d2c4027906ec0d8"
+        },
+        {
+          "path": "tokenizer.json",
+          "bytes": 26178678,
+          "sha256": "7f332727f9a3f093dd452a39cc978e6757627e5dad1b0673aa4e75174f236dd6"
+        },
+        {
+          "path": "tokenizer_config.json",
+          "bytes": 13235,
+          "sha256": "bf09342d285139fd37ce10c70878af1d52cb390e9901e10248654293a80ee636"
+        }
+      ],
+      "run_model_manifest_sha256": "39a8ba307471a79facc94aa5e6a5f00765ca82d328577f33a8efcb119b926996"
+    }
+  },
+  "provenance": {
+    "run_id": "run-20261123T103857Z-5e20e5eb",
+    "candidate_id": "candidate-0002",
+    "source_manifest_sha256": "fcb50efa01e2dd57fa86e55f56a0d9630ae808173cc4510cd49e6c17570e1f33",
+    "original_package_sha256": "55fc848f94d1b139c48b1e7706a5f0e1b68ff2608456de05a0254fb72c13643b",
+    "configuration_sha256": "d44c44d83e37edee36b547bb860d2b92aeb3c95bac053a7b77a5a060535a71d1",
+    "model_manifest_sha256": "39a8ba307471a79facc94aa5e6a5f00765ca82d328577f33a8efcb119b926996",
+    "toolchain": {
+      "nvcc": "/usr/local/cuda (CUDA 13)",
+      "python": "/llm/sessions/2026-11-21-download-the-new-inkling-26b-moe-model/build/venv (Python 3.12.3, torch 2.14.1+cu130, triton 3.8.0; shared site-packages of /llm/engines/crit/crit-venv)"
+    },
+    "runtime_prerequisites": []
+  }
+}

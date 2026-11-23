@@ -185,16 +185,43 @@ def measured(args, seal, candidate, target):
         raise ValueError("The --eval attempts ran under different crit Eval protocols")
     if len({cardlib.evidence_mode(r) for r in results}) > 1:
         raise ValueError("The --eval attempts were judged in different quality modes")
+    asked = asked_exactness(candidate, results)
+    rows = {"exactness": asked} if asked else {}
     target.mkdir(parents=True)
     if not args.eval:
         return {"gpu": args.gpu, "model": args.model, "track": "open", "measured_with": None, "measured_on": None,
-                "stats": {key: None for key in cardlib.STATS}, "evidence": []}
+                **rows, "stats": {key: None for key in cardlib.STATS}, "evidence": []}
     evidence = []
     for number, path in enumerate(attempts, 1):
         name = "evidence/crit-eval.json" if number == 1 else f"evidence/crit-eval-{number}.json"
         copy(path, target / name)
         evidence.append({"file": name, "sha256": digest(target / name)})
-    return {"gpu": args.gpu, "model": args.model, **result_entry(results), "evidence": evidence}
+    items = list(result_entry(results).items())
+    # The levels go right after the quality mode, as the card's results show them.
+    after = [key for key, _ in items].index("quality_mode") + 1
+    entry = {**dict(items[:after]), **rows, **dict(items[after:])}
+    return {"gpu": args.gpu, "model": args.model, **entry, "evidence": evidence}
+
+
+def asked_exactness(candidate, results):
+    """The exactness the candidate's engine asked of its rows, {decode, prompt}: its package configuration.json's
+    exactness (crit run completes it for every candidate; one bare level is written per phase, the decode rows' exact
+    as row-exact), else the level its crit Eval results' honesty check judged it by (quality.honesty.judged_by
+    .exactness, where every file records the same). None where neither states one: an external engine, a candidate
+    recorded before crit stated it. Never inferred from the quality mode."""
+    configuration = candidate / "package" / "configuration.json"
+    stated = read(configuration).get("exactness") if configuration.is_file() else None
+    if isinstance(stated, str):
+        stated = {"decode": "row-exact" if stated == "exact" else stated, "prompt": stated}
+    if stated is None:
+        judged = [((r.get("quality") or {}).get("honesty") or {}).get("judged_by") or {} for r in results]
+        judged = [j.get("exactness") if isinstance(j, dict) else None for j in judged]
+        stated = judged[0] if judged and all(j == judged[0] for j in judged) else None
+    if stated is None:
+        return None
+    if cardlib.exactness_problem(stated):
+        raise ValueError(f"The candidate's {cardlib.exactness_problem(stated)}")
+    return {"decode": stated["decode"], "prompt": stated["prompt"]}
 
 
 def track(results):

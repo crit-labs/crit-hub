@@ -53,8 +53,8 @@ ACCOUNT = re.compile(r"[A-Za-z0-9][A-Za-z0-9-]{0,38}")
 REPRODUCTION_FIELDS = {"by", "measured_with", "measured_on", "quality_mode", "sampling", "hardware", "stats", "more",
                        "throughput", "evidence"}
 TRACKS = {"closed", "open"}
-RESULT_FIELDS = {"gpu", "model", "track", "by", "reproductions", "measured_with", "measured_on", "quality_mode", "sampling", "hardware", "stats", "more", "throughput",
-                 "evidence"}
+RESULT_FIELDS = {"gpu", "model", "track", "by", "reproductions", "measured_with", "measured_on", "quality_mode", "exactness", "sampling", "hardware", "stats",
+                 "more", "throughput", "evidence"}
 MODE = re.compile(r"[a-z][a-z0-9_]*")
 PLATFORMS = {"linux", "wsl2", "windows", "macos"}
 VERSION = re.compile(r"[0-9]+\.[0-9]+")
@@ -705,6 +705,8 @@ def check_results(folder, card):
         if not MODE.fullmatch(str(result.get("quality_mode"))) or result.get("quality_mode") not in cardlib.quality_modes():
             problems.append(f"{name}: quality_mode is one of {', '.join(cardlib.quality_modes())} (schemas/quality-modes.yaml), "
                             f"not {result.get('quality_mode')}: every result states the mode it was judged in")
+        if "exactness" in result and cardlib.exactness_problem(result["exactness"]):
+            problems.append(f"{name}: {cardlib.exactness_problem(result['exactness'])}")
         if "hardware" in result and not (isinstance(result["hardware"], str) and result["hardware"].strip() and "\n" not in result["hardware"]):
             problems.append(f"{name}: hardware is one line naming the machine it ran on")
         stat_problems = check_stats(name, result.get("stats"), result.get("more", {}))

@@ -1,24 +1,27 @@
 <div align="center">
 
-<p align="center">
-  <img src="docs/assets/wordmark.png" width="200" alt="wordmark" />
-  <br />
-</p>
+<h1 align="center">
+  <img src="https://raw.githubusercontent.com/crit-labs/.github/main/brand/logo.png" width="88" alt="crit logo" /><br />
+  crit-hub
+</h1>
 
 ### Huggingface for tailored inference engines. Don't rebuild an engine that already exists.
 
-[![License Apache-2.0](docs/assets/badge-license.svg)](LICENSE)
-[![Registry of engines](docs/assets/badge-registry.svg)](engines/)
-[![Built with crit](docs/assets/badge-crit.svg)](https://github.com/crit-labs/crit)
-
-[Summary](#summary) • [Quick start](#quick-start) • [What crit-hub solves](#what-crit-hub-solves) •
-[Engines](engines/) • [Contributing](CONTRIBUTING.md) • [License](#license)
+<p align="center">
+  <a href="https://github.com/crit-labs/crit-hub#quick-start"><img src="https://raw.githubusercontent.com/crit-labs/.github/main/brand/button-docs.svg" alt="Docs" height="34" /></a>
+  <a href="https://crit-hub.dev"><img src="https://raw.githubusercontent.com/crit-labs/.github/main/brand/button-website.svg" alt="Website" height="34" /></a>
+  <a href="https://huggingface.co/crit-labs"><img src="https://raw.githubusercontent.com/crit-labs/.github/main/brand/button-huggingface.svg" alt="Hugging Face" height="34" /></a>
+  <a href="https://github.com/crit-labs/crit-hub/releases"><img src="https://raw.githubusercontent.com/crit-labs/.github/main/brand/button-releases.svg" alt="Releases" height="34" /></a>
+  <a href="https://github.com/crit-labs/crit-hub/blob/main/LICENSE"><img src="https://raw.githubusercontent.com/crit-labs/.github/main/brand/button-license.svg" alt="License" height="34" /></a>
+</p>
 
 </div>
 
 ---
 
-<a id="summary"></a>
+<br>
+<br>
+<br>
 
 ## Summary
 
@@ -32,6 +35,7 @@ so you can find one built for your hardware and target LLM.**
 > was built on, opens with the same six stats as every other (decode, prefill, time to first
 > token, perplexity and KL divergence against the reference, context), and states its evidence,
 > known limits and a link to the repository of whoever contributed it.
+>
 > Engines come from any toolkit, and every one links its source at a pinned commit. Those built
 > with [crit](https://github.com/crit-labs/crit) keep their sealed source in
 > [crit-engines](https://github.com/crit-labs/crit-engines); external engines link the contributor's repository and are
@@ -40,8 +44,6 @@ so you can find one built for your hardware and target LLM.**
 > and model, each documenting its own trade-offs.
 
 ---
-
-<a id="quick-start"></a>
 
 ## Quick start
 
@@ -58,8 +60,6 @@ Check github.com/crit-labs/crit-hub for an inference engine for my GPU and model
 Nothing fits yet? Build one with [crit](https://github.com/crit-labs/crit) and [contribute](CONTRIBUTING.md) it.
 
 ---
-
-<a id="what-crit-hub-solves"></a>
 
 ## What `crit-hub` solves
 
@@ -82,8 +82,6 @@ Find what already exists. Stop rebuilding it.
 
 ---
 
-<a id="contributing"></a>
-
 ## Contributing
 
 Every working engine you add saves the next person from building it again. An engine is one folder
@@ -101,8 +99,6 @@ checks the folder. Anyone may open a pull request and the crit-labs maintainers 
 folder stays yours, and a change to it needs [your approval](CONTRIBUTING.md#who-approves-and-merges).
 
 ---
-
-<a id="license"></a>
 
 ## License
 
