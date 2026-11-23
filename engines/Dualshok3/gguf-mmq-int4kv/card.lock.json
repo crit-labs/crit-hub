@@ -1,0 +1,62 @@
+{
+  "checkpoints": {
+    "gemma-4-26b-a4b@UD-IQ4-XS": {
+      "repository": "unsloth/gemma-4-26B-A4B-it-GGUF",
+      "revision": "c099eb48e663fd284577b04978a94ffccb261841",
+      "files": [
+        {
+          "path": "chat_template.jinja",
+          "bytes": 18683,
+          "sha256": "ae53464bf3be25802b3a5b37def7fd89667067d7577049b3b2d74c4d8de4c6d4"
+        },
+        {
+          "path": "config.json",
+          "bytes": 3815,
+          "sha256": "ed0c1eb3633de771906e9ba004a44cc5635bcc06ee2062077c3d2e88a50707d3"
+        },
+        {
+          "path": "download.json",
+          "bytes": 327,
+          "sha256": "7211c81d2beb2cf779299078db10624c60b3a29c9e45b2e0a934e079b981bcad"
+        },
+        {
+          "path": "gemma-4-26B-A4B-it-UD-IQ4_XS.gguf",
+          "bytes": 13597177568,
+          "sha256": "babd1e389d386352f71600765d37390f7dc993fbfad6725caccf996ffe34aecf"
+        },
+        {
+          "path": "generation_config.json",
+          "bytes": 208,
+          "sha256": "d4226bbe3117d2d253ba4609720ba82c6c4ce4627a9a6ae05387c78983ac03de"
+        },
+        {
+          "path": "tokenizer.json",
+          "bytes": 32169626,
+          "sha256": "cc8d3a0ce36466ccc1278bf987df5f71db1719b9ca6b4118264f45cb627bfe0f"
+        },
+        {
+          "path": "tokenizer_config.json",
+          "bytes": 3082,
+          "sha256": "9f4fec4b1dc6ecddf8f4a92e9caea5971c0e67d81309f3f9066a2bee8c362633"
+        }
+      ],
+      "run_model_manifest_sha256": "6b0e53faab13005f7a59d08e7e8d6318365f20af9ab95ac7d5c7c92ec8fa56ce"
+    }
+  },
+  "provenance": {
+    "run_id": "run-20261109T095346Z-1b210ccf",
+    "candidate_id": "candidate-0024",
+    "source_manifest_sha256": "6e1af544aa721ae03b1db21c0f02de2e79bf716cbf81b954a8e3f1295454477f",
+    "original_package_sha256": "0d0f46f6741b91c51c53e2c85f43bcd7bdd4b5e383d7153c84b7d7ca7f3e0454",
+    "configuration_sha256": "424118751cb61079eff204f7db682d5f20d55d28e8a7b8ef39c65d0f618ea38e",
+    "model_manifest_sha256": "6b0e53faab13005f7a59d08e7e8d6318365f20af9ab95ac7d5c7c92ec8fa56ce",
+    "toolchain": {
+      "python": "3.14.4",
+      "torch": "2.14.1+cu130",
+      "nvcc": "CUDA 13.4",
+      "msvc": "Visual Studio 18 BuildTools v145 (vcvars64)",
+      "gpu": "sm_120"
+    },
+    "runtime_prerequisites": []
+  }
+}
