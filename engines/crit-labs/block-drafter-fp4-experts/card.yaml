@@ -1,0 +1,110 @@
+# yaml-language-server: $schema=../../../schemas/card.schema.json
+title: block-drafter-fp4-experts
+summary: Inkling-2-Mini, speed, the checkpoint's block drafter in captured rounds, NVFP4 experts on FP4 tensor cores, 200K tokens
+origin: crit
+contributor:
+  name: crit-labs
+  repository: https://github.com/crit-labs/crit
+license: Apache-2.0
+features:
+- openai-api
+- tool-calls
+- speculative
+source:
+  repository: https://github.com/crit-labs/crit-engines
+  revision: d113218017d0969bfa2f3b45a9397d0245b4606f
+  path: block-drafter-fp4-experts
+requirements:
+  platforms:
+  - wsl2
+  gpu_arch:
+  - sm_120a
+  gpu_memory_gb: 32
+  cuda: '13.1'
+  runtime: crit Core plugin package, crit 0.23.0, torch 2.14.1+cu130, Triton 3.8.0
+checkpoints:
+  inkling-2-mini@NVFP4:
+    repository: thinkingmachines/Inkling-2-Mini
+    revision: ed40e7da625f594fc9c4990f5f66be24873c22d7
+results:
+- gpu: rtx5090
+  model: inkling-2-mini@NVFP4
+  track: open
+  measured_with: crit-eval-v0.8.1
+  measured_on: '2026-11-23'
+  quality_mode: speed
+  exactness:
+    decode: row-exact
+    prompt: row-exact
+  hardware: Ubuntu 24.04.4 LTS (WSL); AMD Ryzen 5 9600 6-Core Processor (6/12 cores); 79 GiB RAM; NVIDIA GeForce RTX 5090 32 GiB, PCIe 4.0 x16 (GPU supports 5.0)
+  stats:
+    decode_tok_s: 196.7
+    prefill_tok_s: 8036
+    ttft_ms: 141
+    ppl:
+      vs_reference: 1.42
+    kld_mean: 0.19
+    context_tokens: 200000
+  more:
+    greedy_decode_tok_s: 234.4
+    long_context_decode_tok_s: 157.2
+    heldout_decode_tok_s: 187.3
+    quality_budget_pct: 79.1
+  throughput:
+  - concurrency: 1
+    tok_s: 180.4
+  - concurrency: 2
+    tok_s: 252.1
+  - concurrency: 4
+    tok_s: 230.1
+  evidence:
+  - file: evidence/crit-eval.json
+    sha256: 7f4ece49a0ed5f741cb1bfc5fb1be5106b497970437dbea95b045fa3c7d4c6ae
+readme:
+  intro: |
+    - A crit plugin package for Inkling-2-Mini, a looped MoE (26.4B total, 3.4B active): layers 6-17 run three times with the same weights, attention residuals over blocks, relative attention with a distance bias; every plugin is a copy of crit's library (`inkling2-loop-model` over the models core `model-template`)
+    - Runs the official ModelOpt NVFP4 + MXFP8 checkpoint as stored, judged in crit Eval's `speed` quality mode
+    - Drafts with the checkpoint's own block drafter (`mtp.safetensors`: 3 bidirectional layers and an RNN head) inside Core's captured rounds, up to 7 tokens a round
+    - 200,000 tokens of context on the 32 GB GPU, FP8 KV pages
+    - Open track: judged by a quality budget of its own (perplexity ratio 1.6, KLD p99 5.5) instead of the `speed` mode's protocol budget (1.4, 4.0)
+  design: |
+    | Slot | Plugin and settings |
+    | --- | --- |
+    | Model | `inkling2-loop-model` over `model-template`: the looped span's three passes each with their own KV and convolution windows, attention residuals over blocks, relative attention with a distance bias, learned sinks and short convolutions; the block drafter as the draft head, widths 2, 3, 5 and 7 by acceptance rate (`width_policy: rate`), 2 round slots |
+    | Projections | `quantized-projections`: 16-bit trunk matrices other than the router's re-encoded to FP8 per channel at load, the head in FP8, the drafter's matrices in FP8 (`mtp_encode: fp8`) |
+    | Experts | `grouped-experts` on the stored NVFP4 experts (layers 0-19) and MXFP8 experts (layers 20-23); NVFP4 prompt rows W4A4 at each route's own scale (fp4-row); `topk-router`: sigmoid scores, top 8, renormalized, scaled by 8 |
+    | KV cache and attention | `attention-state`: fp8:row paged pools; the drafter's local layers in a doubled ring of window plus block positions; `softmax-attention`: prompt rows on the decode reduction (`prompt_reader: decode`) |
+    | Prefill | 1,536-token captured prompt chunks, prompt buckets 256, 1,024 and 1,536, prompt steps kept under 0.5 s (`span_seconds`) |
+    | Tools and reasoning | the model's own tool-call syntax and reasoning markers as the plugin's `tool_format` and `reasoning_format`; replies return reasoning apart from the answer |
+    | Kernel tuning | `engine/tuning/`: mma-rows and grouped-experts tables from `crit kernels sweep` on the RTX 5090 (`kernel_tuning: tuning`) |
+  measured: |
+    - crit Eval (crit-eval-v0.8.1) of sealed candidate-0002 of run-20261123T103857Z-5e20e5eb, certified, at 200,000 tokens of context
+    - Decode is sampled at the model's generation_config (temperature 1.0); the model reasons before it answers, and retrieval judges its answer after a 128-token reasoning budget
+    - A model pass takes 11.45 ms against a 3.08 ms bandwidth floor: the looped span runs its 12 layers three times a pass
+    - Decode reaches 34% of the 578 tok/s ceiling Eval prices for this drafter
+    - Partial speed suite: the model's chat template overflows the `agent-long` case (protocol `speed.unmeasurable_cases`), so decode, prefill and TTFT cover the other cases
+    - Greedy drafted output is token for token what plain greedy decoding produces (2 of 2 cases)
+  checks: |
+    - **Gates:** every gate of the certified Eval passed: coverage, repeatable, request history, prompt cache, quality (worst perplexity x1.42 and worst mean KL divergence 0.188, both on long-1024/served), sampling, capacity at 200,000 tokens, retrieval at 4K, 32K and 200K, lower context and concurrency; generality was not judged
+    - **Closed track:** one engine load passed; the quality budget and the drafter did not qualify (a draft step reads 0.74 GB, more than the checkpoint's 0.64 GB of draft layers and head, because of the drafter's FP8 copies)
+    - **Functional:** `crit run serve --check` passed the plugin tests, the serving checks, crit smoke, causal prefixes, a 200K long-text score, prompt steps under the cancel grace and tool calls
+    - **Resources:** 2.43 GB of device memory stayed free at 200,000 tokens after the long-context curve
+  limits: |
+    - Prefill: the CUDA prompt chunk with the distance bias is off, because in the plugin path a prefix's rows followed the prompt's length (about 15% of prefill left)
+    - A prompt that fills 200,000 tokens gets its first token after about 68 s
+    - Four clients reach less than two (230 against 252 tok/s): only two round slots stream at once
+    - The model always reasons first: a client that wants short answers sets a thinking budget (`thinking_budget_tokens`)
+    - Tested only on WSL2 Ubuntu 24.04 with torch 2.14.1+cu130, Triton 3.8.0 and the CUDA 13.1 toolkit, on one RTX 5090
+  build_and_chat: |
+    ```sh
+    git clone https://github.com/crit-labs/crit-engines && git -C crit-engines checkout d113218017d0969bfa2f3b45a9397d0245b4606f
+    crit pull crit-labs/block-drafter-fp4-experts
+    crit serve --engine crit-labs/block-drafter-fp4-experts
+    ```
+
+    - `engine/` is a plugin package: crit's plugin loader assembles it from `engine/configuration.json`, and crit's kernels compile at load
+    - Needs a Python environment with crit 0.23.0, torch 2.14.1+cu130 and Triton 3.8.0
+    - Check the checkpoint from a crit-hub checkout: `python -B tools/verify_model.py engines/crit-labs/block-drafter-fp4-experts /path/to/checkpoint`
+    - Chat at `http://127.0.0.1:8000/v1` (OpenAI-compatible); replies carry the model's reasoning apart from its answer
+  credits: |
+    Credits and licenses are in [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/d113218017d0969bfa2f3b45a9397d0245b4606f/block-drafter-fp4-experts/THIRD_PARTY.md) and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/d113218017d0969bfa2f3b45a9397d0245b4606f/block-drafter-fp4-experts/LICENSES.txt), next to the source.

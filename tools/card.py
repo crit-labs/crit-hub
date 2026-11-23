@@ -203,13 +203,15 @@ def mode_label(mode):
 
 def stat_cells(result):
     """One result's row of the stats table: its GPU and model, the quality mode it was judged in (figures judged
-    in different modes do not compare), then the headline stats with both decodes."""
+    in different modes do not compare) with the exactness the engine asked of its rows where the result states it,
+    then the headline stats with both decodes."""
     stats = result.get("stats") or {}
     sampled, greedy = decodes(result)
     ppl, ppl_label = ppl_cell(stats.get("ppl"))
+    rows = rows_text(result)
     return [
         pair(result),
-        mode_label(quality_mode(result)),
+        mode_label(quality_mode(result)) + (f" ({rows})" if rows else ""),
         figure(sampled, " tok/s"),
         figure(greedy, " tok/s"),
         figure(stats.get("prefill_tok_s"), " tok/s"),
@@ -334,6 +336,32 @@ def quality_mode(result):
     return result.get("quality_mode")
 
 
+# The exactness an engine asks of its rows, from the least exact (crit's kernels/README.md#exactness): what a row's
+# bits may depend on. A result may state the levels it was measured at, one for the decode rows and one for the
+# prompt rows; for the decode rows exact is written row-exact.
+EXACTNESS_LEVELS = ("repeatable", "row-exact", "exact", "declared")
+DECODE_LEVELS = ("repeatable", "row-exact", "declared")
+EXACTNESS_URL = "https://github.com/crit-labs/crit/blob/main/kernels/README.md#exactness"
+
+
+def exactness_problem(value):
+    """Why `value` is not a result's exactness, {decode: LEVEL, prompt: LEVEL} (None when it is one)."""
+    if isinstance(value, dict) and set(value) == {"decode", "prompt"} and value["decode"] in DECODE_LEVELS \
+            and value["prompt"] in EXACTNESS_LEVELS:
+        return None
+    return (f"exactness is {{decode: LEVEL, prompt: LEVEL}}, the levels the engine asked of its rows: decode one of "
+            f"{', '.join(DECODE_LEVELS)}, prompt one of {', '.join(EXACTNESS_LEVELS)}; not {value!r}")
+
+
+def rows_text(result):
+    """The exactness a result's engine asked of its rows, as pages show it beside the quality mode: rows: decode
+    row-exact, prompt exact. None where the result states none (or none that tools/check_engines.py accepts)."""
+    asked = result.get("exactness")
+    if "exactness" not in result or exactness_problem(asked):
+        return None
+    return f"rows: decode {asked['decode']}, prompt {asked['prompt']}"
+
+
 def mode_text(mode):
     """A mode as pages show it: its label and summary, or its id alone when the list does not hold it."""
     about = quality_modes().get(mode) or {}
@@ -379,7 +407,10 @@ def measured(results):
         # Perplexity and KL divergence are judged against the mode's own budget (speed's is wider, and raised
         # per text to the reference's spread), so the share of it the worst path uses says whether they are in it.
         used = f"; the worst path uses {budget}% of its quality budget" if budget is not None else ""
-        lines.append(label("Quality mode") + mode_text(mode) + used)
+        # The levels the engine asked of its rows when it was measured, where the result states them.
+        rows = rows_text(result)
+        rows = f"; {rows} ([exactness]({EXACTNESS_URL}))" if rows else ""
+        lines.append(label("Quality mode") + mode_text(mode) + used + rows)
         if result.get("hardware"):
             lines.append(label("Hardware") + result["hardware"])
         more = more_text(result.get("more") or {})
