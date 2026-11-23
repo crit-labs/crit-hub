@@ -17,7 +17,7 @@
 - **Hardware:** Windows 11; AMD Ryzen 5 3600 6-Core Processor (6/12 cores); 16 GiB RAM; NVIDIA GeForce RTX 5060 Ti 16 GiB, PCIe 3.0 x16 (GPU supports 5.0)
 - **Further figures:** long-context decode 66.6 tok/s · held-out decode 94.8 tok/s
 - **Throughput:** 81.2 tok/s at concurrency 1 · 117.5 tok/s at concurrency 2 · 118.6 tok/s at concurrency 4 · 125.3 tok/s at concurrency 8 (aggregate of the concurrent requests; crit Eval)
-- **Requires:** Windows · sm_120 · 16 GB GPU memory · CUDA 13.4 · crit 0.21.0 with the package tool_format (crit-labs/crit 3cf231c), torch 2.14.1+cu130, MSVC 18 Build Tools
+- **Requires:** Windows · sm_120 · 16 GB GPU memory · CUDA 13.4 · crit 0.22.0 (built on crit 0.21.0 with the package tool_format), torch 2.14.1+cu130, MSVC 18 Build Tools
 - **Checkpoint** (`gemma-4-26b-a4b@UD-IQ4-XS`): [`unsloth/gemma-4-26B-A4B-it-GGUF`](https://huggingface.co/unsloth/gemma-4-26B-A4B-it-GGUF/tree/c099eb48e663fd284577b04978a94ffccb261841) at `c099eb48`
 - **Source:** [crit-labs/crit-engines/gguf-mmq-int4kv @ `e5363b64`](https://github.com/crit-labs/crit-engines/tree/e5363b642fed155311d532ec06bd002ce705c350/gguf-mmq-int4kv)
 - **Built:** 264.132 h · 24 candidates · 561.8M agent tokens · $174.89 API-equivalent · by Claude Code (Claude Opus 5.5)
@@ -97,6 +97,7 @@
 - **Functional:** `crit run serve --check` passed the plugin tests, the serving checks (tool calls included) and Eval's pre-check; crit smoke left out (the checkpoint fails its fluency limit, llama.cpp scores it alike)
 - **Resources:** at least 1 GiB of device memory free at every step of a 200,000-token prompt, 2 GiB of host memory free in the benchmark; slowest prompt step under 1 s
 - **Track:** open: judged under the run's own quality budget, wider than `speed`'s protocol budget (mean KL divergence 0.4, p99 4.0)
+- **crit 0.22.0:** `crit pull` of this card and `crit serve --engine` on crit 0.22.0 (2026-11-23): chat, streaming, tool calls (plain, streamed, with the tool result), reasoning and `json_schema` passed; a served crit Eval (crit-eval 0.7.3, idle machine) matched the certified build: sampled decode 86.7 tok/s, greedy 98.0, prefill 3,088 tok/s, TTFT 337 ms, the same quality, every gate a server measures passed
 
 ---
 
@@ -105,8 +106,7 @@
 - Misses `speed`'s protocol quality budget: the INT4 KV codes flip single positions of this very confident checkpoint; FP8 KV halves the drift but does not fit 200,000 tokens in 16 GB
 - No prompt cache: a follow-up turn prefills its whole prompt again; a 200,000-token prompt takes about 58 s to its first token
 - Constrained JSON (`response_format`) through crit's compact grammar: the model writes `": "` into the first string value, clients strip it
-- Verified with crit 0.21.0 plus the package `tool_format` and `reasoning_format` (crit-labs/crit commit `3cf231c`, shipped in crit 0.22.0); not run on crit 0.22.0, whose engine ABI is 10
-- `crit pull` of this card was not run in the build; the engine was served from its sealed run
+- Needs crit 0.22.0 or newer (the package `tool_format` and `reasoning_format`); certified on crit 0.21.0 with that change (crit-labs/crit `3cf231c`)
 - Built and run only on Windows 11 with MSVC 18 Build Tools, CUDA 13.4, Python 3.14 and torch 2.14.1+cu130, on one RTX 5060 Ti (sm_120)
 - The checkpoint folder combines two repositories: the GGUF from unsloth/gemma-4-26B-A4B-it-GGUF, the config, tokenizer and chat template from google/gemma-4-26B-A4B-it at `4d7ae4984b7db7de8f8457170b3f1a419ee76d52`, plus the run's `download.json`
 
@@ -125,7 +125,7 @@ git clone https://github.com/crit-labs/crit-engines && git -C crit-engines check
   ```
 
 - Check it from a crit-hub checkout: `python -B tools/verify_model.py engines/Dualshok3/gguf-mmq-int4kv <checkpoint folder>`
-- Install and serve it from a shell with the MSVC developer environment (the kernels build at load) and a crit that has the package `tool_format`:
+- Install and serve it from a shell with the MSVC developer environment (the kernels build at load) and crit 0.22.0:
 
   ```sh
   crit pull Dualshok3/gguf-mmq-int4kv --engines crit-engines --model <checkpoint folder> --context 200000
