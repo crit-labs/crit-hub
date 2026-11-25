@@ -1,0 +1,122 @@
+# yaml-language-server: $schema=../../../schemas/card.schema.json
+title: gguf-residency-fp8kv
+summary: Qwen3.6-35B-A3B UD-IQ4_XS on a 16 GB RTX 5060 Ti, GGUF blocks as stored, experts on device and host, 262K tokens
+origin: crit
+contributor:
+  name: Dualshok3
+  repository: https://github.com/Dualshok3
+license: Apache-2.0
+features:
+- openai-api
+- tool-calls
+source:
+  repository: https://github.com/crit-labs/crit-engines
+  revision: 3c0ad1d0b1fb1dfbdeeba88df482394f0a6a3dc4
+  path: gguf-residency-fp8kv
+requirements:
+  platforms:
+  - windows
+  gpu_arch:
+  - sm_120
+  gpu_memory_gb: 16
+  cuda: '13.4'
+  runtime: crit 0.23.0, torch 2.14.1+cu130, MSVC 18 Build Tools, 16 GB host RAM
+build:
+  command:
+  - python
+  - build.py
+checkpoints:
+  qwen3.6-35b-a3b@UD-IQ4-XS:
+    repository: unsloth/Qwen3.6-35B-A3B-GGUF
+    revision: a483e9e6cbd595906af30beda3187c2663a1118c
+results:
+- gpu: rtx5060ti
+  model: qwen3.6-35b-a3b@UD-IQ4-XS
+  track: closed
+  measured_with: crit-eval-v0.8.1
+  measured_on: '2026-11-24'
+  quality_mode: speed
+  exactness:
+    decode: row-exact
+    prompt: repeatable
+  hardware: Windows 11; AMD Ryzen 5 3600 6-Core Processor (6/12 cores); 16 GiB RAM; NVIDIA GeForce RTX 5060 Ti 16 GiB, PCIe 3.0 x16 (GPU supports 5.0)
+  stats:
+    decode_tok_s: 68.1
+    prefill_tok_s: 1026
+    ttft_ms: 1182
+    ppl:
+      vs_reference: 1.0
+    kld_mean: 0.13
+    context_tokens: 262144
+  more:
+    greedy_decode_tok_s: 75.7
+    long_context_decode_tok_s: 45.8
+    heldout_decode_tok_s: 49.3
+    quality_budget_pct: 74.3
+  throughput:
+  - concurrency: 1
+    tok_s: 48.1
+  - concurrency: 2
+    tok_s: 68.0
+  - concurrency: 4
+    tok_s: 72.9
+  - concurrency: 8
+    tok_s: 77.3
+  evidence:
+  - file: evidence/crit-eval.json
+    sha256: e98aadcac686b0539874d716f63c9fc6c722123da231793f79a20a73cbc8ff1e
+readme:
+  intro: |
+    - A plugin package on crit Core (crit 0.23), built in 26 candidates: its own model, attention, recurrence, norms and router plugins for Qwen3.6's hybrid layout (30 Gated DeltaNet layers, 10 full attention layers, 256 experts, 8 a token, beside a shared expert), and GGUF projection and expert plugins, which crit's library did not have
+    - Runs Qwen3.6-35B-A3B from unsloth's UD-IQ4_XS GGUF blocks (17.7 GB) as stored, judged in crit Eval's `speed` quality mode under its protocol budget (closed track)
+    - 262,144 tokens of context on a 16 GB RTX 5060 Ti: the model does not fit the GPU, so the most routed experts sit on the device and the rest in pinned host memory
+    - OpenAI tool calls through crit's serving
+  design: |
+    | Slot | Plugin and settings |
+    | --- | --- |
+    | Weights | The GGUF's quantized blocks (IQ3_S, IQ4_XS, Q6_K, Q8_0) as stored, nothing re-encoded; the pages read through the file map released after load (about 4 GiB of host memory left on a 16 GB machine) |
+    | Model | `qwen35-model`: captured decode graphs; prompt steps under crit serve's 1 s cancel grace; 2 requests at once |
+    | Projections | `gguf-projections`: dp4a GEMVs straight from the blocks for decode, int8 tensor-core tiles from the blocks for prompts (Q6_K rows through FP8) |
+    | Experts | `gguf-experts`: device slots for the most routed experts, the rest in pinned host memory served by an exact AVX2 CPU tier for decode rows and staged over the link for prompt rows; an adaptive residency swaps hot host experts onto the device every 32 decode steps, warmed from each prompt's routes |
+    | KV cache and attention | `qwen35-attention`: FP8 paged full attention; `qwen35-recurrence`: Gated DeltaNet recurrence kernels |
+    | Other | `qwen35-norms` (fused norms and gates), `qwen35-router` (softmax top-k), `token-sampling`, `device-placement`, `topk-router`, `torch-norms` |
+  measured: |
+    - crit Eval (crit-eval 0.8.1) of sealed candidate-0026, certified, at 262,144 tokens of context, on Windows 11 with an RTX 5060 Ti 16 GB (PCIe 3.0 x16 on this board)
+    - Quality is scored against `crit eval reference` of the same GGUF; the worst path uses 74.3% of `speed`'s protocol budget
+    - Decode runs at about 58% of its bandwidth floor: routes to host experts go through the CPU tier
+    - Prefill is bound by staging host experts over PCIe 3.0
+    - The run's own benchmark measured sampled decode at 65.8 to 78.2 tok/s and TTFT at 560 to 583 ms, with 4.07 GiB of host RAM and 2.05 GiB of VRAM free
+  checks: |
+    - **Gates:** every gate of the certified Eval that it judged passed: coverage, repeatable, request history, prompt cache, quality (`speed`'s protocol budget: mean KL divergence 0.4, p99 4.0), sampling, capacity at 262,144 tokens, retrieval, lower context and concurrency; generality not judged (crit-eval 0.8.1 needed freshly prepared data, so its baseline was not comparable)
+    - **Functional:** `crit run serve --check` passed the plugin tests, crit smoke, the serving checks (streaming, stop strings, cancel, tool calls, logprobs) and Eval's pre-check
+    - **Resources:** at least 1 GiB of device memory free at every step of a 262,144-token prompt, 2 GiB of host memory free in the benchmark; slowest prompt step under 1 s
+    - **Track:** closed: judged under `speed`'s protocol budget
+  limits: |
+    - No prompt cache: Gated DeltaNet's recurrent state is not kept between requests, so a follow-up turn prefills its whole prompt again (about 7 s for an 8,000-token conversation)
+    - A 262,144-token prompt takes about 22 minutes to its first token: prompt rows of host experts cross PCIe 3.0
+    - Needs 16 GB of host RAM with about 6 GiB pinned for host experts; other large processes on the machine can leave too little
+    - Built and run only on Windows 11 with MSVC 18 Build Tools, CUDA 13.4, Python 3.14 and torch 2.14.1+cu130, on one RTX 5060 Ti (sm_120)
+    - The checkpoint folder is the GGUF alone: crit derives `config.json`, `tokenizer.json`, `tokenizer_config.json`, `chat_template.jinja` and `generation_config.json` from its metadata, byte for byte the files the run measured
+  build_and_chat: |
+    ```sh
+    git clone https://github.com/crit-labs/crit-engines && git -C crit-engines checkout 3c0ad1d0b1fb1dfbdeeba88df482394f0a6a3dc4
+    ```
+
+    - Put `Qwen3.6-35B-A3B-UD-IQ4_XS.gguf` from the unsloth repository at the pinned revision into an empty folder
+    - To check it from a crit-hub checkout, first write the derived description files next to it (crit's Python, from that folder), then run `python -B tools/verify_model.py engines/Dualshok3/gguf-residency-fp8kv <checkpoint folder>`:
+
+      ```sh
+      python -c "from pathlib import Path; from crit_core.model.gguf import inspect_gguf_model; from crit_core.model.gguf_files import derived_files; [Path(n).write_bytes(d() if callable(d) else d.encode() if isinstance(d, str) else d) for fs in derived_files(inspect_gguf_model(Path('Qwen3.6-35B-A3B-UD-IQ4_XS.gguf'))).values() for n, d in fs.items()]"
+      ```
+
+    - Install and serve it from a shell with the MSVC developer environment (the kernels build at load) and crit 0.23.0:
+
+      ```sh
+      crit pull Dualshok3/gguf-residency-fp8kv --engines crit-engines --model <checkpoint folder> --context 262144
+      crit serve --engine Dualshok3/gguf-residency-fp8kv
+      ```
+
+    - `engine/build.py` runs `engine/build.cmd`: MSVC's `vcvars64.bat`, CUDA 13.4's nvcc (`CUDA_HOME`), then each plugin's `build_kernels.py` with the Python that runs crit
+    - Chat at `http://127.0.0.1:8000/v1` (OpenAI-compatible)
+  credits: |
+    Credits and licenses are in [THIRD_PARTY.md](https://github.com/crit-labs/crit-engines/blob/3c0ad1d0b1fb1dfbdeeba88df482394f0a6a3dc4/gguf-residency-fp8kv/THIRD_PARTY.md) and [LICENSES.txt](https://github.com/crit-labs/crit-engines/blob/3c0ad1d0b1fb1dfbdeeba88df482394f0a6a3dc4/gguf-residency-fp8kv/LICENSES.txt), next to the source. The GGUF block decoders use ggml's IQ3_S codebook and GGUF block layouts (MIT).

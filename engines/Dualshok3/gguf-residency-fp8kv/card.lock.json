@@ -1,0 +1,57 @@
+{
+  "checkpoints": {
+    "qwen3.6-35b-a3b@UD-IQ4-XS": {
+      "repository": "unsloth/Qwen3.6-35B-A3B-GGUF",
+      "revision": "a483e9e6cbd595906af30beda3187c2663a1118c",
+      "files": [
+        {
+          "path": "chat_template.jinja",
+          "bytes": 8057,
+          "sha256": "55d4931433fe502b794226ee7f4d206a6bdd436ac9f80eb7d8ebb4c639f9ea0c"
+        },
+        {
+          "path": "config.json",
+          "bytes": 1982,
+          "sha256": "fa1c61c229d59e2acf132ccc2a7f2efc7617844990c6ce94698c0ea36fd5860b"
+        },
+        {
+          "path": "generation_config.json",
+          "bytes": 178,
+          "sha256": "3167c18a49a8bbc3fef8748b29fb4048907aacc7229291db0b6cdd6ff13f6047"
+        },
+        {
+          "path": "Qwen3.6-35B-A3B-UD-IQ4_XS.gguf",
+          "bytes": 17730509792,
+          "sha256": "649d7508507b84638732c4f52c24c8b15843c6dca2f3ff793ae07c14a67ebbb3"
+        },
+        {
+          "path": "tokenizer.json",
+          "bytes": 19990352,
+          "sha256": "d87ebfe5cbc254e32a751d6ef878836a6a5e855f349853c778b1a97f0b55f20c"
+        },
+        {
+          "path": "tokenizer_config.json",
+          "bytes": 201,
+          "sha256": "3be3978a6691c4af8d1b007164a91ec05626fb3a2f60a51c2ff67df3db79e265"
+        }
+      ],
+      "run_model_manifest_sha256": "914c75b5592d9dfd38618187b088cb5b8c0f26c47f65b718c6c8cbdb257a44ff"
+    }
+  },
+  "provenance": {
+    "run_id": "run-20261111T081913Z-40ce07fd",
+    "candidate_id": "candidate-0026",
+    "source_manifest_sha256": "d7dacdae5eff6eeb5a4525fc3bfa5236aa9d44eed0545aafa791e37898418ce0",
+    "original_package_sha256": "1b55715ca38ff2b455b16953f9e28321a79ca812f3e28dbe602a8e0a93a6796e",
+    "configuration_sha256": "8b648e774a2d9c4a360d695a440f8c05dcf7d297d449ec79cb6866c965416fa0",
+    "model_manifest_sha256": "914c75b5592d9dfd38618187b088cb5b8c0f26c47f65b718c6c8cbdb257a44ff",
+    "toolchain": {
+      "python": "3.14.4",
+      "torch": "2.14.1+cu130",
+      "nvcc": "CUDA 13.4",
+      "msvc": "Visual Studio 18 BuildTools v145 (vcvars64)",
+      "gpu": "sm_120"
+    },
+    "runtime_prerequisites": []
+  }
+}
