@@ -45,10 +45,10 @@
   },
   "provenance": {
     "run_id": "run-20261109T095346Z-1b210ccf",
-    "candidate_id": "candidate-0024",
-    "source_manifest_sha256": "6e1af544aa721ae03b1db21c0f02de2e79bf716cbf81b954a8e3f1295454477f",
-    "original_package_sha256": "0d0f46f6741b91c51c53e2c85f43bcd7bdd4b5e383d7153c84b7d7ca7f3e0454",
-    "configuration_sha256": "424118751cb61079eff204f7db682d5f20d55d28e8a7b8ef39c65d0f618ea38e",
+    "candidate_id": "candidate-0025",
+    "source_manifest_sha256": "08ba17a7c03f7e3b568289fe2950a14f7e1d900e9b7b117e24f8b65c0ebbe927",
+    "original_package_sha256": "9c005eed3a795a99e7ce9b394a1b67e35a4cc0442dd36a48d239f50fa1c885d5",
+    "configuration_sha256": "0c90039194174cb47d5e811d200b8ba8740b1407f889a8e662cb8b9dc4805654",
     "model_manifest_sha256": "6b0e53faab13005f7a59d08e7e8d6318365f20af9ab95ac7d5c7c92ec8fa56ce",
     "toolchain": {
       "python": "3.14.4",
