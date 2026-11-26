@@ -94,7 +94,7 @@
 
 ## Checks
 
-- **Gates:** every gate of the certified Eval passed: coverage, repeatable, request history, prompt cache, quality (under the run's budget: perplexity ratio 1.4, mean KL divergence 1.5, p99 13.0), sampling, capacity at 200,000 tokens, retrieval, lower context and concurrency; generality not judged (crit-eval 0.8.1 needed freshly prepared data, so its baseline was not comparable)
+- **Gates:** every gate of the certified Eval passed: coverage, repeatable, request history, prompt cache, quality (under the run's budget: perplexity ratio 1.4, mean KL divergence 1.5, p99 13.0), sampling, capacity at 200,000 tokens, retrieval, lower context and concurrency; generality judged afterwards against candidate 24 (this engine on crit 0.22), both served and measured by crit-eval 0.8.1 on the held-out prompts alone with the same data and jitter seed, three runs each: held-out decode 88.7 against 87.5 tok/s (+1.4%), a pass in 8 of 9 pairings; the one miss is a single prompt (Arabic) 10.6% slower, as far as candidate 24 swings against itself. The certified Eval's own held-out figure passes against 2 of the 3 runs
 - **Functional:** `crit run serve --check` passed the plugin tests, the serving checks (tool calls included) and Eval's pre-check; crit smoke left out (the checkpoint fails its fluency limit under every crit since 0.19, llama.cpp scores it alike)
 - **Resources:** at least 1 GiB of device memory free at every step of a 200,000-token prompt, 2 GiB of host memory free in the benchmark; slowest prompt step under 1 s
 - **Track:** open: judged under the run's own quality budget, wider than `speed`'s protocol budget (mean KL divergence 0.4, p99 4.0)
